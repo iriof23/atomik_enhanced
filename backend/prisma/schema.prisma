@@ -1,0 +1,294 @@
+// Prisma schema for dual-mode deployment (SQLite for desktop, PostgreSQL for Docker)
+
+generator client {
+  provider = "prisma-client-py"
+  interface = "asyncio"
+}
+
+datasource db {
+  provider = "sqlite" // Change to "postgresql" for Docker mode
+  url      = env("DATABASE_URL")
+}
+
+// User model - supports both license key (desktop) and password (docker) authentication
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  name          String
+  passwordHash  String?  // For Docker mode
+  licenseKey    String?  @unique // For Desktop mode
+  role          Role     @default(USER)
+  
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  lastLoginAt   DateTime?
+  
+  projects      Project[]
+  findings      Finding[]
+  reports       Report[]
+  
+  @@index([email])
+  @@index([licenseKey])
+}
+
+enum Role {
+  ADMIN
+  USER
+  VIEWER
+}
+
+// Organization model for multi-tenancy (Docker mode)
+model Organization {
+  id          String   @id @default(uuid())
+  name        String
+  slug        String   @unique
+  plan        Plan     @default(FREE)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  users       User[]
+  clients     Client[]
+  templates   Template[]
+  
+  @@index([slug])
+}
+
+enum Plan {
+  FREE
+  FREELANCER
+  TEAM
+  ENTERPRISE
+}
+
+// License validation table (Desktop mode)
+model License {
+  id              String   @id @default(uuid())
+  licenseKey      String   @unique
+  machineId       String?
+  activatedAt     DateTime?
+  lastValidatedAt DateTime?
+  expiresAt       DateTime?
+  isActive        Boolean  @default(true)
+  
+  plan            Plan     @default(FREELANCER)
+  maxProjects     Int      @default(10)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([licenseKey])
+  @@index([machineId])
+}
+
+// Client model
+model Client {
+  id              String   @id @default(uuid())
+  name            String
+  contactName     String?
+  contactEmail    String?
+  contactPhone    String?
+  address         String?
+  
+  organizationId  String?
+  organization    Organization? @relation(fields: [organizationId], references: [id])
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  projects        Project[]
+  
+  @@index([organizationId])
+}
+
+// Project model
+model Project {
+  id              String        @id @default(uuid())
+  name            String
+  description     String?
+  status          ProjectStatus @default(PLANNING)
+  startDate       DateTime?
+  endDate         DateTime?
+  
+  clientId        String
+  client          Client        @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  
+  leadId          String
+  lead            User          @relation(fields: [leadId], references: [id])
+  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  findings        Finding[]
+  reports         Report[]
+  
+  @@index([clientId])
+  @@index([leadId])
+  @@index([status])
+}
+
+enum ProjectStatus {
+  PLANNING
+  IN_PROGRESS
+  REVIEW
+  COMPLETED
+  ARCHIVED
+}
+
+// Finding model
+model Finding {
+  id              String          @id @default(uuid())
+  title           String
+  description     String          // Rich text content
+  severity        Severity
+  cvssScore       Float?
+  cvssVector      String?
+  cveId           String?
+  
+  affectedSystems String?
+  remediation     String?         // Rich text content
+  references      String?         // JSON array of URLs
+  
+  status          FindingStatus   @default(OPEN)
+  
+  projectId       String
+  project         Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  createdById     String
+  createdBy       User            @relation(fields: [createdById], references: [id])
+  
+  templateId      String?
+  template        Template?       @relation(fields: [templateId], references: [id])
+  
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  
+  evidences       Evidence[]
+  
+  @@index([projectId])
+  @@index([severity])
+  @@index([status])
+  @@index([cveId])
+}
+
+enum Severity {
+  CRITICAL
+  HIGH
+  MEDIUM
+  LOW
+  INFO
+}
+
+enum FindingStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  ACCEPTED
+  FALSE_POSITIVE
+}
+
+// Evidence model (screenshots, files)
+model Evidence {
+  id          String   @id @default(uuid())
+  filename    String
+  filepath    String
+  filesize    Int
+  mimetype    String
+  caption     String?
+  
+  findingId   String
+  finding     Finding  @relation(fields: [findingId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([findingId])
+}
+
+// Report model
+model Report {
+  id              String       @id @default(uuid())
+  title           String
+  reportType      ReportType   @default(PENTEST)
+  status          ReportStatus @default(DRAFT)
+  
+  projectId       String
+  project         Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  generatedById   String
+  generatedBy     User         @relation(fields: [generatedById], references: [id])
+  
+  templateId      String?
+  template        Template?    @relation(fields: [templateId], references: [id])
+  
+  pdfPath         String?
+  htmlContent     String?      // Cached HTML
+  
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  generatedAt     DateTime?
+  
+  @@index([projectId])
+  @@index([status])
+}
+
+enum ReportType {
+  PENTEST
+  VULNERABILITY_ASSESSMENT
+  COMPLIANCE
+  EXECUTIVE_SUMMARY
+}
+
+enum ReportStatus {
+  DRAFT
+  GENERATING
+  COMPLETED
+  FAILED
+}
+
+// Template model (for findings and reports)
+model Template {
+  id              String         @id @default(uuid())
+  name            String
+  description     String?
+  type            TemplateType
+  content         String         // JSON or HTML content
+  
+  organizationId  String?
+  organization    Organization?  @relation(fields: [organizationId], references: [id])
+  
+  isPublic        Boolean        @default(false)
+  
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  
+  findings        Finding[]
+  reports         Report[]
+  
+  @@index([type])
+  @@index([organizationId])
+}
+
+enum TemplateType {
+  FINDING
+  REPORT
+}
+
+// Sync metadata for desktop-cloud synchronization
+model SyncMetadata {
+  id              String   @id @default(uuid())
+  entityType      String   // "finding", "project", etc.
+  entityId        String
+  lastSyncedAt    DateTime
+  syncHash        String   // Hash of entity data
+  cloudId         String?  // ID in cloud database
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@unique([entityType, entityId])
+  @@index([entityType])
+  @@index([cloudId])
+}
