@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils'
 import { AddClientDialog } from '@/components/AddClientDialog'
 import { AddFindingDialog } from '@/components/AddFindingDialog'
 import { AddProjectDialog } from '@/components/AddProjectDialog'
+import ProjectDetailModal from '@/components/ProjectDetailModal'
 import { useToast } from '@/components/ui/use-toast'
 import {
     Play,
@@ -257,7 +258,17 @@ const useDashboardStore = () => {
 
 // --- Components ---
 
-const HeroCard = ({ project, onStartProject }: { project: Project | null, onStartProject: () => void }) => {
+const HeroCard = ({ 
+    project, 
+    onStartProject,
+    onResumeReport,
+    onViewDetails
+}: { 
+    project: Project | null
+    onStartProject: () => void
+    onResumeReport?: (project: Project) => void
+    onViewDetails?: (project: Project) => void
+}) => {
     const { user } = useAuthStore()
 
     if (!project) return (
@@ -318,11 +329,20 @@ const HeroCard = ({ project, onStartProject }: { project: Project | null, onStar
                     </div>
 
                     <div className="flex gap-4 pt-2">
-                        <Button size="lg" className="gap-2 text-base px-8 shadow-primary/25 shadow-lg hover:shadow-primary/40 transition-all">
+                        <Button 
+                            size="lg" 
+                            className="gap-2 text-base px-8 shadow-primary/25 shadow-lg hover:shadow-primary/40 transition-all"
+                            onClick={() => onResumeReport?.(project)}
+                        >
                             <Play className="w-5 h-5 fill-current" />
                             Resume Report
                         </Button>
-                        <Button size="lg" variant="outline" className="gap-2">
+                        <Button 
+                            size="lg" 
+                            variant="outline" 
+                            className="gap-2"
+                            onClick={() => onViewDetails?.(project)}
+                        >
                             View Details <ArrowRight className="w-4 h-4" />
                         </Button>
                     </div>
@@ -557,6 +577,7 @@ export default function Dashboard() {
     const [showClientDialog, setShowClientDialog] = useState(false)
     const [showFindingDialog, setShowFindingDialog] = useState(false)
     const [showProjectDialog, setShowProjectDialog] = useState(false)
+    const [viewingProject, setViewingProject] = useState<any | null>(null)
     
     // Load clients for project dialog
     const [clients, setClients] = useState<any[]>([])
@@ -592,6 +613,36 @@ export default function Dashboard() {
     
     const handleStartProject = () => {
         setShowProjectDialog(true)
+    }
+    
+    const handleResumeReport = (project: Project) => {
+        // Navigate to the report editor for this project
+        navigate(`/reports/${project.id}`)
+    }
+    
+    const handleViewDetails = (project: Project) => {
+        // Open the project detail modal
+        // Need to convert the Dashboard Project to the full Project type expected by modal
+        setViewingProject({
+            ...project,
+            type: 'External', // Default, would come from actual project data
+            complianceFrameworks: [],
+            scope: [],
+            methodology: 'OWASP',
+            teamMembers: [],
+            leadTester: '',
+            findingsBySeverity: { critical: 0, high: 0, medium: 0, low: 0 },
+            findingsCount: 0,
+            description: '',
+            lastActivity: '',
+            lastActivityDate: new Date(),
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            startDate: new Date(),
+            endDate: new Date(project.endDate),
+            clientId: '1',
+            clientLogoUrl: '🏢'
+        })
     }
     
     const handleClientAdded = (client: any) => {
@@ -665,7 +716,12 @@ export default function Dashboard() {
             {/* Bento Grid Layout */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Row 1: Focus Zone + Horizon */}
-                <HeroCard project={data.activeProject} onStartProject={handleStartProject} />
+                <HeroCard 
+                    project={data.activeProject} 
+                    onStartProject={handleStartProject}
+                    onResumeReport={handleResumeReport}
+                    onViewDetails={handleViewDetails}
+                />
                 <DeadlineList projects={data.upcomingProjects} />
 
                 {/* Row 2: Quick Stats & Actions */}
@@ -699,6 +755,34 @@ export default function Dashboard() {
                 onOpenChange={setShowProjectDialog}
                 onProjectAdded={handleProjectAdded}
                 clients={clients}
+            />
+            
+            {/* Project Detail Modal */}
+            <ProjectDetailModal
+                project={viewingProject}
+                open={!!viewingProject}
+                onClose={() => setViewingProject(null)}
+                onEdit={(project) => {
+                    setViewingProject(null)
+                    // TODO: Implement edit project
+                    toast({
+                        title: "Edit Project",
+                        description: "Project editing will be available soon.",
+                    })
+                }}
+                onGenerateReport={(project) => {
+                    setViewingProject(null)
+                    navigate(`/reports/${project.id}`)
+                }}
+                onDelete={(project) => {
+                    setViewingProject(null)
+                    // TODO: Implement delete project
+                    toast({
+                        title: "Delete Project",
+                        description: "Project deletion will be available soon.",
+                        variant: "destructive",
+                    })
+                }}
             />
         </div>
     )
