@@ -83,17 +83,17 @@ export function ClientCard({
     return (
         <div
             onClick={() => onView(client)}
-            className="group bg-zinc-950/50 rounded-lg border border-zinc-800 hover:border-zinc-600 hover:shadow-2xl transition-all duration-300 cursor-pointer overflow-hidden flex flex-col h-full"
+            className="group bg-card rounded-lg border border-border hover:border-primary/50 hover:shadow-lg transition-all duration-300 cursor-pointer overflow-hidden flex flex-col h-full"
         >
             {/* Header */}
-            <div className="p-4 border-b border-zinc-800/50 flex items-start justify-between bg-zinc-900/20">
+            <div className="p-4 border-b border-border flex items-start justify-between bg-muted/50">
                 <div className="flex items-center gap-3">
                     <div className="text-3xl select-none">{client.logoUrl}</div>
                     <div>
-                        <h3 className="font-semibold text-zinc-100 leading-tight group-hover:text-white transition-colors">
+                        <h3 className="font-semibold text-foreground leading-tight group-hover:text-primary transition-colors">
                             {client.name}
                         </h3>
-                        <p className="text-sm text-zinc-500 mt-0.5">
+                        <p className="text-sm text-muted-foreground mt-0.5">
                             {client.primaryContact}
                         </p>
                     </div>
@@ -101,32 +101,32 @@ export function ClientCard({
 
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                        <button className="p-1.5 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 rounded-md transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100">
+                        <button className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100">
                             <MoreHorizontal className="w-5 h-5" />
                         </button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48 bg-zinc-950 border-zinc-800 text-zinc-300">
-                        <DropdownMenuItem className="focus:bg-zinc-900 focus:text-zinc-100" onClick={(e) => { e.stopPropagation(); onEdit(client) }}>
+                    <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEdit(client) }}>
                             <Edit className="w-4 h-4 mr-2" />
                             Edit Client
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="focus:bg-zinc-900 focus:text-zinc-100" onClick={(e) => { e.stopPropagation(); onCopyLink(client) }}>
+                        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onCopyLink(client) }}>
                             <ExternalLink className="w-4 h-4 mr-2" />
                             Copy Portal Link
                         </DropdownMenuItem>
-                        <DropdownMenuSeparator className="bg-zinc-800" />
-                        <DropdownMenuItem className="focus:bg-zinc-900 focus:text-zinc-100" onClick={(e) => { e.stopPropagation(); onDuplicate(client) }}>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onDuplicate(client) }}>
                             <Copy className="w-4 h-4 mr-2" />
                             Duplicate
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="focus:bg-zinc-900 focus:text-zinc-100" onClick={(e) => { e.stopPropagation(); onArchive(client) }}>
+                        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onArchive(client) }}>
                             <Archive className="w-4 h-4 mr-2" />
                             Archive
                         </DropdownMenuItem>
-                        <DropdownMenuSeparator className="bg-zinc-800" />
+                        <DropdownMenuSeparator />
                         <DropdownMenuItem
                             onClick={(e) => { e.stopPropagation(); onDelete(client) }}
-                            className="text-red-500 focus:text-red-400 focus:bg-red-950/20"
+                            className="text-red-500 focus:text-red-400 focus:bg-red-950/20 dark:focus:bg-red-950/20"
                         >
                             <Trash2 className="w-4 h-4 mr-2" />
                             Delete Client
@@ -138,18 +138,18 @@ export function ClientCard({
             {/* Body */}
             <div className="p-4 space-y-3 flex-1">
                 <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-sm text-zinc-500">
-                        <Mail className="w-4 h-4 text-zinc-600" />
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Mail className="w-4 h-4" />
                         <span className="truncate">{client.email}</span>
                     </div>
                     {client.phone && (
-                        <div className="flex items-center gap-2 text-sm text-zinc-500">
-                            <Phone className="w-4 h-4 text-zinc-600" />
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Phone className="w-4 h-4" />
                             <span>{client.phone}</span>
                         </div>
                     )}
-                    <div className="flex items-center gap-2 text-sm text-zinc-500">
-                        <Building2 className="w-4 h-4 text-zinc-600" />
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Building2 className="w-4 h-4" />
                         <span className="truncate">{client.industry} • {client.companySize}</span>
                         {client.hasPortalAccess && (
                             <span className="ml-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
@@ -162,41 +162,41 @@ export function ClientCard({
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-3 border-t border-zinc-800/50 divide-x divide-zinc-800/50 bg-zinc-900/20">
+            <div className="grid grid-cols-3 border-t border-border divide-x divide-border bg-muted/50">
                 <div className="p-3 text-center">
-                    <div className="text-lg font-semibold text-zinc-200 leading-none mb-1">
+                    <div className="text-lg font-semibold text-foreground leading-none mb-1">
                         {client.projectsCount}
                     </div>
-                    <div className="text-[10px] uppercase tracking-wider text-zinc-500 font-medium">Projects</div>
+                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Projects</div>
                 </div>
                 <div className="p-3 text-center">
-                    <div className="text-lg font-semibold text-zinc-200 leading-none mb-1">
+                    <div className="text-lg font-semibold text-foreground leading-none mb-1">
                         {client.reportsCount}
                     </div>
-                    <div className="text-[10px] uppercase tracking-wider text-zinc-500 font-medium">Reports</div>
+                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Reports</div>
                 </div>
                 <div className="p-3 text-center">
                     <div className="flex items-center justify-center gap-1 mb-1">
-                        <span className="text-lg font-semibold text-zinc-200 leading-none">
+                        <span className="text-lg font-semibold text-foreground leading-none">
                             {client.totalFindings}
                         </span>
                         {client.findingsBySeverity.critical > 0 && (
                             <span className="flex h-2 w-2 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]" title={`${client.findingsBySeverity.critical} Critical`} />
                         )}
                     </div>
-                    <div className="text-[10px] uppercase tracking-wider text-zinc-500 font-medium">Findings</div>
+                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Findings</div>
                 </div>
             </div>
 
             {/* Footer */}
-            <div className="px-4 py-3 border-t border-zinc-800/50 flex items-center justify-between text-xs text-zinc-500 bg-zinc-900/40">
+            <div className="px-4 py-3 border-t border-border flex items-center justify-between text-xs text-muted-foreground bg-muted/50">
                 <div className="flex items-center gap-1.5">
                     <Clock className="w-3.5 h-3.5" />
                     <span>Active: {client.lastActivity}</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                     <span className={cn("w-2 h-2 rounded-full", getStatusColor(client.status))} />
-                    <span className="font-medium text-zinc-400">{client.status}</span>
+                    <span className="font-medium">{client.status}</span>
                 </div>
             </div>
         </div>

@@ -496,13 +496,13 @@ export default function Clients() {
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
           <div className="flex-1 w-full sm:w-auto">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
               <input
                 type="text"
                 placeholder="Search clients by name, contact, email, industry, or tags..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                className="w-full pl-10 pr-4 py-2 border border-input rounded-lg focus:ring-2 focus:ring-ring focus:border-transparent bg-background text-foreground placeholder:text-muted-foreground"
               />
             </div>
           </div>
@@ -528,14 +528,14 @@ export default function Clients() {
               )}
             </Button>
 
-            <button className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center gap-2 text-gray-700 dark:text-gray-300">
-              <Download className="w-4 h-4" />
+            <Button variant="outline" size="sm">
+              <Download className="w-4 h-4 mr-2" />
               Export
-            </button>
+            </Button>
 
             {/* View Mode Switcher with Tooltips */}
             <TooltipProvider>
-              <div className="flex items-center gap-1 border rounded-md p-1 border-gray-300 dark:border-gray-600">
+              <div className="flex items-center gap-1 border rounded-md p-1 border-border bg-card">
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
@@ -584,7 +584,7 @@ export default function Clients() {
 
         {/* Active Filters Display */}
         {activeFilters.length > 0 && (
-          <div className="flex flex-wrap gap-2 items-center p-3 bg-muted/50 rounded-lg border border-gray-200 dark:border-gray-700">
+          <div className="flex flex-wrap gap-2 items-center p-3 bg-muted/50 rounded-lg border border-border">
             <span className="text-sm font-medium text-muted-foreground">Active filters:</span>
             {activeFilters.map((filter) => (
               <Badge
@@ -619,7 +619,7 @@ export default function Clients() {
       {isLoading && (
         <div className="space-y-4">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="flex items-start gap-4 p-4 border rounded-lg border-gray-200 dark:border-gray-700">
+            <div key={i} className="flex items-start gap-4 p-4 border rounded-lg border-border bg-card">
               <Skeleton className="h-12 w-12 rounded-full" />
               <div className="flex-1 space-y-3">
                 <div className="flex items-center gap-2">
@@ -823,7 +823,7 @@ function TableView({ clients, onView, onEdit, onDelete, onDuplicate, onArchive, 
 
   const renderHeader = (label: string, key: string, align: 'left' | 'right' = 'left') => (
     <th
-      className={`px-6 py-3 text-${align} text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer group hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors select-none`}
+      className={`px-6 py-3 text-${align} text-xs font-medium text-muted-foreground uppercase tracking-wider cursor-pointer group hover:bg-muted transition-colors select-none`}
       onClick={() => onSort(key)}
     >
       <div className={`flex items-center ${align === 'right' ? 'justify-end' : ''}`}>
@@ -834,10 +834,10 @@ function TableView({ clients, onView, onEdit, onDelete, onDuplicate, onArchive, 
   )
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+    <div className="bg-card rounded-lg shadow-sm border border-border overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+          <thead className="bg-muted/50 border-b border-border">
             <tr>
               {renderHeader('Client', 'name')}
               {renderHeader('Contact', 'primaryContact')}
@@ -850,21 +850,21 @@ function TableView({ clients, onView, onEdit, onDelete, onDuplicate, onArchive, 
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+          <tbody className="divide-y divide-border">
             {clients.map((client) => (
-              <tr key={client.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+              <tr key={client.id} className="hover:bg-muted/50 transition-colors">
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center gap-3">
                     <div className="text-2xl">{client.logoUrl}</div>
                     <div>
-                      <div className="font-medium text-gray-900 dark:text-white">{client.name}</div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">{client.industry}</div>
+                      <div className="font-medium text-foreground">{client.name}</div>
+                      <div className="text-sm text-muted-foreground">{client.industry}</div>
                     </div>
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900 dark:text-white">{client.primaryContact}</div>
-                  <div className="text-sm text-gray-500 dark:text-gray-400">{client.email}</div>
+                  <div className="text-sm text-foreground">{client.primaryContact}</div>
+                  <div className="text-sm text-muted-foreground">{client.email}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className="px-2 py-1 text-xs font-semibold bg-primary/10 text-primary rounded-full">
@@ -872,11 +872,11 @@ function TableView({ clients, onView, onEdit, onDelete, onDuplicate, onArchive, 
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <span className="text-sm text-gray-900 dark:text-white">{client.reportsCount} pending</span>
+                  <span className="text-sm text-foreground">{client.reportsCount} pending</span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-900 dark:text-white">{client.totalFindings}</span>
+                    <span className="text-sm text-foreground">{client.totalFindings}</span>
                     {client.findingsBySeverity.critical > 0 && (
                       <span className="px-2 py-1 text-xs font-semibold bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-400 rounded-full">
                         {client.findingsBySeverity.critical} critical
@@ -884,26 +884,26 @@ function TableView({ clients, onView, onEdit, onDelete, onDuplicate, onArchive, 
                     )}
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                   {client.lastActivity}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <div className="flex items-center justify-end gap-2">
                     <button
                       onClick={() => onView(client)}
-                      className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg transition-colors"
+                      className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors"
                     >
                       <Eye className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => onEdit(client)}
-                      className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg transition-colors"
+                      className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors"
                     >
                       <Edit className="w-4 h-4" />
                     </button>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <button className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg transition-colors">
+                        <button className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors">
                           <MoreVertical className="w-4 h-4" />
                         </button>
                       </DropdownMenuTrigger>

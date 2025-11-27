@@ -248,20 +248,20 @@ export default function FindingsTabContent({ onUpdate }: Omit<FindingsTabContent
                 {/* 2. Action Toolbar (Middle Row) */}
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div className="relative w-full sm:w-64">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                         <Input
                             placeholder="Search findings..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="pl-9 bg-zinc-900 border-zinc-800 text-zinc-200 placeholder:text-zinc-600 focus:ring-primary/20"
+                            className="pl-9"
                         />
                     </div>
                     <div className="flex items-center gap-2 w-full sm:w-auto">
-                        <Button variant="outline" size="sm" className="flex-1 sm:flex-none border-zinc-800 bg-zinc-900/50 hover:bg-zinc-900 text-zinc-300">
+                        <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
                             <Upload className="w-4 h-4 mr-2" />
                             Import Scan
                         </Button>
-                        <Button onClick={() => setShowAddModal(true)} size="sm" className="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-500 text-white border-none">
+                        <Button onClick={() => setShowAddModal(true)} size="sm" className="flex-1 sm:flex-none">
                             <Plus className="w-4 h-4 mr-2" />
                             Add Finding
                         </Button>
@@ -272,7 +272,7 @@ export default function FindingsTabContent({ onUpdate }: Omit<FindingsTabContent
                 <ScrollArea className="h-[calc(100vh-400px)] min-h-[400px]">
                     <div className="space-y-3 pr-2 pb-20">
                         {findings.length === 0 ? (
-                            <div className="h-96 rounded-lg border border-dashed border-zinc-800 bg-zinc-950/50 flex flex-col items-center justify-center relative overflow-hidden">
+                            <div className="h-96 rounded-lg border border-dashed border-border bg-muted/30 flex flex-col items-center justify-center relative overflow-hidden">
                                 {/* Subtle Background Pattern */}
                                 <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
                                     style={{
@@ -281,24 +281,24 @@ export default function FindingsTabContent({ onUpdate }: Omit<FindingsTabContent
                                 />
 
                                 <div className="relative z-10 flex flex-col items-center text-center p-6">
-                                    <div className="w-16 h-16 rounded-2xl bg-zinc-900/80 border border-zinc-800 flex items-center justify-center mb-6 shadow-xl">
-                                        <Shield className="w-8 h-8 text-zinc-600" />
+                                    <div className="w-16 h-16 rounded-2xl bg-muted border border-border flex items-center justify-center mb-6 shadow-xl">
+                                        <Shield className="w-8 h-8 text-muted-foreground" />
                                     </div>
-                                    <h3 className="text-lg font-medium text-zinc-200 mb-2">
+                                    <h3 className="text-lg font-medium text-foreground mb-2">
                                         No findings added yet
                                     </h3>
-                                    <p className="text-sm text-zinc-500 max-w-md mb-8">
+                                    <p className="text-sm text-muted-foreground max-w-md mb-8">
                                         Start by adding vulnerabilities from the library or import a scanner file to populate your report.
                                     </p>
                                     <div className="flex items-center gap-4 text-sm">
                                         <button
                                             onClick={() => setShowAddModal(true)}
-                                            className="text-emerald-500 hover:text-emerald-400 font-medium hover:underline transition-all"
+                                            className="text-primary hover:text-primary/80 font-medium hover:underline transition-all"
                                         >
                                             Browse Library
                                         </button>
-                                        <span className="text-zinc-700">•</span>
-                                        <button className="text-zinc-400 hover:text-zinc-300 transition-colors">
+                                        <span className="text-muted-foreground">•</span>
+                                        <button className="text-muted-foreground hover:text-foreground transition-colors">
                                             Create Custom
                                         </button>
                                     </div>
@@ -309,32 +309,32 @@ export default function FindingsTabContent({ onUpdate }: Omit<FindingsTabContent
                                 {Object.entries(groupedFindings).map(([severity, items]) => (
                                     items.length > 0 && (
                                         <div key={severity}>
-                                            <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-3 flex items-center gap-2 mt-6 first:mt-0">
-                                                {severity} <span className="text-zinc-600">({items.length})</span>
+                                            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2 mt-6 first:mt-0">
+                                                {severity} <span className="opacity-60">({items.length})</span>
                                             </h3>
                                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                                 {items.map((finding) => (
                                                     <Card
                                                         key={finding.id}
                                                         className={cn(
-                                                            'cursor-pointer transition-all duration-200 hover:shadow-lg hover:shadow-black/40 relative group border-zinc-800 bg-zinc-900/40 hover:bg-zinc-900/80',
+                                                            'cursor-pointer transition-all duration-200 hover:shadow-lg relative group',
                                                             selectedFinding?.id === finding.id
-                                                                ? 'border-emerald-500/50 shadow-md bg-zinc-900 ring-1 ring-emerald-500/20'
-                                                                : 'hover:border-zinc-700'
+                                                                ? 'border-primary shadow-md ring-1 ring-primary/20'
+                                                                : 'hover:border-primary/50'
                                                         )}
                                                         onClick={() => setSelectedFinding(finding)}
                                                     >
                                                         <CardContent className="p-5">
                                                             <div className="flex items-start justify-between gap-3">
                                                                 <div className="flex-1 min-w-0">
-                                                                    <h4 className="text-sm font-semibold text-zinc-200 line-clamp-2 group-hover:text-emerald-400 transition-colors leading-snug">
+                                                                    <h4 className="text-sm font-semibold text-foreground line-clamp-2 group-hover:text-primary transition-colors leading-snug">
                                                                         {finding.title}
                                                                     </h4>
                                                                     <div className="flex items-center gap-2 mt-4">
                                                                         <Badge className={cn('text-[10px] px-2 py-0.5 font-medium border', getSeverityColor(finding.severity))}>
                                                                             {finding.severity}
                                                                         </Badge>
-                                                                        <span className="text-xs text-zinc-500 font-medium">
+                                                                        <span className="text-xs text-muted-foreground font-medium">
                                                                             {finding.status}
                                                                         </span>
                                                                     </div>
@@ -372,11 +372,11 @@ export default function FindingsTabContent({ onUpdate }: Omit<FindingsTabContent
                         {/* Left Panel - Available Vulnerabilities */}
                         <div className="space-y-3 flex flex-col min-h-0">
                             <div className="flex-shrink-0">
-                                <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
+                                <h3 className="text-sm font-semibold text-foreground mb-2">
                                     Available Vulnerabilities
                                 </h3>
                                 <div className="relative">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                                     <Input
                                         placeholder="Search vulnerabilities..."
                                         value={searchQuery}
@@ -409,14 +409,14 @@ export default function FindingsTabContent({ onUpdate }: Omit<FindingsTabContent
                                                         <div className="flex items-start justify-between gap-3">
                                                             <div className="flex-1 min-w-0">
                                                                 <div className="flex items-center gap-2 mb-1">
-                                                                    <h4 className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                                                                    <h4 className="text-sm font-semibold text-foreground truncate">
                                                                         {vuln.title}
                                                                     </h4>
                                                                     <Badge className={cn('text-[10px] px-1.5 py-0 flex-shrink-0', getSeverityColor(vuln.severity))}>
                                                                         {vuln.severity}
                                                                     </Badge>
                                                                 </div>
-                                                                <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-1">
+                                                                <p className="text-xs text-muted-foreground line-clamp-1">
                                                                     {vuln.description}
                                                                 </p>
                                                                 <div className="flex items-center gap-2 mt-1">
@@ -426,7 +426,7 @@ export default function FindingsTabContent({ onUpdate }: Omit<FindingsTabContent
                                                                 </div>
                                                             </div>
                                                             {isSelected ? (
-                                                                <span className="text-xs text-gray-400 flex-shrink-0">Added</span>
+                                                                <span className="text-xs text-muted-foreground flex-shrink-0">Added</span>
                                                             ) : (
                                                                 <Plus className="w-5 h-5 text-primary flex-shrink-0" />
                                                             )}
@@ -440,9 +440,9 @@ export default function FindingsTabContent({ onUpdate }: Omit<FindingsTabContent
                         </div>
 
                         {/* Right Panel - To Be Added */}
-                        <div className="space-y-3 flex flex-col border-l border-gray-200 dark:border-gray-700 pl-4 min-h-0">
+                        <div className="space-y-3 flex flex-col border-l border-border pl-4 min-h-0">
                             <div className="flex items-center justify-between flex-shrink-0">
-                                <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+                                <h3 className="text-sm font-semibold text-foreground">
                                     To Be Added ({selectedVulns.length})
                                 </h3>
                                 {selectedVulns.length > 0 && (
@@ -459,7 +459,7 @@ export default function FindingsTabContent({ onUpdate }: Omit<FindingsTabContent
 
                             {selectedVulns.length === 0 ? (
                                 <div className="flex-1 flex items-center justify-center min-h-0">
-                                    <div className="text-center text-gray-400">
+                                    <div className="text-center text-muted-foreground">
                                         <Plus className="w-12 h-12 mx-auto mb-2 opacity-50" />
                                         <p className="text-sm">No findings selected</p>
                                         <p className="text-xs mt-1">Click on vulnerabilities to add them</p>
@@ -474,14 +474,14 @@ export default function FindingsTabContent({ onUpdate }: Omit<FindingsTabContent
                                                     <div className="flex items-start justify-between gap-2">
                                                         <div className="flex-1 min-w-0">
                                                             <div className="flex items-center gap-2 mb-1">
-                                                                <h4 className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                                                                <h4 className="text-sm font-semibold text-foreground truncate">
                                                                     {vuln.title}
                                                                 </h4>
                                                                 <Badge className={cn('text-[10px] px-1.5 py-0 flex-shrink-0', getSeverityColor(vuln.severity))}>
                                                                     {vuln.severity}
                                                                 </Badge>
                                                             </div>
-                                                            <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-1">
+                                                            <p className="text-xs text-muted-foreground line-clamp-1">
                                                                 {vuln.category}
                                                             </p>
                                                         </div>
@@ -501,7 +501,7 @@ export default function FindingsTabContent({ onUpdate }: Omit<FindingsTabContent
                         </div>
                     </div>
 
-                    <DialogFooter className="border-t border-gray-200 dark:border-gray-700 pt-4 flex-shrink-0">
+                    <DialogFooter className="border-t border-border pt-4 flex-shrink-0">
                         <Button
                             variant="outline"
                             onClick={() => {
@@ -530,7 +530,7 @@ export default function FindingsTabContent({ onUpdate }: Omit<FindingsTabContent
                         <DialogTitle>Delete Finding</DialogTitle>
                     </DialogHeader>
                     <div className="py-4">
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                        <p className="text-sm text-muted-foreground mb-4">
                             Are you sure you want to delete this finding? This action cannot be undone.
                         </p>
                         <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">

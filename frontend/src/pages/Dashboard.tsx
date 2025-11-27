@@ -1,10 +1,14 @@
 import React, { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/lib/store'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
+import { AddClientDialog } from '@/components/AddClientDialog'
+import { AddFindingDialog } from '@/components/AddFindingDialog'
+import { AddProjectDialog } from '@/components/AddProjectDialog'
+import { useToast } from '@/components/ui/use-toast'
 import {
     Play,
     ArrowRight,
@@ -19,8 +23,28 @@ import {
     Zap,
     Calendar,
     MoreHorizontal,
-    Activity
+    Activity,
+    Shield
 } from 'lucide-react'
+
+// --- Helper Functions ---
+
+function formatRelativeTime(date: Date): string {
+    const now = new Date()
+    const diffMs = now.getTime() - date.getTime()
+    const diffSeconds = Math.floor(diffMs / 1000)
+    const diffMinutes = Math.floor(diffSeconds / 60)
+    const diffHours = Math.floor(diffMinutes / 60)
+    const diffDays = Math.floor(diffHours / 24)
+    
+    if (diffSeconds < 60) return 'Just now'
+    if (diffMinutes < 60) return `${diffMinutes}m ago`
+    if (diffHours < 24) return `${diffHours}h ago`
+    if (diffDays === 1) return '1d ago'
+    if (diffDays < 7) return `${diffDays}d ago`
+    
+    return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+}
 
 // --- Types ---
 
@@ -51,7 +75,9 @@ interface DashboardData {
         title: string
         description: string
         timestamp: string
+        timestampText?: string
         icon: React.ReactNode
+        severity?: string
     }>
 }
 
@@ -106,17 +132,66 @@ const useDashboardStore = () => {
             .sort((a, b) => new Date(a.endDate).getTime() - new Date(b.endDate).getTime())
             .slice(0, 3)
 
-        // Recent Activity (Mock generation based on projects)
-        const activity = projects
-            .slice(0, 5)
-            .map(p => ({
-                id: `act-${p.id}`,
+        // Recent Activity - Build comprehensive activity feed
+        const activityList: Array<any> = []
+        
+        // Add project activities
+        projects.forEach(p => {
+            activityList.push({
+                id: `proj-${p.id}`,
                 type: 'project' as const,
-                title: 'Project Updated',
-                description: `${p.name} updated to ${p.progress}%`,
-                timestamp: new Date(p.updatedAt).toLocaleDateString(),
-                icon: <Activity className="w-4 h-4 text-blue-400" />
-            }))
+                title: p.status === 'Completed' ? 'Project Completed' : 'Project Started',
+                description: `${p.name} • ${p.clientName}`,
+                timestamp: new Date(p.updatedAt).toISOString(),
+                timestampText: formatRelativeTime(new Date(p.updatedAt)),
+                icon: <Activity className="w-4 h-4 text-blue-400" />,
+                severity: p.status
+            })
+        })
+        
+        // Add findings from all projects
+        projects.forEach(p => {
+            const findingsKey = `findings_${p.id}`
+            const storedFindings = localStorage.getItem(findingsKey)
+            if (storedFindings) {
+                try {
+                    const findings = JSON.parse(storedFindings)
+                    findings.forEach((f: any) => {
+                        if (f.severity === 'Critical') {
+                            activityList.push({
+                                id: `find-${f.id}`,
+                                type: 'finding' as const,
+                                title: 'Critical Finding Detected',
+                                description: `${f.title} • ${p.name}`,
+                                timestamp: f.createdAt || new Date().toISOString(),
+                                timestampText: formatRelativeTime(new Date(f.createdAt || new Date())),
+                                icon: <AlertTriangle className="w-4 h-4 text-red-400" />,
+                                severity: f.severity
+                            })
+                        }
+                    })
+                } catch (e) { }
+            }
+        })
+        
+        // Add client activities
+        clients.forEach((c: any) => {
+            activityList.push({
+                id: `client-${c.id}`,
+                type: 'client' as const,
+                title: 'New Client Onboarded',
+                description: `${c.name} added to portfolio`,
+                timestamp: c.createdAt || new Date().toISOString(),
+                timestampText: formatRelativeTime(new Date(c.createdAt || new Date())),
+                icon: <Users className="w-4 h-4 text-emerald-400" />,
+                severity: c.status
+            })
+        })
+        
+        // Sort by most recent and take top 5
+        const activity = activityList
+            .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+            .slice(0, 5)
 
         setData({
             activeProject,
@@ -131,25 +206,46 @@ const useDashboardStore = () => {
                 {
                     id: 'mock-1',
                     type: 'finding',
-                    title: 'New Critical Finding',
-                    description: 'SQL Injection detected in Login API',
-                    timestamp: '2 hours ago',
+                    title: 'SQL Injection Vulnerability',
+                    description: 'Critical SQL Injection found in login form • Q4 2024 External Pentest',
+                    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+                    timestampText: '2h ago',
                     icon: <AlertTriangle className="w-4 h-4 text-red-400" />
                 },
                 {
                     id: 'mock-2',
-                    type: 'report',
-                    title: 'Report Generated',
-                    description: 'Q3 Security Assessment for Acme Corp',
-                    timestamp: '5 hours ago',
-                    icon: <FileText className="w-4 h-4 text-purple-400" />
+                    type: 'project',
+                    title: 'New Project Started',
+                    description: 'Internal Security Assessment • Acme Corporation',
+                    timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
+                    timestampText: '5h ago',
+                    icon: <Activity className="w-4 h-4 text-blue-400" />
                 },
                 {
                     id: 'mock-3',
+                    type: 'finding',
+                    title: 'Cross-Site Scripting (XSS)',
+                    description: 'Reflected XSS in search parameter • Web App Security Review',
+                    timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
+                    timestampText: '8h ago',
+                    icon: <AlertTriangle className="w-4 h-4 text-orange-400" />
+                },
+                {
+                    id: 'mock-4',
+                    type: 'report',
+                    title: 'Report Generated',
+                    description: 'Final penetration test report completed • Q3 2024 Assessment',
+                    timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+                    timestampText: '1d ago',
+                    icon: <FileText className="w-4 h-4 text-purple-400" />
+                },
+                {
+                    id: 'mock-5',
                     type: 'client',
                     title: 'New Client Onboarded',
-                    description: 'TechStart Inc added to portfolio',
-                    timestamp: '1 day ago',
+                    description: 'Retail Solutions Ltd added to portfolio',
+                    timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+                    timestampText: '2d ago',
                     icon: <Users className="w-4 h-4 text-emerald-400" />
                 }
             ]
@@ -161,7 +257,7 @@ const useDashboardStore = () => {
 
 // --- Components ---
 
-const HeroCard = ({ project }: { project: Project | null }) => {
+const HeroCard = ({ project, onStartProject }: { project: Project | null, onStartProject: () => void }) => {
     const { user } = useAuthStore()
 
     if (!project) return (
@@ -169,7 +265,7 @@ const HeroCard = ({ project }: { project: Project | null }) => {
             <CardContent className="p-8 flex flex-col justify-center h-full min-h-[300px]">
                 <h2 className="text-3xl font-bold tracking-tight mb-2">Welcome back, {user?.name || 'Commander'}</h2>
                 <p className="text-muted-foreground mb-6">Ready to start your next mission?</p>
-                <Button size="lg" className="w-fit gap-2">
+                <Button size="lg" className="w-fit gap-2" onClick={onStartProject}>
                     <Plus className="w-5 h-5" /> Start New Project
                 </Button>
             </CardContent>
@@ -340,26 +436,64 @@ const QuickStats = ({ stats }: { stats: DashboardData['stats'] }) => {
     )
 }
 
-const QuickActions = () => {
+const QuickActions = ({ onNewFinding, onNewClient, onNewReport, onSearch }: { 
+    onNewFinding: () => void
+    onNewClient: () => void
+    onNewReport: () => void
+    onSearch: () => void
+}) => {
     const actions = [
-        { icon: <Plus className="w-5 h-5" />, label: 'New Finding', color: 'text-primary' },
-        { icon: <Users className="w-5 h-5" />, label: 'New Client', color: 'text-blue-500' },
-        { icon: <FileText className="w-5 h-5" />, label: 'New Report', color: 'text-purple-500' },
-        { icon: <Search className="w-5 h-5" />, label: 'Search', color: 'text-orange-500' },
+        { 
+            icon: <Shield className="w-5 h-5" />, 
+            label: 'New Finding', 
+            color: 'text-red-500',
+            onClick: onNewFinding,
+            description: 'Add vulnerability'
+        },
+        { 
+            icon: <Users className="w-5 h-5" />, 
+            label: 'New Client', 
+            color: 'text-blue-500',
+            onClick: onNewClient,
+            description: 'Add organization'
+        },
+        { 
+            icon: <FileText className="w-5 h-5" />, 
+            label: 'New Report', 
+            color: 'text-purple-500',
+            onClick: onNewReport,
+            description: 'Generate document'
+        },
+        { 
+            icon: <Search className="w-5 h-5" />, 
+            label: 'Search', 
+            color: 'text-cyan-500',
+            onClick: onSearch,
+            description: 'Find anything'
+        },
     ]
 
     return (
         <Card className="bg-card/50 backdrop-blur-sm">
-            <CardContent className="p-6 h-full">
-                <div className="grid grid-cols-2 gap-3 h-full">
+            <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Quick Actions</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+                <div className="grid grid-cols-2 gap-3">
                     {actions.map((action, i) => (
                         <Button
                             key={i}
                             variant="outline"
-                            className="h-full flex flex-col gap-2 hover:bg-accent/50 hover:border-primary/50 transition-all"
+                            onClick={action.onClick}
+                            className="h-24 flex flex-col gap-2 hover:bg-accent/50 hover:border-primary/50 transition-all group"
                         >
-                            <div className={action.color}>{action.icon}</div>
-                            <span className="text-xs font-medium">{action.label}</span>
+                            <div className={cn(action.color, "group-hover:scale-110 transition-transform")}>
+                                {action.icon}
+                            </div>
+                            <div className="text-center">
+                                <div className="text-xs font-medium">{action.label}</div>
+                                <div className="text-[10px] text-muted-foreground mt-0.5">{action.description}</div>
+                            </div>
                         </Button>
                     ))}
                 </div>
@@ -399,7 +533,7 @@ const PulseFeed = ({ activity }: { activity: DashboardData['recentActivity'] }) 
                                 </p>
                             </div>
                             <div className="text-xs text-muted-foreground whitespace-nowrap">
-                                {item.timestamp}
+                                {item.timestampText || item.timestamp}
                             </div>
                             <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100 transition-opacity">
                                 <MoreHorizontal className="w-4 h-4" />
@@ -415,7 +549,102 @@ const PulseFeed = ({ activity }: { activity: DashboardData['recentActivity'] }) 
 // --- Main Dashboard Component ---
 
 export default function Dashboard() {
+    const navigate = useNavigate()
+    const { toast } = useToast()
     const data = useDashboardStore()
+    
+    // Dialog states
+    const [showClientDialog, setShowClientDialog] = useState(false)
+    const [showFindingDialog, setShowFindingDialog] = useState(false)
+    const [showProjectDialog, setShowProjectDialog] = useState(false)
+    
+    // Load clients for project dialog
+    const [clients, setClients] = useState<any[]>([])
+    
+    useEffect(() => {
+        const storedClients = JSON.parse(localStorage.getItem('clients') || '[]')
+        setClients(storedClients)
+    }, [showProjectDialog])
+    
+    // Handlers
+    const handleNewClient = () => {
+        setShowClientDialog(true)
+    }
+    
+    const handleNewFinding = () => {
+        setShowFindingDialog(true)
+    }
+    
+    const handleNewReport = () => {
+        navigate('/report-builder')
+    }
+    
+    const handleSearch = () => {
+        // Navigate to a global search page or show search command palette
+        toast({
+            title: "Global Search",
+            description: "Search across reports, clients, and projects (coming soon)",
+        })
+        // TODO: Implement global search modal or navigate to search page
+        // For now, navigate to projects page which has search functionality
+        navigate('/projects')
+    }
+    
+    const handleStartProject = () => {
+        setShowProjectDialog(true)
+    }
+    
+    const handleClientAdded = (client: any) => {
+        // Save to localStorage
+        const existingClients = JSON.parse(localStorage.getItem('clients') || '[]')
+        const updatedClients = [...existingClients, client]
+        localStorage.setItem('clients', JSON.stringify(updatedClients))
+        
+        toast({
+            title: "Client Added",
+            description: `${client.name} has been added successfully.`,
+        })
+        
+        // Refresh clients list
+        setClients(updatedClients)
+        
+        // Trigger page refresh to update dashboard
+        window.location.reload()
+    }
+    
+    const handleFindingAdded = (finding: any) => {
+        // For findings without a project, save to a global findings list
+        const existingFindings = JSON.parse(localStorage.getItem('global_findings') || '[]')
+        const updatedFindings = [...existingFindings, {
+            ...finding,
+            createdAt: new Date().toISOString(),
+            status: 'Draft'
+        }]
+        localStorage.setItem('global_findings', JSON.stringify(updatedFindings))
+        
+        toast({
+            title: "Finding Added",
+            description: `${finding.title} has been added to your findings library.`,
+        })
+        
+        // Trigger page refresh to update stats
+        window.location.reload()
+    }
+    
+    const handleProjectAdded = (project: any) => {
+        // Save to localStorage
+        const existingProjects = JSON.parse(localStorage.getItem('projects') || '[]')
+        const updatedProjects = [...existingProjects, project]
+        localStorage.setItem('projects', JSON.stringify(updatedProjects))
+        
+        toast({
+            title: "Project Created",
+            description: `${project.name} has been created successfully.`,
+        })
+        
+        // Trigger page refresh to update dashboard
+        window.location.reload()
+    }
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
@@ -424,7 +653,7 @@ export default function Dashboard() {
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight text-foreground">Mission Control</h1>
                     <p className="text-muted-foreground mt-1">
-                        Overview of your penetration testing operations
+                        {data.stats.activeClients} active projects • {data.stats.criticalFindings} critical findings require attention
                     </p>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground bg-card/50 px-3 py-1 rounded-full border border-border/50">
@@ -436,16 +665,41 @@ export default function Dashboard() {
             {/* Bento Grid Layout */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Row 1: Focus Zone + Horizon */}
-                <HeroCard project={data.activeProject} />
+                <HeroCard project={data.activeProject} onStartProject={handleStartProject} />
                 <DeadlineList projects={data.upcomingProjects} />
 
                 {/* Row 2: Quick Stats & Actions */}
                 <QuickStats stats={data.stats} />
-                <QuickActions />
+                <QuickActions 
+                    onNewFinding={handleNewFinding}
+                    onNewClient={handleNewClient}
+                    onNewReport={handleNewReport}
+                    onSearch={handleSearch}
+                />
 
                 {/* Row 3: Pulse Feed */}
                 <PulseFeed activity={data.recentActivity} />
             </div>
+            
+            {/* Dialogs */}
+            <AddClientDialog
+                open={showClientDialog}
+                onOpenChange={setShowClientDialog}
+                onClientAdded={handleClientAdded}
+            />
+            
+            <AddFindingDialog
+                open={showFindingDialog}
+                onOpenChange={setShowFindingDialog}
+                onFindingAdded={handleFindingAdded}
+            />
+            
+            <AddProjectDialog
+                open={showProjectDialog}
+                onOpenChange={setShowProjectDialog}
+                onProjectAdded={handleProjectAdded}
+                clients={clients}
+            />
         </div>
     )
 }

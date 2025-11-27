@@ -66,14 +66,18 @@ export function AddFindingDialog({ open, onOpenChange, onFindingAdded }: AddFind
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                    <DialogTitle>Add Custom Finding</DialogTitle>
-                    <DialogDescription>
-                        Create a new vulnerability finding to add to your database.
-                    </DialogDescription>
-                </DialogHeader>
-                <form onSubmit={handleSubmit} className="space-y-4 py-4">
+            <DialogContent className="sm:max-w-[700px] max-h-[85vh] flex flex-col gap-0 p-0 overflow-hidden">
+                <div className="px-6 pt-6 pb-4 border-b">
+                    <DialogHeader>
+                        <DialogTitle className="text-xl">Add Custom Finding</DialogTitle>
+                        <DialogDescription className="mt-1.5">
+                            Create a new vulnerability finding to add to your database.
+                        </DialogDescription>
+                    </DialogHeader>
+                </div>
+                
+                <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
+                    <div className="flex-1 overflow-y-auto px-6 py-4 space-y-5 custom-scrollbar">
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <Label htmlFor="title">Title</Label>
@@ -136,40 +140,45 @@ export function AddFindingDialog({ open, onOpenChange, onFindingAdded }: AddFind
                         </div>
                     </div>
 
-                    <div className="space-y-2">
-                        <Label htmlFor="description">Description</Label>
-                        <Editor
-                            content={formData.description}
-                            onChange={(html) => setFormData({ ...formData, description: html })}
-                            placeholder="Detailed description of the vulnerability..."
-                            className="min-h-[150px]"
-                        />
+                        <div className="space-y-2">
+                            <Label htmlFor="description">Description</Label>
+                            <Editor
+                                content={formData.description}
+                                onChange={(html) => setFormData({ ...formData, description: html })}
+                                placeholder="Detailed description of the vulnerability..."
+                                className="min-h-[120px]"
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="evidence">Proof of Concept & Evidence</Label>
+                            <Editor
+                                content={formData.evidence}
+                                onChange={(html) => setFormData({ ...formData, evidence: html })}
+                                placeholder="Provide proof of concept, screenshots, code snippets..."
+                                className="min-h-[200px]"
+                            />
+                        </div>
+                        
+                        <div className="space-y-2">
+                            <Label htmlFor="remediation">Remediation</Label>
+                            <Editor
+                                content={formData.remediation}
+                                onChange={(html) => setFormData({ ...formData, remediation: html })}
+                                placeholder="Steps to fix or mitigate the issue..."
+                                className="min-h-[120px]"
+                            />
+                        </div>
                     </div>
 
-                    {/* Proof of Concept & Evidence */}
-                    <Label htmlFor="evidence">Proof of Concept & Evidence</Label>
-                    <Editor
-                        content={formData.evidence}
-                        onChange={(html) => setFormData({ ...formData, evidence: html })}
-                        placeholder="Provide proof of concept, screenshots, code snippets..."
-                        className="min-h-[400px]"
-                    />
-                    <div className="space-y-2">
-                        <Label htmlFor="remediation">Remediation</Label>
-                        <Editor
-                            content={formData.remediation}
-                            onChange={(html) => setFormData({ ...formData, remediation: html })}
-                            placeholder="Steps to fix or mitigate the issue..."
-                            className="min-h-[150px]"
-                        />
+                    <div className="sticky bottom-0 px-6 py-4 bg-background border-t mt-auto">
+                        <DialogFooter>
+                            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                                Cancel
+                            </Button>
+                            <Button type="submit">Add Finding</Button>
+                        </DialogFooter>
                     </div>
-
-                    <DialogFooter>
-                        <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                            Cancel
-                        </Button>
-                        <Button type="submit">Add Finding</Button>
-                    </DialogFooter>
                 </form>
             </DialogContent>
         </Dialog>

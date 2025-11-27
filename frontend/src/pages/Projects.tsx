@@ -645,13 +645,13 @@ export default function Projects() {
                 <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
                     <div className="flex-1 w-full sm:w-auto">
                         <div className="relative">
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
                             <input
                                 type="text"
                                 placeholder="Search projects by name, client, type, or compliance..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                                className="w-full pl-10 pr-4 py-2 border border-input rounded-lg focus:ring-2 focus:ring-ring focus:border-transparent bg-background text-foreground placeholder:text-muted-foreground"
                             />
                         </div>
                     </div>
@@ -674,14 +674,14 @@ export default function Projects() {
                             )}
                         </Button>
 
-                        <button className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center gap-2 text-gray-700 dark:text-gray-300">
-                            <Download className="w-4 h-4" />
+                        <Button variant="outline" size="sm">
+                            <Download className="w-4 h-4 mr-2" />
                             Export
-                        </button>
+                        </Button>
 
                         {/* View Mode Switcher with Tooltips */}
                         <TooltipProvider>
-                            <div className="flex items-center gap-1 border rounded-md p-1 border-gray-300 dark:border-gray-600">
+                            <div className="flex items-center gap-1 border rounded-md p-1 border-border bg-card">
                                 <Tooltip>
                                     <TooltipTrigger asChild>
                                         <Button
@@ -730,7 +730,7 @@ export default function Projects() {
 
                 {/* Active Filters Display */}
                 {activeFilters.length > 0 && (
-                    <div className="flex flex-wrap gap-2 items-center p-3 bg-muted/50 rounded-lg border border-gray-200 dark:border-gray-700">
+                    <div className="flex flex-wrap gap-2 items-center p-3 bg-muted/50 rounded-lg border border-border">
                         <span className="text-sm font-medium text-muted-foreground">Active filters:</span>
                         {activeFilters.map((filter) => (
                             <Badge
@@ -765,7 +765,7 @@ export default function Projects() {
             {isLoading && (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {[1, 2, 3, 4, 5, 6].map((i) => (
-                        <div key={i} className="p-6 border rounded-lg border-gray-200 dark:border-gray-700">
+                        <div key={i} className="p-6 border rounded-lg border-border bg-card">
                             <div className="space-y-4">
                                 <div className="flex items-start justify-between">
                                     <Skeleton className="h-6 w-48" />
@@ -992,10 +992,10 @@ function ProjectCard({
                 {/* Header */}
                 <div className="flex items-start justify-between mb-3">
                     <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-gray-900 dark:text-white truncate">
+                        <h3 className="font-semibold text-foreground truncate">
                             {project.name}
                         </h3>
-                        <p className="text-xs text-gray-600 dark:text-gray-400 flex items-center gap-1 mt-0.5">
+                        <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
                             <Building2 className="w-3 h-3" />
                             {project.clientName}
                         </p>
@@ -1044,29 +1044,29 @@ function ProjectCard({
                 {/* Progress Bar */}
                 <div className="mb-3">
                     <div className="flex items-center justify-between text-xs mb-1.5">
-                        <span className="text-gray-600 dark:text-gray-400">Progress</span>
-                        <span className="font-semibold text-gray-900 dark:text-white">{project.progress}%</span>
+                        <span className="text-muted-foreground">Progress</span>
+                        <span className="font-semibold text-foreground">{project.progress}%</span>
                     </div>
-                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
+                    <div className="w-full bg-muted rounded-full h-1.5">
                         <div
-                            className="bg-blue-600 h-1.5 rounded-full transition-all"
+                            className="bg-primary h-1.5 rounded-full transition-all"
                             style={{ width: `${project.progress}%` }}
                         />
                     </div>
                 </div>
 
                 {/* Timeline */}
-                <div className="flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-400 mb-3">
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-3">
                     <Calendar className="w-4 h-4" />
                     <span>{project.startDate.toLocaleDateString()} - {project.endDate.toLocaleDateString()}</span>
                 </div>
 
                 {/* Findings Summary - Use dynamic count */}
-                <div className="flex items-center justify-between pt-3 border-t border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-between pt-3 border-t border-border">
                     <div className="flex items-center gap-1.5 text-xs">
-                        <Target className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-                        <span className="font-semibold text-gray-900 dark:text-white">{findingsCount}</span>
-                        <span className="text-gray-600 dark:text-gray-400">Finding{findingsCount !== 1 ? 's' : ''}</span>
+                        <Target className="w-4 h-4 text-muted-foreground" />
+                        <span className="font-semibold text-foreground">{findingsCount}</span>
+                        <span className="text-muted-foreground">Finding{findingsCount !== 1 ? 's' : ''}</span>
                     </div>
                     <div className="flex gap-1">
                         {(findingsSeverity?.critical ?? project.findingsBySeverity.critical) > 0 && (
@@ -1118,7 +1118,7 @@ function TableView({
 
     const renderHeader = (label: string, key: string) => (
         <th
-            className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer group hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors select-none"
+            className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider cursor-pointer group hover:bg-muted transition-colors select-none"
             onClick={() => onSort(key)}
         >
             <div className="flex items-center">
@@ -1129,10 +1129,10 @@ function TableView({
     )
 
     return (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div className="bg-card rounded-lg shadow-sm border border-border overflow-hidden">
             <div className="overflow-x-auto">
                 <table className="w-full">
-                    <thead className="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+                    <thead className="bg-muted/50 border-b border-border">
                         <tr>
                             {renderHeader('Project', 'name')}
                             {renderHeader('Client', 'clientName')}
@@ -1146,17 +1146,17 @@ function TableView({
                             </th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                    <tbody className="divide-y divide-border">
                         {projects.map((project) => (
-                            <tr key={project.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                            <tr key={project.id} className="hover:bg-muted/50 transition-colors">
                                 <td className="px-6 py-4 whitespace-nowrap">
-                                    <div className="font-medium text-gray-900 dark:text-white">{project.name}</div>
-                                    <div className="text-xs text-gray-500 dark:text-gray-400">{project.type}</div>
+                                    <div className="font-medium text-foreground">{project.name}</div>
+                                    <div className="text-xs text-muted-foreground">{project.type}</div>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <div className="flex items-center gap-2">
                                         <span className="text-lg">{project.clientLogoUrl}</span>
-                                        <span className="text-sm text-gray-700 dark:text-gray-300">{project.clientName}</span>
+                                        <span className="text-sm text-foreground">{project.clientName}</span>
                                     </div>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
@@ -1172,33 +1172,33 @@ function TableView({
                                 <td className="px-6 py-4 whitespace-nowrap align-middle">
                                     <div className="w-24">
                                         <div className="flex items-center justify-between text-xs mb-1">
-                                            <span className="text-gray-500">{project.progress}%</span>
+                                            <span className="text-muted-foreground">{project.progress}%</span>
                                         </div>
-                                        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
+                                        <div className="w-full bg-muted rounded-full h-1.5">
                                             <div
-                                                className="bg-blue-600 h-1.5 rounded-full"
+                                                className="bg-primary h-1.5 rounded-full"
                                                 style={{ width: `${project.progress}% ` }}
                                             />
                                         </div>
                                     </div>
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                                     <div className="flex flex-col">
                                         <span>{project.startDate.toLocaleDateString()}</span>
-                                        <span className="text-xs text-gray-400">to {project.endDate.toLocaleDateString()}</span>
+                                        <span className="text-xs">to {project.endDate.toLocaleDateString()}</span>
                                     </div>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <div className="flex -space-x-2">
                                         {project.teamMembers.slice(0, 3).map((member) => (
-                                            <Avatar key={member.id} className="h-6 w-6 border-2 border-white dark:border-gray-800">
-                                                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-[10px]">
+                                            <Avatar key={member.id} className="h-6 w-6 border-2 border-background">
+                                                <AvatarFallback className="bg-gradient-to-br from-primary to-purple-600 text-white text-[10px]">
                                                     {member.name.split(' ').map(n => n[0]).join('')}
                                                 </AvatarFallback>
                                             </Avatar>
                                         ))}
                                         {project.teamMembers.length > 3 && (
-                                            <div className="h-6 w-6 rounded-full bg-gray-200 dark:bg-gray-700 border-2 border-white dark:border-gray-800 flex items-center justify-center text-[10px] font-medium">
+                                            <div className="h-6 w-6 rounded-full bg-muted border-2 border-background flex items-center justify-center text-[10px] font-medium text-foreground">
                                                 +{project.teamMembers.length - 3}
                                             </div>
                                         )}
@@ -1207,7 +1207,7 @@ function TableView({
                                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
-                                            <button className="p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+                                            <button className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors">
                                                 <MoreVertical className="w-4 h-4" />
                                             </button>
                                         </DropdownMenuTrigger>
@@ -1275,17 +1275,17 @@ function TimelineView({
     }
 
     return (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div className="bg-card rounded-lg shadow-sm border border-border overflow-hidden">
             <div className="overflow-x-auto">
                 <div className="min-w-[800px]">
                     {/* Header */}
-                    <div className="flex border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
-                        <div className="w-64 flex-shrink-0 p-4 font-medium text-sm text-gray-500 dark:text-gray-400 border-r border-gray-200 dark:border-gray-700 sticky left-0 bg-gray-50 dark:bg-gray-900 z-10">
+                    <div className="flex border-b border-border bg-muted/50">
+                        <div className="w-64 flex-shrink-0 p-4 font-medium text-sm text-muted-foreground border-r border-border sticky left-0 bg-muted/50 z-10">
                             Project
                         </div>
                         <div className="flex-1 flex">
                             {months.map(month => (
-                                <div key={month.toString()} className="flex-1 p-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 border-r border-gray-200 dark:border-gray-700 last:border-r-0">
+                                <div key={month.toString()} className="flex-1 p-2 text-center text-xs font-medium text-muted-foreground border-r border-border last:border-r-0">
                                     {format(month, 'MMM yyyy')}
                                 </div>
                             ))}
@@ -1293,7 +1293,7 @@ function TimelineView({
                     </div>
 
                     {/* Body */}
-                    <div className="divide-y divide-gray-200 dark:divide-gray-700">
+                    <div className="divide-y divide-border">
                         {projects.map(project => {
                             const startOffset = differenceInDays(project.startDate, startDate)
                             const duration = differenceInDays(project.endDate, project.startDate) + 1
@@ -1301,18 +1301,18 @@ function TimelineView({
                             const width = (duration / totalDays) * 100
 
                             return (
-                                <div key={project.id} className="flex hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors group">
-                                    <div className="w-64 flex-shrink-0 p-4 border-r border-gray-200 dark:border-gray-700 flex items-center justify-between sticky left-0 bg-white dark:bg-gray-800 z-10 group-hover:bg-gray-50 dark:group-hover:bg-gray-700/50 transition-colors">
+                                <div key={project.id} className="flex hover:bg-muted/50 transition-colors group">
+                                    <div className="w-64 flex-shrink-0 p-4 border-r border-border flex items-center justify-between sticky left-0 bg-card z-10 group-hover:bg-muted/50 transition-colors">
                                         <div className="flex items-center gap-3 min-w-0">
                                             <div className="text-xl">{project.clientLogoUrl}</div>
                                             <div className="min-w-0">
-                                                <div className="font-medium text-sm text-gray-900 dark:text-white truncate">{project.name}</div>
-                                                <div className="text-xs text-gray-500 dark:text-gray-400 truncate">{project.clientName}</div>
+                                                <div className="font-medium text-sm text-foreground truncate">{project.name}</div>
+                                                <div className="text-xs text-muted-foreground truncate">{project.clientName}</div>
                                             </div>
                                         </div>
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
-                                                <button className="p-1 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors opacity-0 group-hover:opacity-100">
+                                                <button className="p-1 text-muted-foreground hover:text-foreground hover:bg-accent rounded transition-colors opacity-0 group-hover:opacity-100">
                                                     <MoreVertical className="w-4 h-4" />
                                                 </button>
                                             </DropdownMenuTrigger>
@@ -1341,7 +1341,7 @@ function TimelineView({
                                         {/* Grid lines */}
                                         <div className="absolute inset-0 flex pointer-events-none">
                                             {months.map(month => (
-                                                <div key={month.toString()} className="flex-1 border-r border-gray-100 dark:border-gray-700/50 last:border-r-0" />
+                                                <div key={month.toString()} className="flex-1 border-r border-border/50 last:border-r-0" />
                                             ))}
                                         </div>
 

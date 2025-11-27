@@ -136,8 +136,8 @@ export default function Findings() {
             {/* Header Section */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 flex-shrink-0">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Findings Database</h1>
-                    <p className="text-gray-500 dark:text-gray-400">Browse standard vulnerabilities and build your report</p>
+                    <h1 className="text-2xl font-bold text-foreground">Findings Database</h1>
+                    <p className="text-muted-foreground">Browse standard vulnerabilities and build your report</p>
                 </div>
                 <div className="flex gap-2">
                     <input
@@ -161,7 +161,7 @@ export default function Findings() {
             {/* Search and Filter Bar */}
             <div className="flex flex-col md:flex-row gap-4 flex-shrink-0">
                 <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                     <Input
                         placeholder="Search findings..."
                         className="pl-10"
@@ -207,14 +207,14 @@ export default function Findings() {
                                         <div className="flex items-start justify-between">
                                             <div className="space-y-1">
                                                 <div className="flex items-center gap-2">
-                                                    <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white">
+                                                    <CardTitle className="text-lg font-semibold text-foreground">
                                                         {finding.title}
                                                     </CardTitle>
                                                     <Badge variant="outline" className={cn("text-xs font-medium px-2 py-0.5", getSeverityColor(finding.severity))}>
                                                         {finding.severity}
                                                     </Badge>
                                                 </div>
-                                                <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                                     <span className="font-mono">{finding.id}</span>
                                                     <span>•</span>
                                                     <span className="flex items-center gap-1">
@@ -234,14 +234,14 @@ export default function Findings() {
                                         </div>
                                     </CardHeader>
                                     <CardContent>
-                                        <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-3">
+                                        <p className="text-sm text-muted-foreground line-clamp-3">
                                             {finding.description}
                                         </p>
                                     </CardContent>
                                 </Card>
                             ))}
                             {filteredFindings.length === 0 && (
-                                <div className="text-center py-12 text-gray-500">
+                                <div className="text-center py-12 text-muted-foreground">
                                     <Shield className="w-12 h-12 mx-auto mb-4 opacity-20" />
                                     <p>No findings found matching your criteria.</p>
                                 </div>

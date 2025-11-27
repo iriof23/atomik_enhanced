@@ -28,28 +28,28 @@ export function StatCard({
         switch (variant) {
             case 'destructive':
                 return {
+                    iconBg: 'bg-red-500/10 dark:bg-red-500/20',
                     iconColor: 'text-red-500',
-                    trendColor: 'text-red-500',
-                    trendBg: 'bg-red-500/10',
+                    iconBorder: 'border-red-500/20',
                 }
             case 'warning':
                 return {
+                    iconBg: 'bg-orange-500/10 dark:bg-orange-500/20',
                     iconColor: 'text-orange-500',
-                    trendColor: 'text-orange-500',
-                    trendBg: 'bg-orange-500/10',
+                    iconBorder: 'border-orange-500/20',
                 }
             case 'success':
                 return {
+                    iconBg: 'bg-emerald-500/10 dark:bg-emerald-500/20',
                     iconColor: 'text-emerald-500',
-                    trendColor: 'text-emerald-500',
-                    trendBg: 'bg-emerald-500/10',
+                    iconBorder: 'border-emerald-500/20',
                 }
             case 'default':
             default:
                 return {
-                    iconColor: 'text-white',
-                    trendColor: 'text-zinc-400',
-                    trendBg: 'bg-zinc-800',
+                    iconBg: 'bg-muted',
+                    iconColor: 'text-primary',
+                    iconBorder: 'border-border',
                 }
         }
     }
@@ -60,9 +60,8 @@ export function StatCard({
         <Card
             className={cn(
                 "relative overflow-hidden",
-                "bg-zinc-900/50",
-                "border-zinc-800",
-                "transition-all duration-200 hover:border-zinc-700",
+                "bg-card/50 backdrop-blur-sm",
+                "transition-all duration-200 hover:border-primary/50",
                 "border"
             )}
         >
@@ -70,7 +69,7 @@ export function StatCard({
                 {/* Top Section: Icon and Trend/Badge */}
                 <div className="flex items-start justify-between mb-4">
                     {/* Icon */}
-                    <div className={cn("p-2 rounded-lg bg-zinc-900 border border-zinc-800", styles.iconColor)}>
+                    <div className={cn("p-2 rounded-lg border", styles.iconBg, styles.iconBorder, styles.iconColor)}>
                         {icon}
                     </div>
 
@@ -102,10 +101,10 @@ export function StatCard({
 
                 {/* Bottom Section: Value and Label */}
                 <div>
-                    <h3 className="text-3xl font-bold tracking-tight text-white mb-1">
+                    <h3 className="text-3xl font-bold tracking-tight text-foreground mb-1">
                         {value}
                     </h3>
-                    <p className="text-sm font-medium text-zinc-500">
+                    <p className="text-sm font-medium text-muted-foreground">
                         {label}
                     </p>
                 </div>

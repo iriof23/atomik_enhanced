@@ -57,7 +57,7 @@ export function ClientListItem({
 
     return (
         <div
-            className="group flex flex-row items-center justify-between h-20 px-4 bg-transparent hover:bg-zinc-900 border-b border-zinc-800 transition-colors cursor-pointer"
+            className="group flex flex-row items-center justify-between h-20 px-4 bg-transparent hover:bg-muted/50 border-b border-border transition-colors cursor-pointer"
             onClick={() => onView(client)}
         >
             {/* Left Section: Avatar + Identity */}
@@ -65,7 +65,7 @@ export function ClientListItem({
                 {/* Avatar - Square */}
                 <Avatar className="h-10 w-10 rounded-md flex-shrink-0">
                     <AvatarImage src={client.logoUrl} alt={client.name} />
-                    <AvatarFallback className="rounded-md bg-zinc-900 text-zinc-300 font-semibold text-xs">
+                    <AvatarFallback className="rounded-md bg-muted text-muted-foreground font-semibold text-xs">
                         {client.name.slice(0, 2).toUpperCase()}
                     </AvatarFallback>
                 </Avatar>
@@ -74,7 +74,7 @@ export function ClientListItem({
                 <div className="flex flex-col min-w-0">
                     {/* Top Line: Name + Status + Risk + Tags */}
                     <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-semibold text-sm text-white truncate">
+                        <h3 className="font-semibold text-sm text-foreground truncate">
                             {client.name}
                         </h3>
 
@@ -90,14 +90,14 @@ export function ClientListItem({
 
                         {/* Tags */}
                         {client.tags && client.tags.slice(0, 2).map(tag => (
-                            <span key={tag} className="text-[10px] px-1.5 py-0.5 rounded bg-zinc-900 text-zinc-600 border border-zinc-800">
+                            <span key={tag} className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground border border-border">
                                 #{tag}
                             </span>
                         ))}
                     </div>
 
                     {/* Bottom Line: Industry • Contact */}
-                    <div className="text-xs text-zinc-500 truncate">
+                    <div className="text-xs text-muted-foreground truncate">
                         {client.industry} • {client.primaryContact}
                     </div>
                 </div>
@@ -106,13 +106,13 @@ export function ClientListItem({
             {/* Right Section: Stats + Risk + Actions */}
             <div className="flex items-center gap-8">
                 {/* Stats Text */}
-                <div className="hidden lg:block text-sm text-zinc-400">
+                <div className="hidden lg:block text-sm text-muted-foreground">
                     {client.projectsCount} Projects • {client.reportsCount} Reports
                 </div>
 
                 {/* Findings Group - Text Only */}
                 <div className="text-right">
-                    <div className="text-xs text-zinc-500 mb-1">
+                    <div className="text-xs text-muted-foreground mb-1">
                         {client.totalFindings} Findings
                     </div>
                     <div className="text-xs">
@@ -120,7 +120,7 @@ export function ClientListItem({
                             <span className="text-red-500 font-medium">{client.findingsBySeverity.critical} Crit</span>
                         )}
                         {client.findingsBySeverity.critical > 0 && client.findingsBySeverity.high > 0 && (
-                            <span className="text-zinc-700 mx-1">•</span>
+                            <span className="text-muted-foreground mx-1">•</span>
                         )}
                         {client.findingsBySeverity.high > 0 && (
                             <span className="text-orange-500">{client.findingsBySeverity.high} High</span>
@@ -135,34 +135,34 @@ export function ClientListItem({
                 <div className="flex items-center gap-2">
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity">
                                 <MoreVertical className="h-4 w-4" />
                             </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-48 bg-zinc-950 border-zinc-800 text-zinc-300">
-                            <DropdownMenuItem className="focus:bg-zinc-900 focus:text-zinc-100" onClick={(e) => { e.stopPropagation(); onEdit(client) }}>
+                        <DropdownMenuContent align="end" className="w-48">
+                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEdit(client) }}>
                                 <Pencil className="h-4 w-4 mr-2" />
                                 Edit Client
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="focus:bg-zinc-900 focus:text-zinc-100" onClick={(e) => { e.stopPropagation(); }}>
+                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); }}>
                                 <Plus className="h-4 w-4 mr-2" />
                                 New Project
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="focus:bg-zinc-900 focus:text-zinc-100" onClick={(e) => { e.stopPropagation(); }}>
+                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); }}>
                                 <Mail className="h-4 w-4 mr-2" />
                                 Send Email
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="focus:bg-zinc-900 focus:text-zinc-100" onClick={(e) => { e.stopPropagation(); }}>
+                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); }}>
                                 <StickyNote className="h-4 w-4 mr-2" />
                                 Add Note
                             </DropdownMenuItem>
-                            <DropdownMenuSeparator className="bg-zinc-800" />
-                            <DropdownMenuItem className="focus:bg-zinc-900 focus:text-zinc-100" onClick={(e) => { e.stopPropagation(); onArchive(client) }}>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onArchive(client) }}>
                                 <Archive className="h-4 w-4 mr-2" />
                                 Archive
                             </DropdownMenuItem>
                             <DropdownMenuItem
-                                className="text-red-500 focus:text-red-400 focus:bg-red-950/20"
+                                className="text-red-500 focus:text-red-400 focus:bg-red-950/20 dark:focus:bg-red-950/20"
                                 onClick={(e) => { e.stopPropagation(); onDelete(client) }}
                             >
                                 <Trash2 className="h-4 w-4 mr-2" />
@@ -171,7 +171,7 @@ export function ClientListItem({
                         </DropdownMenuContent>
                     </DropdownMenu>
 
-                    <ChevronRight className="h-4 w-4 text-zinc-600 group-hover:text-zinc-400 transition-colors" />
+                    <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
                 </div>
             </div>
         </div>

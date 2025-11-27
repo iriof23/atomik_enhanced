@@ -56,8 +56,8 @@ export function EditFindingModal({ finding, isOpen, onClose, onUpdate, onDelete 
 
     // Generate professional Finding ID from client name + UUID (e.g., "ACM-AF3")
     const generateFindingId = (): string => {
-        if (finding?.referenceId) {
-            return finding.referenceId;
+        if (finding?.references) {
+            return finding.references;
         }
 
         // Try to get client prefix from nested structure
@@ -84,8 +84,8 @@ export function EditFindingModal({ finding, isOpen, onClose, onUpdate, onDelete 
     useEffect(() => {
         setLocalFinding(finding);
         setIsDirty(false);
-        // Initialize from finding.affectedAssetsCount if available, otherwise use array length
-        setAffectedAssetsCount(finding?.affectedAssetsCount || finding?.affectedAssets.length || 0);
+        // Initialize from finding.affectedAssets array length
+        setAffectedAssetsCount(finding?.affectedAssets?.length || 0);
     }, [finding]);
 
     // Dirty state warning on unload
@@ -108,10 +108,9 @@ export function EditFindingModal({ finding, isOpen, onClose, onUpdate, onDelete 
 
     const handleSave = () => {
         if (localFinding) {
-            // Include affectedAssetsCount and evidence in the save payload
+            // Include evidence in the save payload
             onUpdate({
                 ...localFinding,
-                affectedAssetsCount,
                 evidence: localFinding.evidence // Explicitly include evidence
             });
             setIsDirty(false);
