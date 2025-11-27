@@ -25,7 +25,7 @@ type TabType = 'findings' | 'narrative' | 'settings' | 'preview' | 'export'
 export default function ReportEditor() {
     const { projectId } = useParams()
     const navigate = useNavigate()
-    const [activeTab, setActiveTab] = useState<TabType>('findings')
+    const [activeTab, setActiveTab] = useState<TabType>('narrative')
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
     const [actualFindingsCount, setActualFindingsCount] = useState(0)
 
@@ -128,8 +128,8 @@ export default function ReportEditor() {
     }
 
     const tabs = [
-        { id: 'findings' as TabType, label: 'Findings', icon: FileText },
         { id: 'narrative' as TabType, label: 'Narrative', icon: BookOpen },
+        { id: 'findings' as TabType, label: 'Findings', icon: FileText },
         { id: 'settings' as TabType, label: 'Settings', icon: Settings },
         { id: 'preview' as TabType, label: 'Preview', icon: Eye },
         { id: 'export' as TabType, label: 'Export', icon: Download }
