@@ -33,10 +33,11 @@ model User {
   updatedAt   DateTime  @updatedAt
   lastLoginAt DateTime?
 
-  projects    Project[]
-  findings    Finding[]
-  reports     Report[]
-  aiUsageLogs AiUsageLog[]
+  projects           Project[]
+  findings           Finding[]
+  reports            Report[]
+  aiUsageLogs        AiUsageLog[]
+  projectMemberships ProjectMember[] // Project team memberships
 
   @@index([email])
   @@index([licenseKey])
@@ -153,6 +154,7 @@ model Project {
 
   findings Finding[]
   reports  Report[]
+  members  ProjectMember[] // Team members with roles
 
   @@index([clientId])
   @@index([leadId])
@@ -165,6 +167,31 @@ enum ProjectStatus {
   REVIEW
   COMPLETED
   ARCHIVED
+}
+
+enum ProjectRole {
+  LEAD
+  TESTER
+  VIEWER
+}
+
+// Project Member model (Join table for project team membership)
+model ProjectMember {
+  id        String      @id @default(uuid())
+  projectId String
+  project   Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      ProjectRole @default(TESTER)
+  assignedAt DateTime  @default(now())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([projectId, userId]) // Prevent duplicate memberships
+  @@index([projectId])
+  @@index([userId])
+  @@index([role])
 }
 
 // Finding model
