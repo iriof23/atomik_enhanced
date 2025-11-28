@@ -525,7 +525,11 @@ const QuickActions = ({ onNewFinding, onNewClient, onNewReport, onSearch }: {
     )
 }
 
-const PulseFeed = ({ activity }: { activity: DashboardData['recentActivity'] }) => {
+const PulseFeed = ({ activity, onItemClick, onViewAll }: { 
+    activity: DashboardData['recentActivity']
+    onItemClick?: (item: DashboardData['recentActivity'][0]) => void
+    onViewAll?: () => void
+}) => {
     return (
         <Card className="col-span-1 lg:col-span-3 bg-card/50 backdrop-blur-sm">
             <CardHeader className="flex flex-row items-center justify-between">
@@ -533,7 +537,12 @@ const PulseFeed = ({ activity }: { activity: DashboardData['recentActivity'] }) 
                     <Activity className="w-5 h-5 text-primary" />
                     Mission Pulse
                 </CardTitle>
-                <Button variant="ghost" size="sm" className="text-muted-foreground">
+                <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="text-muted-foreground hover:text-primary"
+                    onClick={onViewAll}
+                >
                     View All <ArrowRight className="w-4 h-4 ml-1" />
                 </Button>
             </CardHeader>
@@ -542,6 +551,7 @@ const PulseFeed = ({ activity }: { activity: DashboardData['recentActivity'] }) 
                     {activity.map((item) => (
                         <div
                             key={item.id}
+                            onClick={() => onItemClick?.(item)}
                             className="flex items-center gap-4 p-3 rounded-lg hover:bg-accent/50 transition-colors cursor-pointer group"
                         >
                             <div className="p-2 rounded-full bg-background border border-border group-hover:border-primary/50 transition-colors">
@@ -555,14 +565,34 @@ const PulseFeed = ({ activity }: { activity: DashboardData['recentActivity'] }) 
                                     {item.description}
                                 </p>
                             </div>
-                            <div className="text-xs text-muted-foreground whitespace-nowrap">
-                                {item.timestampText || item.timestamp}
+                            <div className="flex items-center gap-2">
+                                <span className="text-xs text-muted-foreground whitespace-nowrap">
+                                    {item.timestampText || item.timestamp}
+                                </span>
+                                <Badge 
+                                    variant="outline" 
+                                    className={cn(
+                                        "text-[10px] px-1.5 py-0 capitalize opacity-0 group-hover:opacity-100 transition-opacity",
+                                        item.type === 'client' && "border-emerald-500/50 text-emerald-500",
+                                        item.type === 'project' && "border-blue-500/50 text-blue-500",
+                                        item.type === 'finding' && "border-red-500/50 text-red-500",
+                                        item.type === 'report' && "border-purple-500/50 text-purple-500"
+                                    )}
+                                >
+                                    {item.type}
+                                </Badge>
                             </div>
-                            <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100 transition-opacity">
-                                <MoreHorizontal className="w-4 h-4" />
-                            </Button>
+                            <ArrowRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                         </div>
                     ))}
+                    
+                    {activity.length === 0 && (
+                        <div className="text-center py-8 text-muted-foreground">
+                            <Activity className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                            <p className="text-sm">No recent activity</p>
+                            <p className="text-xs">Start a project to see updates here</p>
+                        </div>
+                    )}
                 </div>
             </CardContent>
         </Card>
@@ -621,6 +651,50 @@ export default function Dashboard() {
     const handleResumeReport = (project: Project) => {
         // Navigate to the report editor for this project
         navigate(`/reports/${project.id}`)
+    }
+    
+    const handleActivityClick = (item: DashboardData['recentActivity'][0]) => {
+        // Extract the actual ID from the prefixed ID (e.g., "proj-123" -> "123")
+        const actualId = item.id.split('-').slice(1).join('-')
+        
+        switch (item.type) {
+            case 'client':
+                // Navigate to clients page, potentially with the client selected
+                navigate('/clients')
+                toast({
+                    title: "Client Selected",
+                    description: `Viewing ${item.description.split(' added')[0] || 'client details'}`,
+                })
+                break
+            case 'project':
+                // Navigate to the project's report editor
+                navigate(`/reports/${actualId}`)
+                break
+            case 'finding':
+                // Navigate to findings page
+                navigate('/findings')
+                toast({
+                    title: "Finding Details",
+                    description: item.title,
+                })
+                break
+            case 'report':
+                // Navigate to reports page
+                navigate('/reports')
+                break
+            default:
+                console.log('Unknown activity type:', item.type)
+        }
+    }
+    
+    const handleViewAllActivity = () => {
+        // Navigate to a dedicated activity/history page or show all in a modal
+        // For now, navigate to projects as it has the most activity
+        navigate('/projects')
+        toast({
+            title: "Activity Feed",
+            description: "Viewing all project activity",
+        })
     }
     
     const handleViewDetails = (project: Project) => {
@@ -758,7 +832,11 @@ export default function Dashboard() {
                 />
 
                 {/* Row 3: Pulse Feed */}
-                <PulseFeed activity={data.recentActivity} />
+                <PulseFeed 
+                    activity={data.recentActivity} 
+                    onItemClick={handleActivityClick}
+                    onViewAll={handleViewAllActivity}
+                />
             </div>
             
             {/* Dialogs */}
