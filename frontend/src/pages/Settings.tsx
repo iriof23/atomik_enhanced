@@ -31,7 +31,7 @@ export default function Settings() {
 
     // Create Organization Handler
     const handleCreateOrg = () => {
-        createOrganization?.()
+        createOrganization?.({ name: "My Organization" })
     }
 
     // Content Renderer
