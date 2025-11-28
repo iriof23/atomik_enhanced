@@ -311,7 +311,39 @@ export default function BillingSettings() {
                                 </div>
                                 <div>
                                     <p className="text-sm text-zinc-400">Status</p>
-                                    <p className="text-xl font-bold text-white mt-1">{subscriptionStatus}</p>
+                                    <div className="mt-1">
+                                        {subscriptionStatus === 'active' || subscriptionStatus === 'Active' ? (
+                                            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                                <span className="w-2 h-2 bg-emerald-500 rounded-full mr-2 animate-pulse" />
+                                                Active
+                                            </span>
+                                        ) : subscriptionStatus === 'past_due' ? (
+                                            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-500/10 text-red-400 border border-red-500/20">
+                                                <span className="w-2 h-2 bg-red-500 rounded-full mr-2" />
+                                                Past Due
+                                            </span>
+                                        ) : subscriptionStatus === 'canceled' ? (
+                                            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-zinc-500/10 text-zinc-400 border border-zinc-500/20">
+                                                <span className="w-2 h-2 bg-zinc-500 rounded-full mr-2" />
+                                                Canceled
+                                            </span>
+                                        ) : subscriptionStatus === 'paused' ? (
+                                            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">
+                                                <span className="w-2 h-2 bg-yellow-500 rounded-full mr-2" />
+                                                Paused
+                                            </span>
+                                        ) : subscriptionStatus === 'trialing' ? (
+                                            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                                                <span className="w-2 h-2 bg-purple-500 rounded-full mr-2 animate-pulse" />
+                                                Trial
+                                            </span>
+                                        ) : (
+                                            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                                <span className="w-2 h-2 bg-emerald-500 rounded-full mr-2 animate-pulse" />
+                                                Active
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         </div>
