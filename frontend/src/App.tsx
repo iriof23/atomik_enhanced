@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useEffect } from 'react'
-import { useAuthStore, useThemeStore } from './lib/store'
+import { useAuthStore, useThemeStore, useBillingStore } from './lib/store'
 import Login from './pages/Login'
 import SignInPage from './pages/SignInPage'
 import SignUpPage from './pages/SignUpPage'
@@ -21,6 +21,7 @@ function App() {
     const { isAuthenticated: isStoreAuthenticated, deploymentMode } = useAuthStore()
     const { isSignedIn, isLoaded } = useAuth()
     const initializeTheme = useThemeStore((state) => state.initializeTheme)
+    const isInitialized = useBillingStore((state) => state.isInitialized)
 
     // Initialize theme on mount
     useEffect(() => {
@@ -30,8 +31,24 @@ function App() {
     // Sync Clerk auth state with local store if needed, or just rely on Clerk
     const isAuthenticated = isLoaded ? isSignedIn : isStoreAuthenticated
 
+    // Show loading while Clerk is initializing
     if (!isLoaded) {
-        return <div className="flex items-center justify-center min-h-screen">Loading...</div>
+        return (
+            <div className="h-screen w-full bg-zinc-950 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-emerald-500"></div>
+                <span className="ml-3 text-zinc-400 font-medium">Loading...</span>
+            </div>
+        )
+    }
+
+    // Show loading while user data is being synced (prevents flash of default content)
+    if (isSignedIn && !isInitialized) {
+        return (
+            <div className="h-screen w-full bg-zinc-950 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-emerald-500"></div>
+                <span className="ml-3 text-zinc-400 font-medium">Syncing profile...</span>
+            </div>
+        )
     }
 
     return (
