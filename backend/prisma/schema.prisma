@@ -57,9 +57,9 @@ model Organization {
   plan Plan   @default(FREE)
 
   // Paddle Billing Integration
-  paddleCustomerId   String? @unique // Paddle's customer ID
-  subscriptionId     String? @unique // Active Paddle subscription ID
-  subscriptionStatus String? // active, past_due, canceled, paused
+  paddleCustomerId   String?             @unique // Paddle's customer ID
+  subscriptionId     String?             @unique // Active Paddle subscription ID
+  subscriptionStatus SubscriptionStatus? // Subscription state from Paddle
   updateUrl          String? // Paddle URL to update payment method
   cancelUrl          String? // Paddle URL to cancel subscription
 
@@ -81,9 +81,16 @@ model Organization {
 
 enum Plan {
   FREE
-  FREELANCER
-  TEAM
-  ENTERPRISE
+  PRO
+  AGENCY
+}
+
+enum SubscriptionStatus {
+  active
+  past_due
+  trialing
+  paused
+  canceled
 }
 
 // License validation table (Desktop mode)
@@ -96,7 +103,7 @@ model License {
   expiresAt       DateTime?
   isActive        Boolean   @default(true)
 
-  plan        Plan @default(FREELANCER)
+  plan        Plan @default(FREE)
   maxProjects Int  @default(10)
 
   createdAt DateTime @default(now())
