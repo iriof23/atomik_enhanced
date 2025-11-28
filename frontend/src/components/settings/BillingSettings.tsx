@@ -6,7 +6,8 @@ import { Badge } from '@/components/ui/badge'
 import { Check, Zap, CreditCard, Shield, Crown, Sparkles, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { billingApi, api } from '@/lib/api'
-import { useUser, useAuth } from '@clerk/clerk-react'
+import { useUser, useAuth, useOrganization } from '@clerk/clerk-react'
+import { useToast } from '@/components/ui/use-toast'
 
 interface BillingInfo {
     plan: 'FREE' | 'PRO' | 'AGENCY'
@@ -23,6 +24,8 @@ export default function BillingSettings() {
     const [fetchingBilling, setFetchingBilling] = useState(true)
     const { user } = useUser()
     const { getToken } = useAuth()
+    const { organization } = useOrganization()
+    const { toast } = useToast()
 
     // Fetch billing info from backend
     useEffect(() => {
@@ -117,23 +120,47 @@ export default function BillingSettings() {
         }
     }, [])
 
+    // Determine tier from price ID
+    const getTierFromPriceId = (priceId: string): 'PRO' | 'AGENCY' | 'credits' => {
+        if (priceId === 'pri_01kb5djzbeyaev2k64nzkayfbx') return 'PRO'
+        if (priceId === 'pri_01kb5dphg35030j7e9crrcqxd8') return 'AGENCY'
+        return 'credits' // Credit packs
+    }
+
     // Open Paddle Checkout
     const openCheckout = (priceId: string) => {
         if (!paddle) {
             console.error('Paddle not initialized')
+            toast({
+                title: 'Error',
+                description: 'Payment system not ready. Please try again.',
+                variant: 'destructive'
+            })
             return
         }
         
         setLoading(priceId)
         
-        // Build checkout options with user info
+        // Determine the tier/type for this purchase
+        const tier = getTierFromPriceId(priceId)
+        const isCredits = tier === 'credits'
+        
+        // Build checkout options with user info and custom data
         const checkoutOptions: any = {
             items: [{ priceId, quantity: 1 }],
             settings: {
                 successUrl: `${window.location.origin}/settings?checkout=success`,
-                displayMode: 'overlay', // or 'inline'
+                displayMode: 'overlay',
                 theme: 'dark',
                 locale: 'en'
+            },
+            // Pass custom data for webhook processing
+            customData: {
+                type: isCredits ? 'credits' : 'subscription',
+                tier: tier,
+                userId: user?.id || null,
+                orgId: organization?.id || null,
+                userEmail: user?.primaryEmailAddress?.emailAddress || null,
             }
         }
         
