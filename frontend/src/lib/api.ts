@@ -105,3 +105,24 @@ export const reportsApi = {
         return response.data
     },
 }
+
+// Billing API
+export const billingApi = {
+    // Get current user's billing info (plan, credits, subscription status)
+    getBillingInfo: async () => {
+        const response = await api.get('/billing/info')
+        return response.data
+    },
+
+    // Get organization's billing info
+    getOrganizationBilling: async (organizationId: string) => {
+        const response = await api.get(`/billing/organization/${organizationId}`)
+        return response.data
+    },
+
+    // Update subscription after Paddle webhook
+    updateSubscription: async (data: any) => {
+        const response = await api.post('/billing/subscription/update', data)
+        return response.data
+    },
+}

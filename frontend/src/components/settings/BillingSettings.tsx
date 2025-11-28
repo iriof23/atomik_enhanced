@@ -3,17 +3,57 @@ import { initializePaddle, Paddle } from '@paddle/paddle-js'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Check, Zap, CreditCard, Shield, Crown, Sparkles } from 'lucide-react'
+import { Check, Zap, CreditCard, Shield, Crown, Sparkles, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { billingApi } from '@/lib/api'
+import { useUser } from '@clerk/clerk-react'
+
+interface BillingInfo {
+    plan: 'FREE' | 'PRO' | 'AGENCY'
+    creditBalance: number
+    subscriptionStatus: string | null
+    subscriptionId: string | null
+    paddleCustomerId: string | null
+}
 
 export default function BillingSettings() {
     const [paddle, setPaddle] = useState<Paddle | null>(null)
     const [loading, setLoading] = useState<string | null>(null)
+    const [billingInfo, setBillingInfo] = useState<BillingInfo | null>(null)
+    const [fetchingBilling, setFetchingBilling] = useState(true)
+    const { user } = useUser()
 
-    // Mock current plan data (replace with actual API call)
-    const currentPlan = 'FREE'
-    const currentCredits = 10
-    const subscriptionStatus = 'Active'
+    // Fetch billing info from backend
+    useEffect(() => {
+        const fetchBillingInfo = async () => {
+            try {
+                setFetchingBilling(true)
+                const data = await billingApi.getBillingInfo()
+                setBillingInfo(data)
+            } catch (error) {
+                console.error('Failed to fetch billing info:', error)
+                // Fallback to default values
+                setBillingInfo({
+                    plan: 'FREE',
+                    creditBalance: 5,
+                    subscriptionStatus: null,
+                    subscriptionId: null,
+                    paddleCustomerId: null
+                })
+            } finally {
+                setFetchingBilling(false)
+            }
+        }
+
+        if (user) {
+            fetchBillingInfo()
+        }
+    }, [user])
+
+    // Current plan data from API
+    const currentPlan = billingInfo?.plan || 'FREE'
+    const currentCredits = billingInfo?.creditBalance || 0
+    const subscriptionStatus = billingInfo?.subscriptionStatus || 'Active'
 
     // Initialize Paddle
     useEffect(() => {
@@ -22,12 +62,18 @@ export default function BillingSettings() {
             initializePaddle({
                 environment: 'sandbox',
                 token,
-                eventCallback: (data) => {
+                eventCallback: async (data) => {
                     console.log('Paddle Event:', data)
                     // Handle successful checkout
                     if (data.name === 'checkout.completed') {
                         console.log('Checkout completed!', data)
-                        // TODO: Refresh user data from API
+                        // Refresh billing data from API
+                        try {
+                            const updatedBilling = await billingApi.getBillingInfo()
+                            setBillingInfo(updatedBilling)
+                        } catch (error) {
+                            console.error('Failed to refresh billing info:', error)
+                        }
                     }
                 }
             }).then((paddleInstance) => {
@@ -81,7 +127,7 @@ export default function BillingSettings() {
             name: 'Pro',
             subtitle: 'For Freelancers',
             price: 49,
-            priceId: '[REPLACE_WITH_PRO_PRICE_ID]',
+            priceId: 'pri_01kb5djzbeyaev2k64nzkayfbx',
             credits: 500,
             features: [
                 'Unlimited Projects',
@@ -98,7 +144,7 @@ export default function BillingSettings() {
             name: 'Agency',
             subtitle: 'For Teams',
             price: 149,
-            priceId: '[REPLACE_WITH_AGENCY_PRICE_ID]',
+            priceId: 'pri_01kb5dphg35030j7e9crrcqxd8',
             credits: 2000,
             features: [
                 'Everything in Pro',
@@ -120,7 +166,7 @@ export default function BillingSettings() {
             name: 'Starter Pack',
             price: 15,
             credits: 500,
-            priceId: '[REPLACE_WITH_CREDIT_15_ID]',
+            priceId: 'pri_01kb5dww39pc83mag1x8dtrzyw',
             description: 'Perfect for occasional use'
         },
         {
@@ -128,11 +174,23 @@ export default function BillingSettings() {
             name: 'Pro Pack',
             price: 50,
             credits: 2000,
-            priceId: '[REPLACE_WITH_CREDIT_50_ID]',
+            priceId: 'pri_01kb5e09hfcpdpzxvxmzg3c179',
             description: 'Best value for power users',
             popular: true
         }
     ]
+
+    // Show loading state while fetching billing info
+    if (fetchingBilling) {
+        return (
+            <div className="flex items-center justify-center min-h-[400px]">
+                <div className="text-center">
+                    <Loader2 className="w-8 h-8 text-emerald-500 animate-spin mx-auto mb-4" />
+                    <p className="text-zinc-400">Loading billing information...</p>
+                </div>
+            </div>
+        )
+    }
 
     return (
         <div className="space-y-8">
