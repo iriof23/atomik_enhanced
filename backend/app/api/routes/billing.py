@@ -8,7 +8,7 @@ import hashlib
 import json
 from datetime import datetime
 
-from app.core.security import get_current_user
+from app.api.routes.auth import get_current_user
 from app.db import get_db
 
 router = APIRouter(prefix="/billing", tags=["billing"])
