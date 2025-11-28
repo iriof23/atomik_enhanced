@@ -1,16 +1,24 @@
 import { Outlet, Link, useNavigate } from 'react-router-dom'
+import { useAuthStore } from '../lib/store'
 import { useUser, useClerk } from '@clerk/clerk-react'
 import logo from '../assets/logo.png'
 import { Toaster } from '@/components/ui/toaster'
 
 export default function Layout() {
     const navigate = useNavigate()
-    const { user } = useUser()
+    const { user: storeUser, logout: storeLogout } = useAuthStore()
+    const { user: clerkUser, isLoaded } = useUser()
     const { signOut } = useClerk()
 
-    const handleLogout = () => {
-        signOut(() => navigate('/sign-in'))
+    const handleLogout = async () => {
+        await signOut()
+        storeLogout()
+        navigate('/sign-in')
     }
+
+    // Use Clerk user if available, otherwise fallback to store user (for legacy/dev support if needed)
+    const displayName = clerkUser ? clerkUser.fullName : storeUser?.name
+    const displayEmail = clerkUser ? clerkUser.primaryEmailAddress?.emailAddress : storeUser?.email
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -65,19 +73,12 @@ export default function Layout() {
 
                     <div className="p-3 border-t border-gray-200 dark:border-gray-700">
                         <div className="space-y-2">
-                            <div className="text-center flex flex-col items-center">
-                                {user?.imageUrl && (
-                                    <img 
-                                        src={user.imageUrl} 
-                                        alt="Profile" 
-                                        className="w-8 h-8 rounded-full mb-2 border border-gray-200 dark:border-gray-600"
-                                    />
-                                )}
-                                <p className="text-sm font-medium text-gray-900 dark:text-white truncate w-full" title={user?.fullName || ''}>
-                                    {user?.fullName}
+                            <div className="text-center">
+                                <p className="text-sm font-medium text-gray-900 dark:text-white truncate" title={displayName || ''}>
+                                    {displayName}
                                 </p>
-                                <p className="text-xs text-gray-500 dark:text-gray-400 truncate w-full" title={user?.primaryEmailAddress?.emailAddress || ''}>
-                                    {user?.primaryEmailAddress?.emailAddress}
+                                <p className="text-xs text-gray-500 dark:text-gray-400 truncate" title={displayEmail || ''}>
+                                    {displayEmail}
                                 </p>
                             </div>
                             <button

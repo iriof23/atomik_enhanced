@@ -59,6 +59,8 @@ if (!PUBLISHABLE_KEY) {
         <React.StrictMode>
             <ClerkProvider 
                 publishableKey={PUBLISHABLE_KEY}
+                signInUrl="/sign-in"
+                signUpUrl="/sign-up"
                 appearance={{
                     baseTheme: dark,
                     variables: { colorPrimary: '#10b981', colorBackground: '#09090b' }

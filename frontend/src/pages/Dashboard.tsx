@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/lib/store'
+import { useUser } from '@clerk/clerk-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -269,12 +270,14 @@ const HeroCard = ({
     onResumeReport?: (project: Project) => void
     onViewDetails?: (project: Project) => void
 }) => {
-    const { user } = useAuthStore()
+    const { user: storeUser } = useAuthStore()
+    const { user: clerkUser } = useUser()
+    const displayName = clerkUser?.firstName || storeUser?.name || 'Commander'
 
     if (!project) return (
         <Card className="col-span-1 lg:col-span-2 relative overflow-hidden bg-gradient-to-br from-primary/5 via-card to-card border-primary/20">
             <CardContent className="p-8 flex flex-col justify-center h-full min-h-[300px]">
-                <h2 className="text-3xl font-bold tracking-tight mb-2">Welcome back, {user?.name || 'Commander'}</h2>
+                <h2 className="text-3xl font-bold tracking-tight mb-2">Welcome back, {displayName}</h2>
                 <p className="text-muted-foreground mb-6">Ready to start your next mission?</p>
                 <Button size="lg" className="w-fit gap-2" onClick={onStartProject}>
                     <Plus className="w-5 h-5" /> Start New Project
