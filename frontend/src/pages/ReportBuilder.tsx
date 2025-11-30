@@ -304,19 +304,15 @@ export default function ReportBuilder() {
     })
 
     const handleOpenReport = async (projectId: string) => {
-        // Check if this project already has a report
-        const existingReports = projectReports[projectId]
-        
-        if (existingReports && existingReports.length > 0) {
-            // Navigate to the most recent report
-            const latestReport = existingReports.sort((a, b) => 
-                new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
-            )[0]
-            navigate(`/reports/${latestReport.id}`)
+        // For mock projects (short IDs), show info message
+        if (projectId.length < 10) {
+            toast({
+                title: 'Info',
+                description: 'Please create a real project first to start a report.',
+            })
             return
         }
         
-        // No existing report - create one
         setIsOpeningEditor(true)
         try {
             const token = await getToken()
@@ -326,6 +322,7 @@ export default function ReportBuilder() {
                     description: 'Authentication required',
                     variant: 'destructive',
                 })
+                setIsOpeningEditor(false)
                 return
             }
             
@@ -336,16 +333,26 @@ export default function ReportBuilder() {
                     description: 'Project not found',
                     variant: 'destructive',
                 })
+                setIsOpeningEditor(false)
                 return
             }
             
-            // For mock projects, just navigate (it won't work but user gets feedback)
-            if (projectId.length < 10) {
-                toast({
-                    title: 'Info',
-                    description: 'Please create a real project first to start a report.',
+            // First, check if a report already exists for this project by querying the API
+            try {
+                const reportsResponse = await api.get(`/v1/reports/?project_id=${projectId}`, {
+                    headers: { Authorization: `Bearer ${token}` }
                 })
-                return
+                
+                if (reportsResponse.data && reportsResponse.data.length > 0) {
+                    // Report exists - navigate to the most recent one
+                    const sortedReports = reportsResponse.data.sort((a: any, b: any) => 
+                        new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+                    )
+                    navigate(`/reports/${sortedReports[0].id}`)
+                    return
+                }
+            } catch (e) {
+                console.log('No existing reports found, will create new one')
             }
             
             // Create a new report for this project
