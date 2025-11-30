@@ -249,6 +249,174 @@ async def get_report(
     )
 
 
+class ReportUpdate(BaseModel):
+    """Request model for updating a report"""
+    title: Optional[str] = Field(None, max_length=500)
+    html_content: Optional[str] = Field(None, description="HTML content of the report narrative")
+    status: Optional[str] = Field(None, description="Report status")
+    
+    @field_validator('status')
+    @classmethod
+    def validate_status(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return v
+        allowed_statuses = ["DRAFT", "GENERATING", "COMPLETED", "FAILED"]
+        if v.upper() not in allowed_statuses:
+            raise ValueError(f"status must be one of: {', '.join(allowed_statuses)}")
+        return v.upper()
+
+
+class ReportDetailResponse(BaseModel):
+    """Detailed report response including content"""
+    id: str
+    title: str
+    report_type: str
+    status: str
+    html_content: Optional[str]
+    project_id: str
+    project_name: str
+    client_name: str
+    generated_by_id: str
+    generated_by_name: str
+    template_id: Optional[str]
+    pdf_path: Optional[str]
+    created_at: str
+    updated_at: str
+    generated_at: Optional[str]
+
+
+@router.get("/{report_id}/detail", response_model=ReportDetailResponse)
+async def get_report_detail(
+    report_id: str,
+    current_user = Depends(get_current_user)
+):
+    """Get detailed report including content"""
+    report = await db.report.find_unique(
+        where={"id": report_id},
+        include={
+            "project": {"include": {"client": True}},
+            "generatedBy": True,
+        }
+    )
+    
+    if not report:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Report not found"
+        )
+    
+    # Check organization access
+    if current_user.organizationId and report.project.client.organizationId != current_user.organizationId:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied"
+        )
+    
+    return ReportDetailResponse(
+        id=report.id,
+        title=report.title,
+        report_type=report.reportType,
+        status=report.status,
+        html_content=report.htmlContent,
+        project_id=report.projectId,
+        project_name=report.project.name,
+        client_name=report.project.client.name,
+        generated_by_id=report.generatedById,
+        generated_by_name=report.generatedBy.name,
+        template_id=report.templateId,
+        pdf_path=report.pdfPath,
+        created_at=report.createdAt.isoformat(),
+        updated_at=report.updatedAt.isoformat(),
+        generated_at=report.generatedAt.isoformat() if report.generatedAt else None,
+    )
+
+
+@router.put("/{report_id}", response_model=ReportResponse)
+async def update_report(
+    report_id: str,
+    report_data: ReportUpdate,
+    current_user = Depends(get_current_user)
+):
+    """Update a report"""
+    logger.info(f"Updating report {report_id} by user {current_user.id}")
+    
+    report = await db.report.find_unique(
+        where={"id": report_id},
+        include={
+            "project": {"include": {"client": True}},
+            "generatedBy": True,
+        }
+    )
+    
+    if not report:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Report not found"
+        )
+    
+    # Check organization access
+    if current_user.organizationId and report.project.client.organizationId != current_user.organizationId:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied"
+        )
+    
+    # Build update data
+    update_data = {}
+    if report_data.title is not None:
+        update_data["title"] = report_data.title.strip()
+    if report_data.html_content is not None:
+        update_data["htmlContent"] = report_data.html_content
+    if report_data.status is not None:
+        update_data["status"] = report_data.status
+    
+    if not update_data:
+        # Nothing to update, return current report
+        return ReportResponse(
+            id=report.id,
+            title=report.title,
+            report_type=report.reportType,
+            status=report.status,
+            project_id=report.projectId,
+            project_name=report.project.name,
+            generated_by_id=report.generatedById,
+            generated_by_name=report.generatedBy.name,
+            template_id=report.templateId,
+            pdf_path=report.pdfPath,
+            created_at=report.createdAt.isoformat(),
+            updated_at=report.updatedAt.isoformat(),
+            generated_at=report.generatedAt.isoformat() if report.generatedAt else None,
+        )
+    
+    # Update the report
+    updated_report = await db.report.update(
+        where={"id": report_id},
+        data=update_data,
+        include={
+            "project": True,
+            "generatedBy": True,
+        }
+    )
+    
+    logger.info(f"Successfully updated report {report_id}")
+    
+    return ReportResponse(
+        id=updated_report.id,
+        title=updated_report.title,
+        report_type=updated_report.reportType,
+        status=updated_report.status,
+        project_id=updated_report.projectId,
+        project_name=updated_report.project.name,
+        generated_by_id=updated_report.generatedById,
+        generated_by_name=updated_report.generatedBy.name,
+        template_id=updated_report.templateId,
+        pdf_path=updated_report.pdfPath,
+        created_at=updated_report.createdAt.isoformat(),
+        updated_at=updated_report.updatedAt.isoformat(),
+        generated_at=updated_report.generatedAt.isoformat() if updated_report.generatedAt else None,
+    )
+
+
 @router.post("/{report_id}/generate")
 async def generate_report(
     report_id: str,

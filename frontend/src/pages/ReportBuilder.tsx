@@ -107,6 +107,15 @@ const mockProjects = [
     }
 ]
 
+interface Report {
+    id: string
+    title: string
+    project_id: string
+    status: string
+    created_at: string
+    updated_at: string
+}
+
 export default function ReportBuilder() {
     const navigate = useNavigate()
     const { getToken } = useAuth()
@@ -118,6 +127,37 @@ export default function ReportBuilder() {
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
     const [isDeleting, setIsDeleting] = useState(false)
     const [projects, setProjects] = useState(mockProjects)
+    const [projectReports, setProjectReports] = useState<Record<string, Report[]>>({})
+    const [isOpeningEditor, setIsOpeningEditor] = useState(false)
+
+    // Fetch reports for all projects
+    useEffect(() => {
+        const fetchReports = async () => {
+            try {
+                const token = await getToken()
+                if (!token) return
+                
+                const response = await api.get('/v1/reports/', {
+                    headers: { Authorization: `Bearer ${token}` }
+                })
+                
+                // Group reports by project ID
+                const reportsByProject: Record<string, Report[]> = {}
+                response.data.forEach((report: Report) => {
+                    if (!reportsByProject[report.project_id]) {
+                        reportsByProject[report.project_id] = []
+                    }
+                    reportsByProject[report.project_id].push(report)
+                })
+                
+                setProjectReports(reportsByProject)
+            } catch (error) {
+                console.error('Failed to fetch reports:', error)
+            }
+        }
+        
+        fetchReports()
+    }, [getToken])
 
     // Delete project handler
     const handleDeleteProject = async () => {
@@ -201,8 +241,72 @@ export default function ReportBuilder() {
         return matchesSearch && matchesStatus
     })
 
-    const handleOpenReport = (projectId: string) => {
-        navigate(`/reports/${projectId}`)
+    const handleOpenReport = async (projectId: string) => {
+        // Check if this project already has a report
+        const existingReports = projectReports[projectId]
+        
+        if (existingReports && existingReports.length > 0) {
+            // Navigate to the most recent report
+            const latestReport = existingReports.sort((a, b) => 
+                new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+            )[0]
+            navigate(`/reports/${latestReport.id}`)
+            return
+        }
+        
+        // No existing report - create one
+        setIsOpeningEditor(true)
+        try {
+            const token = await getToken()
+            if (!token) {
+                toast({
+                    title: 'Error',
+                    description: 'Authentication required',
+                    variant: 'destructive',
+                })
+                return
+            }
+            
+            const project = projects.find(p => p.id === projectId)
+            if (!project) {
+                toast({
+                    title: 'Error',
+                    description: 'Project not found',
+                    variant: 'destructive',
+                })
+                return
+            }
+            
+            // For mock projects, just navigate (it won't work but user gets feedback)
+            if (projectId.length < 10) {
+                toast({
+                    title: 'Info',
+                    description: 'Please create a real project first to start a report.',
+                })
+                return
+            }
+            
+            // Create a new report for this project
+            const response = await api.post('/v1/reports/', {
+                project_id: projectId,
+                title: `${project.name} Report`,
+                report_type: 'PENTEST'
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
+            })
+            
+            // Navigate to the new report
+            navigate(`/reports/${response.data.id}`)
+        } catch (error: any) {
+            console.error('Failed to create report:', error)
+            toast({
+                title: 'Error',
+                description: error.response?.data?.detail || 'Failed to create report',
+                variant: 'destructive',
+            })
+        } finally {
+            setIsOpeningEditor(false)
+        }
     }
 
     const getStatusColor = (status: string) => {
@@ -240,7 +344,33 @@ export default function ReportBuilder() {
                         Select a project to manage findings and generate reports
                     </p>
                 </div>
-                <NewReportDialog />
+                <NewReportDialog onReportCreated={() => {
+                    // Refresh reports list after a new report is created
+                    const refreshReports = async () => {
+                        try {
+                            const token = await getToken()
+                            if (!token) return
+                            
+                            const response = await api.get('/v1/reports/', {
+                                headers: { Authorization: `Bearer ${token}` }
+                            })
+                            
+                            // Group reports by project ID
+                            const reportsByProject: Record<string, Report[]> = {}
+                            response.data.forEach((report: Report) => {
+                                if (!reportsByProject[report.project_id]) {
+                                    reportsByProject[report.project_id] = []
+                                }
+                                reportsByProject[report.project_id].push(report)
+                            })
+                            
+                            setProjectReports(reportsByProject)
+                        } catch (error) {
+                            console.error('Failed to refresh reports:', error)
+                        }
+                    }
+                    refreshReports()
+                }} />
             </div>
 
             {/* Two-Column Layout - Premium Split View */}
@@ -355,10 +485,20 @@ export default function ReportBuilder() {
                                     </Button>
                                     <Button 
                                         onClick={() => handleOpenReport(selectedProject.id)}
+                                        disabled={isOpeningEditor}
                                         className="bg-emerald-600 hover:bg-emerald-500 text-white font-medium h-9 px-4 shadow-lg shadow-emerald-900/20"
                                     >
-                                        Open Editor
-                                        <ArrowUpRight className="w-4 h-4 ml-2" />
+                                        {isOpeningEditor ? (
+                                            <>
+                                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                                Opening...
+                                            </>
+                                        ) : (
+                                            <>
+                                                Open Editor
+                                                <ArrowUpRight className="w-4 h-4 ml-2" />
+                                            </>
+                                        )}
                                     </Button>
                                 </div>
                             </div>

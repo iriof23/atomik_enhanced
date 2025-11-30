@@ -1,38 +1,120 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { ChevronLeft, FileText, BookOpen, Settings, Eye, Download, Save, ChevronDown, ChevronRight } from 'lucide-react'
+import { useAuth } from '@clerk/clerk-react'
+import { ChevronLeft, FileText, BookOpen, Settings, Eye, Download, Save, ChevronDown, ChevronRight, Loader2 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import FindingsTabContent from '@/components/FindingsTabContent'
 import { Editor } from '@/components/editor/Editor'
+import { api } from '@/lib/api'
+import { useToast } from '@/components/ui/use-toast'
 
-// Mock project data - will be replaced with actual data
-const mockProject = {
-    id: '1',
-    name: 'Q4 2024 External Pentest',
-    clientName: 'Acme Corporation',
+// Default/fallback project data
+const defaultProject = {
+    id: '',
+    name: 'Loading...',
+    clientName: 'Loading...',
     clientLogoUrl: '🏢',
     status: 'In Progress' as const,
-    progress: 65,
-    findingsCount: 23,
-    findingsBySeverity: { critical: 3, high: 7, medium: 10, low: 3 }
+    progress: 0,
+    findingsCount: 0,
+    findingsBySeverity: { critical: 0, high: 0, medium: 0, low: 0 }
 }
 
 type TabType = 'findings' | 'narrative' | 'settings' | 'preview' | 'export'
 
+interface ReportData {
+    id: string
+    title: string
+    report_type: string
+    status: string
+    html_content: string | null
+    project_id: string
+    project_name: string
+    client_name: string
+    generated_by_id: string
+    generated_by_name: string
+    created_at: string
+    updated_at: string
+}
+
 export default function ReportEditor() {
-    const { projectId } = useParams()
+    const { projectId: reportId } = useParams() // This is actually the report ID
     const navigate = useNavigate()
+    const { getToken } = useAuth()
+    const { toast } = useToast()
+    
     const [activeTab, setActiveTab] = useState<TabType>('narrative')
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
     const [actualFindingsCount, setActualFindingsCount] = useState(0)
+    const [isLoading, setIsLoading] = useState(true)
+    const [isSaving, setIsSaving] = useState(false)
+    const [reportData, setReportData] = useState<ReportData | null>(null)
+    const [narrativeContent, setNarrativeContent] = useState<string>('')
+    
+    // Project data derived from report
+    const project = reportData ? {
+        id: reportData.project_id,
+        name: reportData.project_name,
+        clientName: reportData.client_name,
+        clientLogoUrl: '🏢',
+        status: reportData.status as 'In Progress' | 'Planning' | 'Completed',
+        progress: 0,
+        findingsCount: 0,
+        findingsBySeverity: { critical: 0, high: 0, medium: 0, low: 0 }
+    } : defaultProject
+    
+    // Fetch report data on mount
+    useEffect(() => {
+        const fetchReport = async () => {
+            if (!reportId) return
+            
+            setIsLoading(true)
+            try {
+                const token = await getToken()
+                if (!token) {
+                    toast({
+                        title: 'Error',
+                        description: 'Authentication required',
+                        variant: 'destructive',
+                    })
+                    navigate('/reports')
+                    return
+                }
+
+                const response = await api.get(`/v1/reports/${reportId}/detail`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                })
+                
+                console.log('Report data:', response.data)
+                setReportData(response.data)
+                setNarrativeContent(response.data.html_content || '')
+            } catch (error: any) {
+                console.error('Failed to fetch report:', error)
+                toast({
+                    title: 'Error',
+                    description: error.response?.data?.detail || 'Failed to load report',
+                    variant: 'destructive',
+                })
+                // Navigate back if report not found
+                if (error.response?.status === 404) {
+                    navigate('/reports')
+                }
+            } finally {
+                setIsLoading(false)
+            }
+        }
+        
+        fetchReport()
+    }, [reportId, getToken, navigate, toast])
 
     // Function to calculate findings count from localStorage
     const calculateFindingsCount = () => {
-        if (projectId) {
-            const storageKey = `findings_${projectId}`
+        const projectIdForFindings = reportData?.project_id || reportId
+        if (projectIdForFindings) {
+            const storageKey = `findings_${projectIdForFindings}`
             const stored = localStorage.getItem(storageKey)
             if (stored) {
                 try {
@@ -53,9 +135,11 @@ export default function ReportEditor() {
     useEffect(() => {
         calculateFindingsCount()
         
+        const projectIdForFindings = reportData?.project_id || reportId
+        
         // Listen for storage changes to update count when findings are added/removed
         const handleStorageChange = (e: StorageEvent) => {
-            if (e.key === `findings_${projectId}`) {
+            if (e.key === `findings_${projectIdForFindings}`) {
                 calculateFindingsCount()
             }
         }
@@ -71,7 +155,7 @@ export default function ReportEditor() {
             window.removeEventListener('storage', handleStorageChange)
             clearInterval(interval)
         }
-    }, [projectId])
+    }, [reportId, reportData?.project_id])
     
     // Handler to update findings count when FindingsTabContent updates
     const handleFindingsUpdate = () => {
@@ -83,19 +167,30 @@ export default function ReportEditor() {
         if (activeTab === 'findings') {
             calculateFindingsCount()
         }
-    }, [activeTab, projectId])
+    }, [activeTab, reportId, reportData?.project_id])
 
-    // Report settings state
+    // Report settings state - initialize from report data when available
     const [reportSettings, setReportSettings] = useState({
         clientLogo: '',
-        clientName: mockProject.clientName,
-        reportTitle: `${mockProject.name} - Security Assessment Report`,
+        clientName: '',
+        reportTitle: '',
         primaryColor: '#10b981', // emerald-500
         headerText: 'Confidential',
         footerText: 'Prepared by Atomik Security',
         preparedBy: 'Security Team',
         confidentialityLevel: 'Confidential' as const
     })
+    
+    // Update report settings when report data loads
+    useEffect(() => {
+        if (reportData) {
+            setReportSettings(prev => ({
+                ...prev,
+                clientName: reportData.client_name,
+                reportTitle: `${reportData.project_name} - Security Assessment Report`,
+            }))
+        }
+    }, [reportData])
 
     const handleBack = () => {
         if (hasUnsavedChanges) {
@@ -107,11 +202,43 @@ export default function ReportEditor() {
         }
     }
 
-    const handleSave = () => {
-        // TODO: Save to backend
-        console.log('Saving report...', reportSettings)
-        setHasUnsavedChanges(false)
-        // Show success notification
+    const handleSave = async () => {
+        if (!reportId || !reportData) return
+        
+        setIsSaving(true)
+        try {
+            const token = await getToken()
+            if (!token) {
+                toast({
+                    title: 'Error',
+                    description: 'Authentication required',
+                    variant: 'destructive',
+                })
+                return
+            }
+
+            await api.put(`/v1/reports/${reportId}`, {
+                title: reportSettings.reportTitle || reportData.title,
+                html_content: narrativeContent,
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
+            })
+            
+            setHasUnsavedChanges(false)
+            toast({
+                title: 'Saved',
+                description: 'Report saved successfully.',
+            })
+        } catch (error: any) {
+            console.error('Failed to save report:', error)
+            toast({
+                title: 'Error',
+                description: error.response?.data?.detail || 'Failed to save report',
+                variant: 'destructive',
+            })
+        } finally {
+            setIsSaving(false)
+        }
     }
 
     const getStatusColor = (status: string) => {
@@ -135,6 +262,18 @@ export default function ReportEditor() {
         { id: 'export' as TabType, label: 'Export', icon: Download }
     ]
 
+    // Show loading state
+    if (isLoading) {
+        return (
+            <div className="h-[calc(100vh-100px)] flex items-center justify-center">
+                <div className="text-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-emerald-500 mx-auto" />
+                    <p className="text-zinc-400 mt-2">Loading report...</p>
+                </div>
+            </div>
+        )
+    }
+
     return (
         <div className="space-y-4">
             {/* Breadcrumb Navigation */}
@@ -151,10 +290,10 @@ export default function ReportEditor() {
                     to="/clients"
                     className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
                 >
-                    {mockProject.clientName}
+                    {project.clientName}
                 </Link>
                 <span className="text-gray-400">/</span>
-                <span className="text-gray-900 dark:text-white font-medium">{mockProject.name}</span>
+                <span className="text-gray-900 dark:text-white font-medium">{project.name}</span>
             </div>
 
             {/* Project Header */}
@@ -162,19 +301,19 @@ export default function ReportEditor() {
                 <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                            <div className="text-3xl">{mockProject.clientLogoUrl}</div>
+                            <div className="text-3xl">{project.clientLogoUrl}</div>
                             <div>
                                 <h1 className="text-xl font-bold text-gray-900 dark:text-white">
-                                    {mockProject.name}
+                                    {project.name}
                                 </h1>
                                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                                    {mockProject.clientName}
+                                    {project.clientName}
                                 </p>
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
-                            <Badge className={getStatusColor(mockProject.status)}>
-                                {mockProject.status}
+                            <Badge className={getStatusColor(project.status)}>
+                                {project.status}
                             </Badge>
                             <div className="text-right">
                                 <p className="text-sm font-semibold text-gray-900 dark:text-white">
@@ -184,9 +323,18 @@ export default function ReportEditor() {
                                     {actualFindingsCount > 0 ? Math.round((actualFindingsCount / 10) * 100) : 0}% Complete
                                 </p>
                             </div>
-                            <Button onClick={handleSave} size="sm" disabled={!hasUnsavedChanges}>
-                                <Save className="w-4 h-4 mr-2" />
-                                {hasUnsavedChanges ? 'Save Changes' : 'Saved'}
+                            <Button onClick={handleSave} size="sm" disabled={!hasUnsavedChanges || isSaving}>
+                                {isSaving ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                        Saving...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Save className="w-4 h-4 mr-2" />
+                                        {hasUnsavedChanges ? 'Save Changes' : 'Saved'}
+                                    </>
+                                )}
                             </Button>
                         </div>
                     </div>
@@ -232,7 +380,13 @@ export default function ReportEditor() {
                     />
                 )}
                 {activeTab === 'narrative' && (
-                    <NarrativeTab onUpdate={() => setHasUnsavedChanges(true)} />
+                    <NarrativeTab 
+                        initialContent={narrativeContent}
+                        onUpdate={(content) => {
+                            setNarrativeContent(content)
+                            setHasUnsavedChanges(true)
+                        }} 
+                    />
                 )}
                 {activeTab === 'settings' && (
                     <SettingsTab
@@ -244,7 +398,7 @@ export default function ReportEditor() {
                     />
                 )}
                 {activeTab === 'preview' && (
-                    <PreviewTab settings={reportSettings} project={mockProject} />
+                    <PreviewTab settings={reportSettings} project={project} />
                 )}
                 {activeTab === 'export' && (
                     <ExportTab />
@@ -260,13 +414,47 @@ function FindingsTab({ onUpdate }: { onUpdate: () => void }) {
 }
 
 // Narrative Tab Component
-// Narrative Tab Component
-function NarrativeTab({ onUpdate }: { onUpdate: () => void }) {
-    const [narrative, setNarrative] = useState({
-        executiveSummary: '',
-        methodology: '',
-        scope: ''
-    })
+interface NarrativeContent {
+    executiveSummary: string
+    methodology: string
+    scope: string
+}
+
+function NarrativeTab({ 
+    initialContent, 
+    onUpdate 
+}: { 
+    initialContent: string
+    onUpdate: (content: string) => void 
+}) {
+    // Parse initial content from JSON string (from database)
+    const parseInitialContent = (): NarrativeContent => {
+        if (!initialContent) {
+            return { executiveSummary: '', methodology: '', scope: '' }
+        }
+        try {
+            const parsed = JSON.parse(initialContent)
+            return {
+                executiveSummary: parsed.executiveSummary || parsed.executive_summary || '',
+                methodology: parsed.methodology || '',
+                scope: parsed.narrative_scope || parsed.scope || ''
+            }
+        } catch {
+            // If not valid JSON, treat as raw HTML for executive summary
+            return { executiveSummary: initialContent, methodology: '', scope: '' }
+        }
+    }
+    
+    const [narrative, setNarrative] = useState<NarrativeContent>(parseInitialContent)
+    
+    // Serialize narrative to JSON string whenever it changes
+    const serializeNarrative = (updated: NarrativeContent): string => {
+        return JSON.stringify({
+            executiveSummary: updated.executiveSummary,
+            methodology: updated.methodology,
+            narrative_scope: updated.scope
+        })
+    }
 
     return (
         <div className="space-y-4">
@@ -274,8 +462,9 @@ function NarrativeTab({ onUpdate }: { onUpdate: () => void }) {
                 <Editor
                     content={narrative.executiveSummary}
                     onChange={(html) => {
-                        setNarrative({ ...narrative, executiveSummary: html })
-                        onUpdate()
+                        const updated = { ...narrative, executiveSummary: html }
+                        setNarrative(updated)
+                        onUpdate(serializeNarrative(updated))
                     }}
                     placeholder="Provide a high-level overview of the assessment..."
                 />
@@ -285,8 +474,9 @@ function NarrativeTab({ onUpdate }: { onUpdate: () => void }) {
                 <Editor
                     content={narrative.methodology}
                     onChange={(html) => {
-                        setNarrative({ ...narrative, methodology: html })
-                        onUpdate()
+                        const updated = { ...narrative, methodology: html }
+                        setNarrative(updated)
+                        onUpdate(serializeNarrative(updated))
                     }}
                     placeholder="Describe the testing methodology used..."
                 />
@@ -296,8 +486,9 @@ function NarrativeTab({ onUpdate }: { onUpdate: () => void }) {
                 <Editor
                     content={narrative.scope}
                     onChange={(html) => {
-                        setNarrative({ ...narrative, scope: html })
-                        onUpdate()
+                        const updated = { ...narrative, scope: html }
+                        setNarrative(updated)
+                        onUpdate(serializeNarrative(updated))
                     }}
                     placeholder="Define the scope of the assessment..."
                 />
