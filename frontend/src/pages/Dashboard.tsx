@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/lib/store'
 import { useUser, useAuth } from '@clerk/clerk-react'
@@ -12,6 +12,7 @@ import { AddProjectDialog } from '@/components/AddProjectDialog'
 import ProjectDetailModal from '@/components/ProjectDetailModal'
 import { useToast } from '@/components/ui/use-toast'
 import { api } from '@/lib/api'
+import { getActivityLog, type ActivityEvent, logClientCreated, logProjectCreated, logFindingAdded } from '@/lib/activityLog'
 import {
     Play,
     ArrowRight,
@@ -28,7 +29,8 @@ import {
     MoreHorizontal,
     Activity,
     Shield,
-    Loader2
+    Loader2,
+    ScrollText
 } from 'lucide-react'
 
 // --- Helper Functions ---
@@ -612,72 +614,114 @@ const QuickActions = ({ onNewFinding, onNewClient, onNewReport, onSearch }: {
     )
 }
 
-const PulseFeed = ({ activity, onItemClick, onViewAll }: { 
-    activity: DashboardData['recentActivity']
-    onItemClick?: (item: DashboardData['recentActivity'][0]) => void
-    onViewAll?: () => void
-}) => {
+// Activity Log Feed Component (View-only log of all actions)
+const PulseFeed = () => {
+    const [activityLog, setActivityLog] = useState<ActivityEvent[]>([])
+    
+    // Load activity log on mount and refresh periodically
+    useEffect(() => {
+        const loadLog = () => {
+            setActivityLog(getActivityLog())
+        }
+        
+        loadLog()
+        
+        // Refresh every 2 seconds to show new entries
+        const interval = setInterval(loadLog, 2000)
+        return () => clearInterval(interval)
+    }, [])
+    
+    // Get icon based on event type and action
+    const getEventIcon = (event: ActivityEvent) => {
+        switch (event.type) {
+            case 'client':
+                return <Users className="w-4 h-4 text-emerald-400" />
+            case 'project':
+                if (event.action === 'completed') return <CheckCircle2 className="w-4 h-4 text-green-400" />
+                if (event.action === 'deleted') return <AlertTriangle className="w-4 h-4 text-red-400" />
+                return <Activity className="w-4 h-4 text-blue-400" />
+            case 'finding':
+                const severity = event.metadata?.severity
+                if (severity === 'Critical') return <AlertTriangle className="w-4 h-4 text-red-400" />
+                if (severity === 'High') return <AlertTriangle className="w-4 h-4 text-orange-400" />
+                return <Shield className="w-4 h-4 text-yellow-400" />
+            case 'report':
+                if (event.action === 'generated') return <FileText className="w-4 h-4 text-green-400" />
+                return <FileText className="w-4 h-4 text-purple-400" />
+            default:
+                return <Activity className="w-4 h-4 text-gray-400" />
+        }
+    }
+    
+    // Get type badge color
+    const getTypeBadgeClass = (type: string) => {
+        switch (type) {
+            case 'client': return "border-emerald-500/50 text-emerald-500 bg-emerald-500/5"
+            case 'project': return "border-blue-500/50 text-blue-500 bg-blue-500/5"
+            case 'finding': return "border-orange-500/50 text-orange-500 bg-orange-500/5"
+            case 'report': return "border-purple-500/50 text-purple-500 bg-purple-500/5"
+            default: return "border-gray-500/50 text-gray-500 bg-gray-500/5"
+        }
+    }
+    
     return (
         <Card className="col-span-1 lg:col-span-3 bg-card/50 backdrop-blur-sm">
-            <CardHeader className="flex flex-row items-center justify-between">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="flex items-center gap-2">
-                    <Activity className="w-5 h-5 text-primary" />
+                    <ScrollText className="w-5 h-5 text-primary" />
                     Mission Pulse
                 </CardTitle>
-                <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="text-muted-foreground hover:text-primary"
-                    onClick={onViewAll}
-                >
-                    View All <ArrowRight className="w-4 h-4 ml-1" />
-                </Button>
+                <Badge variant="outline" className="text-xs text-muted-foreground">
+                    Activity Log
+                </Badge>
             </CardHeader>
             <CardContent>
-                <div className="space-y-1">
-                    {activity.map((item) => (
+                <div className="space-y-0.5 max-h-[320px] overflow-y-auto scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
+                    {activityLog.slice(0, 10).map((event) => (
                         <div
-                            key={item.id}
-                            onClick={() => onItemClick?.(item)}
-                            className="flex items-center gap-4 p-3 rounded-lg hover:bg-accent/50 transition-colors cursor-pointer group"
+                            key={event.id}
+                            className="flex items-center gap-3 p-2.5 rounded-md hover:bg-accent/30 transition-colors border-l-2 border-transparent hover:border-primary/30"
                         >
-                            <div className="p-2 rounded-full bg-background border border-border group-hover:border-primary/50 transition-colors">
-                                {item.icon}
+                            {/* Icon */}
+                            <div className="p-1.5 rounded-full bg-background/80 border border-border/50 flex-shrink-0">
+                                {getEventIcon(event)}
                             </div>
+                            
+                            {/* Content */}
                             <div className="flex-1 min-w-0">
-                                <h4 className="font-medium text-sm truncate group-hover:text-primary transition-colors">
-                                    {item.title}
-                                </h4>
-                                <p className="text-muted-foreground text-xs truncate">
-                                    {item.description}
+                                <div className="flex items-center gap-2">
+                                    <h4 className="font-medium text-sm truncate">
+                                        {event.title}
+                                    </h4>
+                                    <Badge 
+                                        variant="outline" 
+                                        className={cn(
+                                            "text-[9px] px-1.5 py-0 capitalize flex-shrink-0",
+                                            getTypeBadgeClass(event.type)
+                                        )}
+                                    >
+                                        {event.type}
+                                    </Badge>
+                                </div>
+                                <p className="text-muted-foreground text-xs truncate mt-0.5">
+                                    {event.description}
                                 </p>
                             </div>
-                            <div className="flex items-center gap-2">
-                                <span className="text-xs text-muted-foreground whitespace-nowrap">
-                                    {item.timestampText || item.timestamp}
+                            
+                            {/* Timestamp */}
+                            <div className="text-right flex-shrink-0">
+                                <span className="text-[10px] text-muted-foreground whitespace-nowrap font-mono">
+                                    {formatRelativeTime(new Date(event.timestamp))}
                                 </span>
-                                <Badge 
-                                    variant="outline" 
-                                    className={cn(
-                                        "text-[10px] px-1.5 py-0 capitalize opacity-0 group-hover:opacity-100 transition-opacity",
-                                        item.type === 'client' && "border-emerald-500/50 text-emerald-500",
-                                        item.type === 'project' && "border-blue-500/50 text-blue-500",
-                                        item.type === 'finding' && "border-red-500/50 text-red-500",
-                                        item.type === 'report' && "border-purple-500/50 text-purple-500"
-                                    )}
-                                >
-                                    {item.type}
-                                </Badge>
                             </div>
-                            <ArrowRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                         </div>
                     ))}
                     
-                    {activity.length === 0 && (
-                        <div className="text-center py-8 text-muted-foreground">
-                            <Activity className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                            <p className="text-sm">No recent activity</p>
-                            <p className="text-xs">Start a project to see updates here</p>
+                    {activityLog.length === 0 && (
+                        <div className="text-center py-10 text-muted-foreground">
+                            <ScrollText className="w-10 h-10 mx-auto mb-3 opacity-30" />
+                            <p className="text-sm font-medium">No activity yet</p>
+                            <p className="text-xs mt-1">Actions will appear here as you work</p>
                         </div>
                     )}
                 </div>
@@ -816,50 +860,6 @@ export default function Dashboard() {
         }
     }
     
-    const handleActivityClick = (item: DashboardData['recentActivity'][0]) => {
-        // Extract the actual ID from the prefixed ID (e.g., "proj-123" -> "123")
-        const actualId = item.id.split('-').slice(1).join('-')
-        
-        switch (item.type) {
-            case 'client':
-                // Navigate to clients page, potentially with the client selected
-                navigate('/clients')
-                toast({
-                    title: "Client Selected",
-                    description: `Viewing ${item.description.split(' added')[0] || 'client details'}`,
-                })
-                break
-            case 'project':
-                // Navigate to the project's report editor
-                navigate(`/reports/${actualId}`)
-                break
-            case 'finding':
-                // Navigate to findings page
-                navigate('/findings')
-                toast({
-                    title: "Finding Details",
-                    description: item.title,
-                })
-                break
-            case 'report':
-                // Navigate to reports page
-                navigate('/reports')
-                break
-            default:
-                console.log('Unknown activity type:', item.type)
-        }
-    }
-    
-    const handleViewAllActivity = () => {
-        // Navigate to a dedicated activity/history page or show all in a modal
-        // For now, navigate to projects as it has the most activity
-        navigate('/projects')
-        toast({
-            title: "Activity Feed",
-            description: "Viewing all project activity",
-        })
-    }
-    
     const handleViewDetails = (project: Project) => {
         // Load full project data from localStorage
         const storedProjects = JSON.parse(localStorage.getItem('projects') || '[]')
@@ -910,6 +910,9 @@ export default function Dashboard() {
         // Update clients list in state
         setClients(prev => [...prev, client])
         
+        // Log activity
+        logClientCreated(client.name, client.id)
+        
         // Show success toast
         toast({
             title: "✓ Client Created Successfully",
@@ -927,6 +930,9 @@ export default function Dashboard() {
         }]
         localStorage.setItem('global_findings', JSON.stringify(updatedFindings))
         
+        // Log activity
+        logFindingAdded(finding.title, finding.severity || 'Medium', 'Library', finding.id)
+        
         // Show success toast
         toast({
             title: "✓ Finding Added Successfully",
@@ -935,6 +941,9 @@ export default function Dashboard() {
     }
     
     const handleProjectAdded = (project: any) => {
+        // Log activity
+        logProjectCreated(project.name, project.client_name || project.clientName || 'Unknown', project.id)
+        
         // Show success toast
         toast({
             title: "✓ Project Created Successfully",
@@ -993,12 +1002,8 @@ export default function Dashboard() {
                     onSearch={handleSearch}
                 />
 
-                {/* Row 3: Pulse Feed */}
-                <PulseFeed 
-                    activity={data.recentActivity} 
-                    onItemClick={handleActivityClick}
-                    onViewAll={handleViewAllActivity}
-                />
+                {/* Row 3: Activity Log (Mission Pulse) */}
+                <PulseFeed />
             </div>
             
             {/* Dialogs */}

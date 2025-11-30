@@ -12,6 +12,7 @@ import { Editor } from '@/components/editor/Editor'
 import { EditFindingModal } from './EditFindingModal'
 import { StatCard } from './StatCard'
 import { useParams } from 'react-router-dom'
+import { logFindingAdded, logFindingUpdated, logFindingDeleted } from '@/lib/activityLog'
 
 interface ProjectFinding {
     id: string
@@ -93,6 +94,11 @@ export default function FindingsTabContent({ projectId: propProjectId, onUpdate 
         const updatedFindings = [...findings, newFinding]
         setFindings(updatedFindings)
         setShowAddModal(false)
+        
+        // Log activity
+        const projectName = localStorage.getItem(`project_name_${projectId}`) || 'Project'
+        logFindingAdded(vuln.title, vuln.severity === 'Info' ? 'Informational' : vuln.severity, projectName, newFinding.id)
+        
         onUpdate()
     }
 
@@ -118,6 +124,12 @@ export default function FindingsTabContent({ projectId: propProjectId, onUpdate 
         setShowAddModal(false)
         setSelectedVulns([])
         setSearchQuery('')
+
+        // Log activity for each finding
+        const projectName = localStorage.getItem(`project_name_${projectId}`) || 'Project'
+        newFindings.forEach(finding => {
+            logFindingAdded(finding.title, finding.severity, projectName, finding.id)
+        })
 
         // Show success notification
         const notification = document.createElement('div')
@@ -162,6 +174,10 @@ export default function FindingsTabContent({ projectId: propProjectId, onUpdate 
     // Delete finding
     const handleDeleteFinding = () => {
         if (!selectedFinding) return
+
+        // Log activity
+        const projectName = localStorage.getItem(`project_name_${projectId}`) || 'Project'
+        logFindingDeleted(selectedFinding.title, projectName, selectedFinding.id)
 
         const updatedFindings = findings.filter(f => f.id !== selectedFinding.id)
         setFindings(updatedFindings)

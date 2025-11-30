@@ -33,6 +33,7 @@ import { StatCard } from '@/components/StatCard'
 import { ClientListItem } from '@/components/ClientListItem'
 import { FilterDialog, FilterConfig, ActiveFilters } from '@/components/FilterDialog'
 import { api } from '@/lib/api'
+import { logClientCreated, logClientUpdated, logClientDeleted } from '@/lib/activityLog'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -353,9 +354,13 @@ export default function Clients() {
       const updatedClients = clients.map(c => c.id === editingClient.id ? { ...c, ...mappedClient } : c)
       setClients(updatedClients)
       setEditingClient(null)
+      // Log update activity
+      logClientUpdated(newClient.name, newClient.id)
     } else {
       // Add new client at the beginning of the list
       setClients([mappedClient, ...clients])
+      // Log create activity
+      logClientCreated(newClient.name, newClient.id)
     }
     
     toast({
@@ -380,8 +385,16 @@ export default function Clients() {
 
   const confirmDeleteClient = () => {
     if (deletingClient) {
+      // Log delete activity
+      logClientDeleted(deletingClient.name, deletingClient.id)
+      
       setClients(clients.filter(c => c.id !== deletingClient.id))
       setDeletingClient(null)
+      
+      toast({
+        title: "Client Deleted",
+        description: `${deletingClient.name} has been removed.`,
+      })
     }
   }
 

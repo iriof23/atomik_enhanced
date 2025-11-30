@@ -28,6 +28,7 @@ import {
 import { api } from '@/lib/api'
 import { useToast } from '@/components/ui/use-toast'
 import { mockProjects } from '@/pages/Projects'
+import { logReportCreated } from '@/lib/activityLog'
 
 interface DialogProject {
     id: string
@@ -256,6 +257,9 @@ export function NewReportDialog({ children, onReportCreated }: NewReportDialogPr
             const response = await api.post('/v1/reports/', payload, {
                 headers: { Authorization: `Bearer ${token}` }
             })
+
+            // Log activity
+            logReportCreated(`${selectedProject.name} Report`, selectedProject.name, response.data.id)
 
             toast({
                 title: "Report initialized",

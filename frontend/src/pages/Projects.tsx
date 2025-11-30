@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@clerk/clerk-react'
 import { api } from '@/lib/api'
+import { logProjectCreated, logProjectUpdated, logProjectDeleted, logProjectCompleted } from '@/lib/activityLog'
 import {
     FolderKanban,
     CheckCircle2,
@@ -555,10 +556,14 @@ export default function Projects() {
             setProjects(updatedProjects)
             localStorage.setItem('projects', JSON.stringify(updatedProjects))
             setEditingProject(null)
+            // Log update activity
+            logProjectUpdated(newProject.name || editingProject.name, editingProject.id)
         } else {
             // Add new project
             const updatedProjects = [...projects, newProject]
             setProjects(updatedProjects)
+            // Log create activity
+            logProjectCreated(newProject.name, newProject.client_name || newProject.clientName || 'Unknown', newProject.id)
             localStorage.setItem('projects', JSON.stringify(updatedProjects))
         }
     }
@@ -583,6 +588,9 @@ export default function Projects() {
 
     const confirmDeleteProject = () => {
         if (deletingProject) {
+            // Log delete activity
+            logProjectDeleted(deletingProject.name, deletingProject.id)
+            
             const updatedProjects = projects.filter(p => p.id !== deletingProject.id)
             setProjects(updatedProjects)
             localStorage.setItem('projects', JSON.stringify(updatedProjects))

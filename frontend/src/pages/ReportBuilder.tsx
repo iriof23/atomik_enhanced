@@ -21,6 +21,7 @@ import { cn } from '@/lib/utils'
 import { NewReportDialog } from '@/components/reports/NewReportDialog'
 import { api } from '@/lib/api'
 import { useToast } from '@/components/ui/use-toast'
+import { logProjectDeleted, logReportDeleted } from '@/lib/activityLog'
 
 // Mock data - will be replaced with actual data from Projects
 const mockProjects = [
@@ -245,6 +246,9 @@ export default function ReportBuilder() {
                     headers: { Authorization: `Bearer ${token}` }
                 })
             }
+
+            // Log activity
+            logProjectDeleted(selectedProject.name, selectedProject.id)
 
             // Remove from local state
             const updatedProjects = projects.filter(p => p.id !== selectedProject.id)
