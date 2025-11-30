@@ -1,13 +1,26 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search, FileText, AlertTriangle, Clock, Calendar, Target, ChevronRight, Download, Share2, Edit, ArrowUpRight, Users, Shield } from 'lucide-react'
+import { useAuth } from '@clerk/clerk-react'
+import { Search, FileText, AlertTriangle, Clock, Calendar, Target, ChevronRight, Download, Share2, Edit, ArrowUpRight, Users, Shield, Trash2, Loader2 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { cn } from '@/lib/utils'
 import { NewReportDialog } from '@/components/reports/NewReportDialog'
+import { api } from '@/lib/api'
+import { useToast } from '@/components/ui/use-toast'
 
 // Mock data - will be replaced with actual data from Projects
 const mockProjects = [
@@ -96,15 +109,69 @@ const mockProjects = [
 
 export default function ReportBuilder() {
     const navigate = useNavigate()
+    const { getToken } = useAuth()
+    const { toast } = useToast()
     const [searchQuery, setSearchQuery] = useState('')
     const [selectedProject, setSelectedProject] = useState(mockProjects[0])
     const [statusFilter, setStatusFilter] = useState<'all' | 'In Progress' | 'Planning'>('all')
     const [projectFindingsData, setProjectFindingsData] = useState<Record<string, { count: number, severity: { critical: number, high: number, medium: number, low: number } }>>({})
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+    const [isDeleting, setIsDeleting] = useState(false)
+    const [projects, setProjects] = useState(mockProjects)
+
+    // Delete project handler
+    const handleDeleteProject = async () => {
+        if (!selectedProject) return
+        
+        setIsDeleting(true)
+        try {
+            const token = await getToken()
+            if (!token) {
+                toast({
+                    title: 'Error',
+                    description: 'Authentication required',
+                    variant: 'destructive',
+                })
+                return
+            }
+
+            // Check if it's a real project (UUID) or mock project
+            const isRealProject = selectedProject.id.length > 10 // UUIDs are longer than mock IDs
+            
+            if (isRealProject) {
+                await api.delete(`/projects/${selectedProject.id}`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                })
+            }
+
+            // Remove from local state
+            const updatedProjects = projects.filter(p => p.id !== selectedProject.id)
+            setProjects(updatedProjects)
+            
+            // Select the first remaining project or null
+            setSelectedProject(updatedProjects[0] || null)
+            
+            toast({
+                title: 'Project Deleted',
+                description: `${selectedProject.name} has been deleted successfully.`,
+            })
+        } catch (error: any) {
+            console.error('Failed to delete project:', error)
+            toast({
+                title: 'Error',
+                description: error.response?.data?.detail || 'Failed to delete project',
+                variant: 'destructive',
+            })
+        } finally {
+            setIsDeleting(false)
+            setDeleteDialogOpen(false)
+        }
+    }
 
     // Load actual findings counts from localStorage
     useEffect(() => {
         const data: Record<string, any> = {}
-        mockProjects.forEach(project => {
+        projects.forEach(project => {
             const storageKey = `findings_${project.id}`
             const stored = localStorage.getItem(storageKey)
             if (stored) {
@@ -124,10 +191,10 @@ export default function ReportBuilder() {
             }
         })
         setProjectFindingsData(data)
-    }, [])
+    }, [projects])
 
     // Filter projects
-    const filteredProjects = mockProjects.filter(project => {
+    const filteredProjects = projects.filter(project => {
         const matchesSearch = project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             project.clientName.toLowerCase().includes(searchQuery.toLowerCase())
         const matchesStatus = statusFilter === 'all' || project.status === statusFilter
@@ -278,6 +345,15 @@ export default function ReportBuilder() {
                                         Export
                                     </Button>
                                     <Button 
+                                        variant="ghost" 
+                                        size="sm" 
+                                        className="text-red-400 hover:text-red-300 hover:bg-red-950/50 h-9"
+                                        onClick={() => setDeleteDialogOpen(true)}
+                                    >
+                                        <Trash2 className="w-4 h-4 mr-2" />
+                                        Delete
+                                    </Button>
+                                    <Button 
                                         onClick={() => handleOpenReport(selectedProject.id)}
                                         className="bg-emerald-600 hover:bg-emerald-500 text-white font-medium h-9 px-4 shadow-lg shadow-emerald-900/20"
                                     >
@@ -418,6 +494,45 @@ export default function ReportBuilder() {
                     )}
                 </div>
             </div>
+
+            {/* Delete Confirmation Dialog */}
+            <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+                <AlertDialogContent className="bg-zinc-900 border-zinc-800">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className="text-zinc-100">Delete Project</AlertDialogTitle>
+                        <AlertDialogDescription className="text-zinc-400">
+                            Are you sure you want to delete <span className="font-semibold text-zinc-300">"{selectedProject?.name}"</span>? 
+                            This will permanently delete the project and all associated reports and findings. 
+                            This action cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel 
+                            className="bg-zinc-800 border-zinc-700 text-zinc-300 hover:bg-zinc-700 hover:text-zinc-100"
+                            disabled={isDeleting}
+                        >
+                            Cancel
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleDeleteProject}
+                            disabled={isDeleting}
+                            className="bg-red-600 hover:bg-red-500 text-white"
+                        >
+                            {isDeleting ? (
+                                <>
+                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                    Deleting...
+                                </>
+                            ) : (
+                                <>
+                                    <Trash2 className="w-4 h-4 mr-2" />
+                                    Delete Project
+                                </>
+                            )}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     )
 }
