@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
+import { useAuth } from '@clerk/clerk-react'
 import {
   Users,
   FileText,
@@ -21,7 +22,8 @@ import {
   X,
   ArrowUpDown,
   ArrowUp,
-  ArrowDown
+  ArrowDown,
+  Loader2
 } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
@@ -29,6 +31,7 @@ import { Button } from '@/components/ui/button'
 import { StatCard } from '@/components/StatCard'
 import { ClientListItem } from '@/components/ClientListItem'
 import { FilterDialog, FilterConfig, ActiveFilters } from '@/components/FilterDialog'
+import { api } from '@/lib/api'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -226,43 +229,78 @@ export default function Clients() {
     return (saved === 'card' || saved === 'table' || saved === 'list') ? saved : 'table'
   })
   const [searchQuery, setSearchQuery] = useState('')
-  const [isLoading] = useState(false)
   const [activeFilters, setActiveFilters] = useState<Array<{ id: string, label: string, value: string }>>([])
   const { toast } = useToast()
   const [filterDialogOpen, setFilterDialogOpen] = useState(false)
   const [appliedFilters, setAppliedFilters] = useState<ActiveFilters>({})
-  const [clients, setClients] = useState<Client[]>(() => {
-    const saved = localStorage.getItem('clients')
-    if (saved) {
-      try {
-        return JSON.parse(saved).map((c: any) => ({
-          ...c,
-          lastActivityDate: new Date(c.lastActivityDate),
-          createdAt: new Date(c.createdAt),
-          updatedAt: new Date(c.updatedAt)
-        }))
-      } catch (e) {
-        console.error('Failed to parse clients', e)
-        return mockClients
-      }
-    }
-    return mockClients
-  })
+  const [clients, setClients] = useState<Client[]>(mockClients)
+  const [isLoading, setIsLoading] = useState(true)
   const [addClientDialogOpen, setAddClientDialogOpen] = useState(false)
   const [editingClient, setEditingClient] = useState<Client | null>(null)
   const [viewingClient, setViewingClient] = useState<Client | null>(null)
   const [deletingClient, setDeletingClient] = useState<Client | null>(null)
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null)
+  const { getToken } = useAuth()
+
+  // Fetch clients from API
+  useEffect(() => {
+    const fetchClients = async () => {
+      setIsLoading(true)
+      try {
+        const token = await getToken()
+        if (token) {
+          const response = await api.get('/clients', {
+            headers: { Authorization: `Bearer ${token}` }
+          })
+          
+          if (response.data && Array.isArray(response.data) && response.data.length > 0) {
+            // Map API data to Client interface
+            const apiClients: Client[] = response.data.map((c: any) => ({
+              id: c.id,
+              name: c.name,
+              logoUrl: '🏢',
+              status: c.status || 'Active',
+              riskLevel: c.risk_level || 'Medium',
+              industry: c.industry || 'Technology',
+              companySize: c.company_size || 'SMB',
+              primaryContact: c.contact_name || '',
+              email: c.contact_email || '',
+              phone: c.contact_phone || '',
+              lastActivity: 'Recently',
+              lastActivityDate: c.updated_at ? new Date(c.updated_at) : new Date(),
+              tags: [],
+              projectsCount: 0,
+              reportsCount: 0,
+              totalFindings: 0,
+              findingsBySeverity: { critical: 0, high: 0, medium: 0, low: 0 },
+              createdAt: c.created_at ? new Date(c.created_at) : new Date(),
+              updatedAt: c.updated_at ? new Date(c.updated_at) : new Date(),
+            }))
+            
+            // Combine API clients with mock clients (API first)
+            setClients([...apiClients, ...mockClients])
+          } else {
+            // No API clients, use mock data
+            setClients(mockClients)
+          }
+        } else {
+          setClients(mockClients)
+        }
+      } catch (error) {
+        console.error('Failed to fetch clients:', error)
+        setClients(mockClients)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    
+    fetchClients()
+  }, [getToken])
 
   // Save view mode to localStorage
   useEffect(() => {
     localStorage.setItem('atomik_client_view_mode', viewMode)
   }, [viewMode])
-
-  // Save clients to localStorage whenever they change
-  useEffect(() => {
-    localStorage.setItem('clients', JSON.stringify(clients))
-  }, [clients])
 
   // Filter management functions
   const removeFilter = (id: string) => {
@@ -284,16 +322,43 @@ export default function Clients() {
   }
 
   const handleClientAdded = (newClient: any) => {
+    // Map the API response to our Client interface
+    const mappedClient: Client = {
+      id: newClient.id,
+      name: newClient.name,
+      logoUrl: '🏢',
+      status: newClient.status || 'Active',
+      riskLevel: newClient.risk_level || 'Medium',
+      industry: newClient.industry || 'Technology',
+      companySize: newClient.company_size || 'SMB',
+      primaryContact: newClient.contact_name || '',
+      email: newClient.contact_email || '',
+      phone: newClient.contact_phone || '',
+      lastActivity: 'Just now',
+      lastActivityDate: new Date(),
+      tags: [],
+      projectsCount: 0,
+      reportsCount: 0,
+      totalFindings: 0,
+      findingsBySeverity: { critical: 0, high: 0, medium: 0, low: 0 },
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }
+    
     if (editingClient) {
       // Update existing client
-      const updatedClients = clients.map(c => c.id === editingClient.id ? { ...c, ...newClient } : c)
+      const updatedClients = clients.map(c => c.id === editingClient.id ? { ...c, ...mappedClient } : c)
       setClients(updatedClients)
       setEditingClient(null)
     } else {
-      // Add new client
-      const updatedClients = [...clients, newClient]
-      setClients(updatedClients)
+      // Add new client at the beginning of the list
+      setClients([mappedClient, ...clients])
     }
+    
+    toast({
+      title: "✓ Client Saved",
+      description: `${newClient.name} has been ${editingClient ? 'updated' : 'added'} successfully.`,
+    })
   }
 
   // Client action handlers
