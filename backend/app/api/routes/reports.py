@@ -1,24 +1,35 @@
 """
 Report management and generation routes
 """
+import logging
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from fastapi.responses import FileResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator
 
 from app.api.routes.auth import get_current_user
 from app.db import db
 
+logger = logging.getLogger(__name__)
 
-router = APIRouter()
+router = APIRouter(redirect_slashes=False)
 
 
 # Request/Response models
 class ReportCreate(BaseModel):
-    title: str
-    project_id: str
-    report_type: str = "PENTEST"
-    template_id: Optional[str] = None
+    title: str = Field(..., min_length=1, max_length=500, description="Report title")
+    project_id: str = Field(..., description="ID of the project this report belongs to")
+    report_type: str = Field(default="PENTEST", description="Type of report")
+    template_id: Optional[str] = Field(None, description="Optional template ID")
+    
+    @field_validator('report_type')
+    @classmethod
+    def validate_report_type(cls, v: str) -> str:
+        """Validate report type is one of the allowed values"""
+        allowed_types = ["PENTEST", "VULNERABILITY_ASSESSMENT", "COMPLIANCE", "EXECUTIVE_SUMMARY"]
+        if v.upper() not in allowed_types:
+            raise ValueError(f"report_type must be one of: {', '.join(allowed_types)}")
+        return v.upper()
 
 
 class ReportResponse(BaseModel):
@@ -93,58 +104,105 @@ async def create_report(
     background_tasks: BackgroundTasks,
     current_user = Depends(get_current_user)
 ):
-    """Create a new report (initiates generation)"""
-    # Verify project exists and user has access
-    project = await db.project.find_unique(
-        where={"id": report_data.project_id},
-        include={"client": True}
-    )
+    """
+    Create a new report (initiates generation)
     
-    if not project:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Project not found"
+    Creates a draft report for the specified project. The report will be in DRAFT status
+    and can be edited before final generation.
+    """
+    try:
+        # Verify project exists and user has access
+        logger.info(f"Creating report for project {report_data.project_id} by user {current_user.id}")
+        
+        project = await db.project.find_unique(
+            where={"id": report_data.project_id},
+            include={"client": True}
+        )
+        
+        if not project:
+            logger.warning(f"Project not found: {report_data.project_id}")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Project not found: {report_data.project_id}"
+            )
+        
+        # Check organization access
+        if current_user.organizationId and project.client.organizationId != current_user.organizationId:
+            logger.warning(
+                f"Access denied: User {current_user.id} (org: {current_user.organizationId}) "
+                f"tried to create report for project {report_data.project_id} "
+                f"(org: {project.client.organizationId})"
+            )
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied: You do not have permission to create reports for this project"
+            )
+        
+        # Validate template if provided
+        if report_data.template_id:
+            template = await db.template.find_unique(
+                where={"id": report_data.template_id}
+            )
+            if not template:
+                logger.warning(f"Template not found: {report_data.template_id}")
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Template not found: {report_data.template_id}"
+                )
+        
+        # Create the report with all required fields
+        try:
+            report = await db.report.create(
+                data={
+                    "title": report_data.title.strip(),  # Clean whitespace
+                    "reportType": report_data.report_type,  # Validated by Pydantic
+                    "projectId": report_data.project_id,
+                    "generatedById": current_user.id,
+                    "templateId": report_data.template_id,
+                    "status": "DRAFT",  # Always start as DRAFT
+                },
+                include={
+                    "project": True,
+                    "generatedBy": True,
+                }
+            )
+            logger.info(f"Successfully created report {report.id} for project {report_data.project_id}")
+        except Exception as db_error:
+            logger.error(f"Database error creating report: {str(db_error)}", exc_info=True)
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to create report: {str(db_error)}"
+            )
+        
+        # TODO: Add background task for PDF generation
+        # background_tasks.add_task(generate_report_pdf, report.id)
+        
+        return ReportResponse(
+            id=report.id,
+            title=report.title,
+            report_type=report.reportType,
+            status=report.status,
+            project_id=report.projectId,
+            project_name=report.project.name,
+            generated_by_id=report.generatedById,
+            generated_by_name=report.generatedBy.name,
+            template_id=report.templateId,
+            pdf_path=report.pdfPath,
+            created_at=report.createdAt.isoformat(),
+            updated_at=report.updatedAt.isoformat(),
+            generated_at=report.generatedAt.isoformat() if report.generatedAt else None,
         )
     
-    if current_user.organizationId and project.client.organizationId != current_user.organizationId:
+    except HTTPException:
+        # Re-raise HTTP exceptions as-is
+        raise
+    except Exception as e:
+        # Catch any unexpected errors
+        logger.error(f"Unexpected error creating report: {str(e)}", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Access denied"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"An unexpected error occurred while creating the report: {str(e)}"
         )
-    
-    report = await db.report.create(
-        data={
-            "title": report_data.title,
-            "reportType": report_data.report_type,
-            "projectId": report_data.project_id,
-            "generatedById": current_user.id,
-            "templateId": report_data.template_id,
-            "status": "DRAFT",
-        },
-        include={
-            "project": True,
-            "generatedBy": True,
-        }
-    )
-    
-    # TODO: Add background task for PDF generation
-    # background_tasks.add_task(generate_report_pdf, report.id)
-    
-    return ReportResponse(
-        id=report.id,
-        title=report.title,
-        report_type=report.reportType,
-        status=report.status,
-        project_id=report.projectId,
-        project_name=report.project.name,
-        generated_by_id=report.generatedById,
-        generated_by_name=report.generatedBy.name,
-        template_id=report.templateId,
-        pdf_path=report.pdfPath,
-        created_at=report.createdAt.isoformat(),
-        updated_at=report.updatedAt.isoformat(),
-        generated_at=report.generatedAt.isoformat() if report.generatedAt else None,
-    )
 
 
 @router.get("/{report_id}", response_model=ReportResponse)

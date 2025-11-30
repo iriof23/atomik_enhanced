@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { cn } from '@/lib/utils'
+import { NewReportDialog } from '@/components/reports/NewReportDialog'
 
 // Mock data - will be replaced with actual data from Projects
 const mockProjects = [
@@ -172,6 +173,7 @@ export default function ReportBuilder() {
                         Select a project to manage findings and generate reports
                     </p>
                 </div>
+                <NewReportDialog />
             </div>
 
             {/* Two-Column Layout - Premium Split View */}

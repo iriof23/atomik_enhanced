@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useAuth } from '@clerk/clerk-react'
 import {
     Dialog,
     DialogContent,
@@ -23,9 +24,12 @@ import {
     CheckCircle2,
     ChevronRight,
     ChevronLeft,
-    X
+    X,
+    Loader2
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { api } from '@/lib/api'
+import { useToast } from '@/components/ui/use-toast'
 
 interface AddClientDialogProps {
     open: boolean
@@ -35,7 +39,10 @@ interface AddClientDialogProps {
 }
 
 export function AddClientDialog({ open, onOpenChange, onClientAdded, editingClient }: AddClientDialogProps) {
+    const { getToken } = useAuth()
+    const { toast } = useToast()
     const [step, setStep] = useState(1)
+    const [isSubmitting, setIsSubmitting] = useState(false)
     const [formData, setFormData] = useState({
         // Basic Info
         name: '',
@@ -118,48 +125,115 @@ export function AddClientDialog({ open, onOpenChange, onClientAdded, editingClie
         if (step > 1) setStep(step - 1)
     }
 
-    const handleSubmit = () => {
-        // Create or update client object
-        const clientData = editingClient ? {
-            ...editingClient,
-            ...formData,
-            updatedAt: new Date()
-        } : {
-            id: Date.now().toString(),
-            ...formData,
-            lastActivity: 'Just now',
-            lastActivityDate: new Date(),
-            projectsCount: 0,
-            reportsCount: 0,
-            totalFindings: 0,
-            findingsBySeverity: {
-                critical: 0,
-                high: 0,
-                medium: 0,
-                low: 0
-            },
-            createdAt: new Date(),
-            updatedAt: new Date()
+    const handleSubmit = async () => {
+        if (isSubmitting) return
+        setIsSubmitting(true)
+
+        try {
+            const token = await getToken()
+            if (!token) {
+                toast({
+                    title: 'Error',
+                    description: 'Authentication token not available.',
+                    variant: 'destructive',
+                })
+                return
+            }
+
+            // Map form data to API expected format (snake_case)
+            // Only include fields with actual values to avoid validation issues
+            const payload: Record<string, string> = {
+                name: formData.name.trim(),
+            }
+            
+            if (formData.primaryContact?.trim()) {
+                payload.contact_name = formData.primaryContact.trim()
+            }
+            if (formData.email?.trim()) {
+                payload.contact_email = formData.email.trim()
+            }
+            if (formData.phone?.trim()) {
+                payload.contact_phone = formData.phone.trim()
+            }
+
+            console.log('Creating client with payload:', payload)
+
+            let clientData
+            if (editingClient) {
+                // Update existing client
+                const response = await api.put(`/clients/${editingClient.id}`, payload, {
+                    headers: { Authorization: `Bearer ${token}` }
+                })
+                clientData = response.data
+                toast({
+                    title: 'Client Updated',
+                    description: `${clientData.name} has been updated successfully.`,
+                })
+            } else {
+                // Create new client
+                const response = await api.post('/clients/', payload, {
+                    headers: { Authorization: `Bearer ${token}` }
+                })
+                clientData = response.data
+                toast({
+                    title: 'Client Created',
+                    description: `${clientData.name} has been created successfully.`,
+                })
+            }
+
+            console.log('API response:', clientData)
+
+            // Map API response back to frontend format for the callback
+            const frontendClientData = {
+                id: clientData.id,
+                name: clientData.name,
+                logoUrl: formData.logoUrl || '🏢',
+                status: formData.status,
+                riskLevel: formData.riskLevel,
+                industry: formData.industry,
+                companySize: formData.companySize,
+                primaryContact: clientData.contact_name || formData.primaryContact,
+                email: clientData.contact_email || formData.email,
+                phone: clientData.contact_phone || formData.phone,
+                tags: formData.tags,
+                lastActivity: 'Just now',
+                lastActivityDate: new Date(),
+                projectsCount: 0,
+                reportsCount: 0,
+                totalFindings: 0,
+                findingsBySeverity: { critical: 0, high: 0, medium: 0, low: 0 },
+                createdAt: new Date(clientData.created_at),
+                updatedAt: new Date(clientData.updated_at),
+            }
+
+            onClientAdded?.(frontendClientData)
+            onOpenChange(false)
+
+            // Reset form
+            setStep(1)
+            setFormData({
+                name: '',
+                industry: '',
+                companySize: 'SMB',
+                logoUrl: '',
+                primaryContact: '',
+                email: '',
+                phone: '',
+                status: 'Prospect',
+                riskLevel: 'Medium',
+                tags: [],
+                notes: ''
+            })
+        } catch (error: any) {
+            console.error('Failed to create/update client:', error)
+            toast({
+                title: 'Error',
+                description: error.response?.data?.detail || 'Failed to save client. Please try again.',
+                variant: 'destructive',
+            })
+        } finally {
+            setIsSubmitting(false)
         }
-
-        onClientAdded?.(clientData)
-        onOpenChange(false)
-
-        // Reset form
-        setStep(1)
-        setFormData({
-            name: '',
-            industry: '',
-            companySize: 'SMB',
-            logoUrl: '',
-            primaryContact: '',
-            email: '',
-            phone: '',
-            status: 'Prospect',
-            riskLevel: 'Medium',
-            tags: [],
-            notes: ''
-        })
     }
 
     return (
@@ -465,11 +539,15 @@ export function AddClientDialog({ open, onOpenChange, onClientAdded, editingClie
                             <Button
                                 type="button"
                                 onClick={handleSubmit}
-                                disabled={!formData.name || !formData.primaryContact || !formData.email}
+                                disabled={!formData.name || !formData.primaryContact || !formData.email || isSubmitting}
                                 className="bg-primary hover:bg-primary/90"
                             >
-                                <CheckCircle2 className="h-4 w-4 mr-2" />
-                                {editingClient ? 'Update Client' : 'Create Client'}
+                                {isSubmitting ? (
+                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                ) : (
+                                    <CheckCircle2 className="h-4 w-4 mr-2" />
+                                )}
+                                {isSubmitting ? 'Saving...' : (editingClient ? 'Update Client' : 'Create Client')}
                             </Button>
                         )}
                     </div>

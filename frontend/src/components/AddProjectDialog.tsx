@@ -41,8 +41,10 @@ import {
     Server,
     Cloud,
     Wifi,
-    FileCode
+    FileCode,
+    Loader2
 } from 'lucide-react'
+import { useToast } from '@/components/ui/use-toast'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
 import { api } from '@/lib/api'
@@ -58,9 +60,11 @@ interface AddProjectDialogProps {
 
 export function AddProjectDialog({ open, onOpenChange, onProjectAdded, clients, editingProject }: AddProjectDialogProps) {
     const { getToken } = useAuth()
+    const { toast } = useToast()
     const [step, setStep] = useState(1)
     const [projectMembers, setProjectMembers] = useState<any[]>([])
     const [loadingMembers, setLoadingMembers] = useState(false)
+    const [isSubmitting, setIsSubmitting] = useState(false)
     
     const [formData, setFormData] = useState({
         // Step 1: Basics
@@ -200,52 +204,124 @@ export function AddProjectDialog({ open, onOpenChange, onProjectAdded, clients, 
         if (step > 1) setStep(step - 1)
     }
 
-    const handleSubmit = () => {
-        // Find selected client details
-        const selectedClient = clients.find(c => c.id === formData.clientId)
+    const handleSubmit = async () => {
+        if (isSubmitting) return
+        setIsSubmitting(true)
 
-        // Create new project object
-        const newProject = {
-            id: Date.now().toString(),
-            ...formData,
-            clientName: selectedClient?.name || 'Unknown Client',
-            clientLogoUrl: selectedClient?.logoUrl || '🏢',
-            progress: 0,
-            findingsCount: 0,
-            findingsBySeverity: { critical: 0, high: 0, medium: 0, low: 0 },
-            teamMembers: formData.teamMembers.map(id => ({
-                id,
-                name: id === '1' ? 'Alice Johnson' : id === '2' ? 'Bob Smith' : 'Unknown User', // Mock logic
-                role: 'Pentester',
-                avatarUrl: ''
-            })),
-            lastActivity: 'Just now',
-            lastActivityDate: new Date(),
-            createdAt: new Date(),
-            updatedAt: new Date()
+        try {
+            const token = await getToken()
+            if (!token) {
+                toast({
+                    title: 'Error',
+                    description: 'Authentication token not available.',
+                    variant: 'destructive',
+                })
+                return
+            }
+
+            // Find selected client details
+            const selectedClient = clients.find(c => c.id === formData.clientId)
+
+            // Map form data to API expected format (snake_case)
+            const payload: Record<string, any> = {
+                name: formData.name.trim(),
+                client_id: formData.clientId,
+            }
+            
+            if (formData.description?.trim()) {
+                payload.description = formData.description.trim()
+            }
+            if (formData.startDate) {
+                payload.start_date = formData.startDate.toISOString()
+            }
+            if (formData.endDate) {
+                payload.end_date = formData.endDate.toISOString()
+            }
+
+            console.log('Creating project with payload:', payload)
+
+            let projectData
+            if (editingProject) {
+                // Update existing project
+                const response = await api.put(`/projects/${editingProject.id}`, payload, {
+                    headers: { Authorization: `Bearer ${token}` }
+                })
+                projectData = response.data
+                toast({
+                    title: 'Project Updated',
+                    description: `${projectData.name} has been updated successfully.`,
+                })
+            } else {
+                // Create new project
+                const response = await api.post('/projects/', payload, {
+                    headers: { Authorization: `Bearer ${token}` }
+                })
+                projectData = response.data
+                toast({
+                    title: 'Project Created',
+                    description: `${projectData.name} has been created successfully.`,
+                })
+            }
+
+            console.log('API response:', projectData)
+
+            // Map API response back to frontend format for the callback
+            const frontendProjectData = {
+                id: projectData.id,
+                name: projectData.name,
+                description: projectData.description,
+                clientId: projectData.client_id,
+                clientName: projectData.client_name || selectedClient?.name || 'Unknown Client',
+                clientLogoUrl: selectedClient?.logoUrl || '🏢',
+                type: formData.type,
+                status: projectData.status || 'Planning',
+                priority: formData.priority,
+                startDate: projectData.start_date ? new Date(projectData.start_date) : formData.startDate,
+                endDate: projectData.end_date ? new Date(projectData.end_date) : formData.endDate,
+                progress: 0,
+                findingsCount: projectData.finding_count || 0,
+                findingsBySeverity: { critical: 0, high: 0, medium: 0, low: 0 },
+                teamMembers: [],
+                methodology: formData.methodology,
+                complianceFrameworks: formData.complianceFrameworks,
+                scope: formData.scope,
+                lastActivity: 'Just now',
+                lastActivityDate: new Date(),
+                createdAt: new Date(projectData.created_at),
+                updatedAt: new Date(projectData.updated_at),
+            }
+
+            onProjectAdded?.(frontendProjectData)
+            onOpenChange(false)
+
+            // Reset form
+            setStep(1)
+            setFormData({
+                name: '',
+                clientId: '',
+                clientName: '',
+                type: 'External',
+                description: '',
+                scope: [],
+                methodology: 'PTES',
+                complianceFrameworks: [],
+                startDate: undefined,
+                endDate: undefined,
+                priority: 'Medium',
+                status: 'Planning',
+                leadTester: '',
+                teamMembers: []
+            })
+        } catch (error: any) {
+            console.error('Failed to create/update project:', error)
+            toast({
+                title: 'Error',
+                description: error.response?.data?.detail || 'Failed to save project. Please try again.',
+                variant: 'destructive',
+            })
+        } finally {
+            setIsSubmitting(false)
         }
-
-        onProjectAdded?.(newProject)
-        onOpenChange(false)
-
-        // Reset form
-        setStep(1)
-        setFormData({
-            name: '',
-            clientId: '',
-            clientName: '',
-            type: 'External',
-            description: '',
-            scope: [],
-            methodology: 'PTES',
-            complianceFrameworks: [],
-            startDate: undefined,
-            endDate: undefined,
-            priority: 'Medium',
-            status: 'Planning',
-            leadTester: '',
-            teamMembers: []
-        })
     }
 
     // Mock team members
@@ -328,22 +404,35 @@ export function AddProjectDialog({ open, onOpenChange, onProjectAdded, clients, 
                                     <Label>Client <span className="text-red-500">*</span></Label>
                                     <Select
                                         value={formData.clientId}
-                                        onValueChange={(value) => updateField('clientId', value)}
+                                        onValueChange={(value) => {
+                                            console.log('Selected client ID:', value)
+                                            updateField('clientId', value)
+                                        }}
                                     >
                                         <SelectTrigger>
-                                            <SelectValue placeholder="Select client..." />
+                                            <SelectValue placeholder={clients.length === 0 ? "Loading clients..." : "Select client..."} />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            {clients.map((client) => (
-                                                <SelectItem key={client.id} value={client.id}>
-                                                    <span className="flex items-center gap-2">
-                                                        <span>{client.logoUrl || '🏢'}</span>
-                                                        {client.name}
-                                                    </span>
-                                                </SelectItem>
-                                            ))}
+                                            {clients.length === 0 ? (
+                                                <div className="p-2 text-sm text-muted-foreground text-center">
+                                                    No clients available. Create a client first.
+                                                </div>
+                                            ) : (
+                                                clients.map((client) => (
+                                                    <SelectItem key={client.id} value={client.id}>
+                                                        <span className="flex items-center gap-2">
+                                                            <span>{client.logoUrl || '🏢'}</span>
+                                                            {client.name}
+                                                        </span>
+                                                    </SelectItem>
+                                                ))
+                                            )}
                                         </SelectContent>
                                     </Select>
+                                    {/* Debug: Show client count */}
+                                    {clients.length > 0 && (
+                                        <p className="text-xs text-muted-foreground">{clients.length} client(s) available</p>
+                                    )}
                                 </div>
 
                                 <div className="space-y-2">
@@ -648,10 +737,15 @@ export function AddProjectDialog({ open, onOpenChange, onProjectAdded, clients, 
                             <Button
                                 type="button"
                                 onClick={handleSubmit}
+                                disabled={isSubmitting}
                                 className="bg-blue-600 hover:bg-blue-700"
                             >
-                                <CheckCircle2 className="h-4 w-4 mr-2" />
-                                {editingProject ? 'Update Project' : 'Create Project'}
+                                {isSubmitting ? (
+                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                ) : (
+                                    <CheckCircle2 className="h-4 w-4 mr-2" />
+                                )}
+                                {isSubmitting ? 'Saving...' : (editingProject ? 'Update Project' : 'Create Project')}
                             </Button>
                         )}
                     </div>

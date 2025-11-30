@@ -99,17 +99,28 @@ async def list_projects(
     current_user = Depends(get_current_user)
 ):
     """List all projects"""
+    import logging
+    logger = logging.getLogger(__name__)
+    
     where_clause = {}
     
     # Filter by organization through client relationship
     if current_user.organizationId:
         where_clause["client"] = {"organizationId": current_user.organizationId}
+        logger.info(f"Filtering projects by organization: {current_user.organizationId}")
+    else:
+        logger.info("No organizationId for user, returning all projects")
     
     if status:
         where_clause["status"] = status
+        logger.info(f"Filtering by status: {status}")
     
     if client_id:
         where_clause["clientId"] = client_id
+        logger.info(f"Filtering by client_id: {client_id}")
+    
+    logger.info(f"Query where_clause: {where_clause}")
+    logger.info(f"User ID: {current_user.id}, Organization ID: {current_user.organizationId}")
     
     projects = await db.project.find_many(
         where=where_clause,
@@ -118,15 +129,25 @@ async def list_projects(
         include={
             "client": True,
             "lead": True,
-            "_count": {
-                "select": {
-                    "findings": True,
-                    "reports": True,
-                }
-            }
+            "findings": True,  # Include to get count
+            "reports": True,   # Include to get count
         },
         order={"createdAt": "desc"}
     )
+    
+    logger.info(f"Found {len(projects)} projects for user {current_user.id}")
+    if len(projects) > 0:
+        for p in projects:
+            logger.info(f"  - Project: {p.name} (ID: {p.id}), Client Org: {p.client.organizationId if p.client else 'None'}")
+    else:
+        # Debug: Check if there are any projects at all
+        all_projects = await db.project.find_many(
+            take=5,
+            include={"client": True}
+        )
+        logger.info(f"Total projects in DB (any org): {len(all_projects)}")
+        for p in all_projects:
+            logger.info(f"  - All Project: {p.name}, Client Org: {p.client.organizationId if p.client else 'No client'}")
     
     return [
         ProjectResponse(
@@ -142,8 +163,8 @@ async def list_projects(
             lead_name=project.lead.name,
             created_at=project.createdAt.isoformat(),
             updated_at=project.updatedAt.isoformat(),
-            finding_count=project._count.findings,
-            report_count=project._count.reports,
+            finding_count=len(project.findings),
+            report_count=len(project.reports),
         )
         for project in projects
     ]
@@ -183,30 +204,37 @@ async def create_project(
         include={
             "client": True,
             "lead": True,
-            "_count": {
-                "select": {
-                    "findings": True,
-                    "reports": True,
-                }
-            }
+            "findings": True,  # Include to get count
+            "reports": True,    # Include to get count
+        }
+    )
+    
+    # Fetch project with counts for response
+    project_with_counts = await db.project.find_unique(
+        where={"id": project.id},
+        include={
+            "client": True,
+            "lead": True,
+            "findings": True,  # Include to get count
+            "reports": True,  # Include to get count
         }
     )
     
     return ProjectResponse(
-        id=project.id,
-        name=project.name,
-        description=project.description,
-        status=project.status,
-        start_date=project.startDate.isoformat() if project.startDate else None,
-        end_date=project.endDate.isoformat() if project.endDate else None,
-        client_id=project.clientId,
-        client_name=project.client.name,
-        lead_id=project.leadId,
-        lead_name=project.lead.name,
-        created_at=project.createdAt.isoformat(),
-        updated_at=project.updatedAt.isoformat(),
-        finding_count=project._count.findings,
-        report_count=project._count.reports,
+        id=project_with_counts.id,
+        name=project_with_counts.name,
+        description=project_with_counts.description,
+        status=project_with_counts.status,
+        start_date=project_with_counts.startDate.isoformat() if project_with_counts.startDate else None,
+        end_date=project_with_counts.endDate.isoformat() if project_with_counts.endDate else None,
+        client_id=project_with_counts.clientId,
+        client_name=project_with_counts.client.name,
+        lead_id=project_with_counts.leadId,
+        lead_name=project_with_counts.lead.name,
+        created_at=project_with_counts.createdAt.isoformat(),
+        updated_at=project_with_counts.updatedAt.isoformat(),
+        finding_count=len(project_with_counts.findings),
+        report_count=len(project_with_counts.reports),
     )
 
 

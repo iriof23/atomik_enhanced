@@ -1,5 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '@clerk/clerk-react'
+import { api } from '@/lib/api'
 import {
     FolderKanban,
     CheckCircle2,
@@ -62,7 +64,7 @@ import {
 } from 'date-fns'
 
 // Project interface
-interface Project {
+export interface Project {
     id: string
     name: string
     clientId: string
@@ -113,7 +115,7 @@ interface Project {
 }
 
 // Mock data
-const mockProjects: Project[] = [
+export const mockProjects: Project[] = [
     {
         id: '1',
         name: 'Q1 2024 External Penetration Test',
@@ -313,15 +315,6 @@ const mockProjects: Project[] = [
     }
 ]
 
-// Mock clients for dropdown
-const mockClientsForDropdown = [
-    { id: '1', name: 'Acme Corporation', logoUrl: '🏢' },
-    { id: '2', name: 'TechStart Inc', logoUrl: '🚀' },
-    { id: '3', name: 'Global Finance Ltd', logoUrl: '🏦' },
-    { id: '4', name: 'HealthTech Solutions', logoUrl: '🏥' },
-    { id: '5', name: 'RetailCo International', logoUrl: '🛒' }
-]
-
 type ViewMode = 'card' | 'table' | 'timeline'
 
 const getStatusColor = (status: Project['status']) => {
@@ -346,29 +339,11 @@ const getPriorityColor = (priority: Project['priority']) => {
 export default function Projects() {
     const [viewMode, setViewMode] = useState<ViewMode>('table')
     const [searchQuery, setSearchQuery] = useState('')
-    const [isLoading] = useState(false)
+    const [isLoading, setIsLoading] = useState(true)
     const [activeFilters, setActiveFilters] = useState<Array<{ id: string, label: string, value: string }>>([])
     const navigate = useNavigate()
     const { toast } = useToast()
-    const [projects, setProjects] = useState<Project[]>(() => {
-        const saved = localStorage.getItem('projects')
-        if (saved) {
-            try {
-                return JSON.parse(saved).map((p: any) => ({
-                    ...p,
-                    startDate: new Date(p.startDate),
-                    endDate: new Date(p.endDate),
-                    lastActivityDate: new Date(p.lastActivityDate),
-                    createdAt: new Date(p.createdAt),
-                    updatedAt: new Date(p.updatedAt)
-                }))
-            } catch (e) {
-                console.error('Failed to parse projects', e)
-                return mockProjects
-            }
-        }
-        return mockProjects
-    })
+    const [projects, setProjects] = useState<Project[]>(mockProjects)
     const [addProjectDialogOpen, setAddProjectDialogOpen] = useState(false)
     const [editingProject, setEditingProject] = useState<Project | null>(null)
     const [viewingProject, setViewingProject] = useState<Project | null>(null)
@@ -378,6 +353,138 @@ export default function Projects() {
     const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null)
     const [filterDialogOpen, setFilterDialogOpen] = useState(false)
     const [appliedFilters, setAppliedFilters] = useState<ActiveFilters>({})
+    
+    // Real clients from API
+    const [clients, setClients] = useState<any[]>([])
+    const [loadingClients, setLoadingClients] = useState(false)
+    const { getToken } = useAuth()
+    
+    // Fetch clients when dialog opens
+    useEffect(() => {
+        const fetchClients = async () => {
+            if (!addProjectDialogOpen) return
+            
+            setLoadingClients(true)
+            try {
+                const token = await getToken()
+                if (!token) {
+                    console.error('No auth token available for fetching clients')
+                    setClients([])
+                    return
+                }
+                console.log('Fetching clients from API...')
+                // Use trailing slash to avoid 307 redirect
+                const response = await api.get('/clients/', {
+                    headers: { Authorization: `Bearer ${token}` }
+                })
+                console.log('API response:', response.data)
+                
+                // Map API response to expected format
+                if (Array.isArray(response.data) && response.data.length > 0) {
+                    const mappedClients = response.data.map((c: any) => ({
+                        id: c.id,
+                        name: c.name,
+                        logoUrl: '🏢' // Default icon
+                    }))
+                    console.log('Fetched clients for dropdown:', mappedClients)
+                    setClients(mappedClients)
+                } else {
+                    console.warn('No clients returned from API')
+                    setClients([])
+                }
+            } catch (error: any) {
+                console.error('Failed to fetch clients:', error)
+                if (error.response) {
+                    console.error('Error response:', error.response.status, error.response.data)
+                }
+                setClients([])
+            } finally {
+                setLoadingClients(false)
+            }
+        }
+        
+        fetchClients()
+    }, [addProjectDialogOpen, getToken])
+
+    // Fetch real projects from API on page load
+    useEffect(() => {
+        const fetchProjects = async () => {
+            setIsLoading(true)
+            try {
+                const token = await getToken()
+                if (!token) {
+                    console.warn('No auth token, using mock projects')
+                    setProjects(mockProjects)
+                    return
+                }
+                
+                console.log('Fetching projects from API...')
+                const response = await api.get('/projects/', {
+                    headers: { Authorization: `Bearer ${token}` }
+                })
+                
+                console.log('API projects response:', response.data)
+                
+                if (Array.isArray(response.data) && response.data.length > 0) {
+                    // Map API response to frontend Project format
+                    const apiProjects: Project[] = response.data.map((p: any) => ({
+                        id: p.id,
+                        name: p.name,
+                        clientId: p.client_id,
+                        clientName: p.client_name,
+                        clientLogoUrl: '🏢',
+                        type: 'Web App' as const,
+                        status: mapApiStatus(p.status),
+                        priority: 'Medium' as const,
+                        startDate: p.start_date ? new Date(p.start_date) : new Date(),
+                        endDate: p.end_date ? new Date(p.end_date) : new Date(),
+                        progress: 0,
+                        findingsCount: p.finding_count || 0,
+                        findingsBySeverity: { critical: 0, high: 0, medium: 0, low: 0 },
+                        teamMembers: [],
+                        lastActivity: 'Just now',
+                        lastActivityDate: new Date(p.updated_at),
+                        createdAt: new Date(p.created_at),
+                        updatedAt: new Date(p.updated_at),
+                        // Additional required fields
+                        description: p.description || '',
+                        scope: [],
+                        methodology: 'OWASP Testing Guide v4',
+                        leadTester: p.lead_name || '',
+                        complianceFrameworks: [],
+                    }))
+                    
+                    console.log(`Loaded ${apiProjects.length} real projects from API`)
+                    // Combine with mock projects for now (real projects first)
+                    setProjects([...apiProjects, ...mockProjects])
+                } else {
+                    console.log('No projects from API, using mock projects')
+                    setProjects(mockProjects)
+                }
+            } catch (error) {
+                console.error('Failed to fetch projects:', error)
+                setProjects(mockProjects)
+            } finally {
+                setIsLoading(false)
+            }
+        }
+        
+        fetchProjects()
+    }, [getToken])
+    
+    // Helper to map API status to frontend status
+    const mapApiStatus = (status: string): Project['status'] => {
+        const statusMap: Record<string, Project['status']> = {
+            'PLANNING': 'Planning',
+            'IN_PROGRESS': 'In Progress',
+            'REVIEW': 'In Progress',
+            'COMPLETED': 'Completed',
+            'ARCHIVED': 'Completed',
+            'ON_HOLD': 'On Hold',
+            'CANCELLED': 'Cancelled',
+        }
+        return statusMap[status?.toUpperCase()] || 'Planning'
+    }
 
     // Load saved view mode from localStorage (defaults to 'table' if not set)
     useEffect(() => {
@@ -960,7 +1067,7 @@ export default function Projects() {
                     if (!open) setEditingProject(null)
                 }}
                 onProjectAdded={handleProjectAdded}
-                clients={mockClientsForDropdown}
+                clients={clients}
                 editingProject={editingProject}
             />
 
