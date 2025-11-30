@@ -372,6 +372,7 @@ export default function ReportEditor() {
             <div className="min-h-[600px]">
                 {activeTab === 'findings' && (
                     <FindingsTab
+                        projectId={reportData?.project_id}
                         onUpdate={() => {
                             setHasUnsavedChanges(true)
                             // Update findings count
@@ -409,8 +410,8 @@ export default function ReportEditor() {
 }
 
 // Findings Tab Component
-function FindingsTab({ onUpdate }: { onUpdate: () => void }) {
-    return <FindingsTabContent onUpdate={onUpdate} />
+function FindingsTab({ projectId, onUpdate }: { projectId?: string; onUpdate: () => void }) {
+    return <FindingsTabContent projectId={projectId} onUpdate={onUpdate} />
 }
 
 // Narrative Tab Component

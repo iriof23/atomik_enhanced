@@ -29,12 +29,14 @@ interface ProjectFinding {
 }
 
 interface FindingsTabContentProps {
-    projectId: string
+    projectId?: string  // Optional - if not provided, will use URL params
     onUpdate: () => void
 }
 
-export default function FindingsTabContent({ onUpdate }: Omit<FindingsTabContentProps, 'projectId'>) {
-    const { projectId } = useParams()
+export default function FindingsTabContent({ projectId: propProjectId, onUpdate }: FindingsTabContentProps) {
+    const { projectId: urlProjectId } = useParams()
+    // Use prop projectId if provided, otherwise fall back to URL param
+    const projectId = propProjectId || urlProjectId
     const [findings, setFindings] = useState<ProjectFinding[]>([])
     const [selectedFinding, setSelectedFinding] = useState<ProjectFinding | null>(null)
     const [showAddModal, setShowAddModal] = useState(false)
