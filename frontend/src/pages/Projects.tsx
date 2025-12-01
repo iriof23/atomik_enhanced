@@ -25,7 +25,8 @@ import {
     X,
     ArrowUpDown,
     ArrowUp,
-    ArrowDown
+    ArrowDown,
+    Loader2
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -385,16 +386,51 @@ export default function Projects() {
         setDeletingProject(project)
     }
 
-    const confirmDeleteProject = () => {
-        if (deletingProject) {
+    const [isDeletingProject, setIsDeletingProject] = useState(false)
+
+    const confirmDeleteProject = async () => {
+        if (!deletingProject) return
+        
+        setIsDeletingProject(true)
+        try {
+            const token = await getToken()
+            if (!token) {
+                toast({
+                    title: "Error",
+                    description: "Authentication required",
+                    variant: "destructive",
+                })
+                return
+            }
+
+            // Call the backend API to delete the project
+            await api.delete(`/projects/${deletingProject.id}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            })
+
             // Log delete activity
             logProjectDeleted(deletingProject.name, deletingProject.id)
             
+            // Remove from local state
             const updatedProjects = projects.filter(p => p.id !== deletingProject.id)
             setProjects(updatedProjects)
-            localStorage.setItem('projects', JSON.stringify(updatedProjects))
-            // Also delete associated findings
+            
+            // Also delete associated findings from localStorage
             localStorage.removeItem(`findings_${deletingProject.id}`)
+            
+            toast({
+                title: "Project Deleted",
+                description: `${deletingProject.name} has been permanently removed.`,
+            })
+        } catch (error: any) {
+            console.error('Failed to delete project:', error)
+            toast({
+                title: "Error",
+                description: error.response?.data?.detail || "Failed to delete project. Please try again.",
+                variant: "destructive",
+            })
+        } finally {
+            setIsDeletingProject(false)
             setDeletingProject(null)
         }
     }
@@ -898,18 +934,29 @@ export default function Projects() {
             />
 
             {/* Delete Confirmation Dialog */}
-            <AlertDialog open={!!deletingProject} onOpenChange={(open) => !open && setDeletingProject(null)}>
+            <AlertDialog open={!!deletingProject} onOpenChange={(open) => !open && !isDeletingProject && setDeletingProject(null)}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle>Delete Project</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Are you sure you want to delete "{deletingProject?.name}"? This action cannot be undone and will also delete all associated findings.
+                            Are you sure you want to delete "{deletingProject?.name}"? This action cannot be undone and will also permanently delete all associated findings and reports.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={confirmDeleteProject} className="bg-red-600 hover:bg-red-700">
-                            Delete
+                        <AlertDialogCancel disabled={isDeletingProject}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction 
+                            onClick={confirmDeleteProject} 
+                            className="bg-red-600 hover:bg-red-700"
+                            disabled={isDeletingProject}
+                        >
+                            {isDeletingProject ? (
+                                <>
+                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                    Deleting...
+                                </>
+                            ) : (
+                                'Delete Project'
+                            )}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>

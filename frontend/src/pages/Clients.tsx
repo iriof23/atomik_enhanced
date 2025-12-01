@@ -247,18 +247,48 @@ export default function Clients() {
     setDeletingClient(client)
   }
 
-  const confirmDeleteClient = () => {
-    if (deletingClient) {
+  const [isDeleting, setIsDeleting] = useState(false)
+
+  const confirmDeleteClient = async () => {
+    if (!deletingClient) return
+    
+    setIsDeleting(true)
+    try {
+      const token = await getToken()
+      if (!token) {
+        toast({
+          title: "Error",
+          description: "Authentication required",
+          variant: "destructive",
+        })
+        return
+      }
+
+      // Call the backend API to delete the client
+      await api.delete(`/clients/${deletingClient.id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+
       // Log delete activity
       logClientDeleted(deletingClient.name, deletingClient.id)
       
+      // Remove from local state
       setClients(clients.filter(c => c.id !== deletingClient.id))
-      setDeletingClient(null)
       
       toast({
         title: "Client Deleted",
-        description: `${deletingClient.name} has been removed.`,
+        description: `${deletingClient.name} has been permanently removed.`,
       })
+    } catch (error: any) {
+      console.error('Failed to delete client:', error)
+      toast({
+        title: "Error",
+        description: error.response?.data?.detail || "Failed to delete client. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsDeleting(false)
+      setDeletingClient(null)
     }
   }
 
@@ -786,22 +816,30 @@ export default function Clients() {
       />
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={!!deletingClient} onOpenChange={() => setDeletingClient(null)}>
+      <AlertDialog open={!!deletingClient} onOpenChange={(open) => !open && !isDeleting && setDeletingClient(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Client</AlertDialogTitle>
             <AlertDialogDescription>
               Are you sure you want to delete <strong>{deletingClient?.name}</strong>? This action cannot be undone.
-              All associated projects and reports will remain but will no longer be linked to this client.
+              All associated projects and reports will also be permanently deleted.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDeleteClient}
               className="bg-red-600 hover:bg-red-700"
+              disabled={isDeleting}
             >
-              Delete Client
+              {isDeleting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                'Delete Client'
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
