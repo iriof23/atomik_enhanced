@@ -359,8 +359,8 @@ async def get_project(
                     "user": True
                 }
             },
-            "findings": True,
-            "reports": True,
+                    "findings": True,
+                    "reports": True,
         }
     )
     
@@ -470,8 +470,8 @@ async def update_project(
         include={
             "client": True,
             "lead": True,
-            "findings": True,
-            "reports": True,
+                    "findings": True,
+                    "reports": True,
         }
     )
     

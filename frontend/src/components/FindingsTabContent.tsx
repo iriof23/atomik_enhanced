@@ -73,10 +73,10 @@ export default function FindingsTabContent({ projectId: propProjectId, onUpdate 
         if (apiFinding.affected_assets_json) {
             try {
                 affectedAssets = JSON.parse(apiFinding.affected_assets_json)
-            } catch (e) {
+                } catch (e) {
                 console.error('Failed to parse affected_assets_json:', e)
+                }
             }
-        }
         
         return {
             id: apiFinding.id,
@@ -128,8 +128,8 @@ export default function FindingsTabContent({ projectId: propProjectId, onUpdate 
                 })
             } finally {
                 setIsLoading(false)
+                }
             }
-        }
 
         fetchFindings()
     }, [projectId, getToken, toast])
@@ -150,9 +150,9 @@ export default function FindingsTabContent({ projectId: propProjectId, onUpdate 
             }
 
             const payload = {
-                title: vuln.title,
+            title: vuln.title,
                 description: vuln.description || '',
-                severity: vuln.severity === 'Info' ? 'Informational' : vuln.severity,
+            severity: vuln.severity === 'Info' ? 'Informational' : vuln.severity,
                 project_id: projectId,
                 cvss_vector: vuln.cvss_vector || undefined,
                 remediation: vuln.recommendation || '',
@@ -203,9 +203,9 @@ export default function FindingsTabContent({ projectId: propProjectId, onUpdate 
             // Create all findings in parallel
             const createPromises = selectedVulns.map(vuln => 
                 api.post('/findings/', {
-                    title: vuln.title,
+            title: vuln.title,
                     description: vuln.description || '',
-                    severity: vuln.severity === 'Info' ? 'Informational' : vuln.severity,
+            severity: vuln.severity === 'Info' ? 'Informational' : vuln.severity,
                     project_id: projectId,
                     cvss_vector: vuln.cvss_vector || undefined,
                     remediation: vuln.recommendation || '',
@@ -219,10 +219,10 @@ export default function FindingsTabContent({ projectId: propProjectId, onUpdate 
             
             setFindings([...findings, ...newFindings])
 
-            // Reset modal state
-            setShowAddModal(false)
-            setSelectedVulns([])
-            setSearchQuery('')
+        // Reset modal state
+        setShowAddModal(false)
+        setSelectedVulns([])
+        setSearchQuery('')
 
             // Log activity for each finding
             newFindings.forEach((finding, index) => {
@@ -235,7 +235,7 @@ export default function FindingsTabContent({ projectId: propProjectId, onUpdate 
                 description: `Successfully added ${newFindings.length} finding${newFindings.length !== 1 ? 's' : ''}.`,
             })
 
-            onUpdate()
+        onUpdate()
         } catch (error: any) {
             console.error('Failed to create findings:', error)
             toast({
@@ -293,8 +293,8 @@ export default function FindingsTabContent({ projectId: propProjectId, onUpdate 
                 title: 'Finding Updated',
                 description: `${updated.title} has been updated successfully.`,
             })
-            
-            onUpdate()
+
+        onUpdate()
         } catch (error: any) {
             console.error('Failed to update finding:', error)
             toast({
@@ -329,10 +329,10 @@ export default function FindingsTabContent({ projectId: propProjectId, onUpdate 
             // Log activity
             logFindingDeleted(selectedFinding.title, 'Project', selectedFinding.id)
 
-            const updatedFindings = findings.filter(f => f.id !== selectedFinding.id)
-            setFindings(updatedFindings)
-            setSelectedFinding(null)
-            setShowDeleteDialog(false)
+        const updatedFindings = findings.filter(f => f.id !== selectedFinding.id)
+        setFindings(updatedFindings)
+        setSelectedFinding(null)
+        setShowDeleteDialog(false)
 
             toast({
                 title: 'Finding Deleted',
@@ -740,8 +740,8 @@ export default function FindingsTabContent({ projectId: propProjectId, onUpdate 
                                 </>
                             ) : (
                                 <>
-                                    <Trash2 className="w-4 h-4 mr-2" />
-                                    Delete Finding
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Delete Finding
                                 </>
                             )}
                         </Button>

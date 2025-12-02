@@ -171,65 +171,65 @@ const useDashboardStore = (getToken: () => Promise<string | null>) => {
             }
 
             // Calculate Stats from localStorage findings (for each project)
-            let totalFindings = 0
-            let criticalFindings = 0
+        let totalFindings = 0
+        let criticalFindings = 0
 
-            projects.forEach((p: any) => {
-                const findingsKey = `findings_${p.id}`
-                const storedFindings = localStorage.getItem(findingsKey)
-                if (storedFindings) {
-                    try {
-                        const findings = JSON.parse(storedFindings)
-                        totalFindings += findings.length
-                        findings.forEach((f: any) => {
-                            if (f.severity === 'Critical') criticalFindings++
-                        })
-                    } catch (e) { }
-                }
-            })
+        projects.forEach((p: any) => {
+            const findingsKey = `findings_${p.id}`
+            const storedFindings = localStorage.getItem(findingsKey)
+            if (storedFindings) {
+                try {
+                    const findings = JSON.parse(storedFindings)
+                    totalFindings += findings.length
+                    findings.forEach((f: any) => {
+                        if (f.severity === 'Critical') criticalFindings++
+                    })
+                } catch (e) { }
+            }
+        })
 
-            // Active Project (Most recently updated 'In Progress' project)
+        // Active Project (Most recently updated 'In Progress' project)
             const activeProjects = projects.filter(p => 
                 p.status === 'In Progress' || p.status === 'IN_PROGRESS' || p.status === 'In Review'
             )
-            const sortedActive = [...activeProjects].sort((a, b) =>
-                new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-            )
-            const activeProject = sortedActive.length > 0 ? sortedActive[0] : (projects[0] || null)
+        const sortedActive = [...activeProjects].sort((a, b) =>
+            new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+        )
+        const activeProject = sortedActive.length > 0 ? sortedActive[0] : (projects[0] || null)
 
             // Upcoming Deadlines - Projects with future end dates, not completed
-            const upcoming = [...projects]
+        const upcoming = [...projects]
                 .filter(p => p.status !== 'Completed' && p.status !== 'COMPLETED' && new Date(p.endDate) > new Date())
-                .sort((a, b) => new Date(a.endDate).getTime() - new Date(b.endDate).getTime())
-                .slice(0, 3)
+            .sort((a, b) => new Date(a.endDate).getTime() - new Date(b.endDate).getTime())
+            .slice(0, 3)
 
-            // Recent Activity - Build comprehensive activity feed
-            const activityList: Array<any> = []
-            
-            // Add project activities
-            projects.forEach(p => {
-                activityList.push({
-                    id: `proj-${p.id}`,
-                    type: 'project' as const,
+        // Recent Activity - Build comprehensive activity feed
+        const activityList: Array<any> = []
+        
+        // Add project activities
+        projects.forEach(p => {
+            activityList.push({
+                id: `proj-${p.id}`,
+                type: 'project' as const,
                     title: p.status === 'Completed' || p.status === 'COMPLETED' ? 'Project Completed' : 
                            p.status === 'In Progress' || p.status === 'IN_PROGRESS' ? 'Project In Progress' :
                            'Project Created',
-                    description: `${p.name} • ${p.clientName}`,
-                    timestamp: new Date(p.updatedAt).toISOString(),
-                    timestampText: formatRelativeTime(new Date(p.updatedAt)),
-                    icon: <Activity className="w-4 h-4 text-blue-400" />,
-                    severity: p.status
-                })
+                description: `${p.name} • ${p.clientName}`,
+                timestamp: new Date(p.updatedAt).toISOString(),
+                timestampText: formatRelativeTime(new Date(p.updatedAt)),
+                icon: <Activity className="w-4 h-4 text-blue-400" />,
+                severity: p.status
             })
-            
+        })
+        
             // Add findings from all projects (from localStorage)
-            projects.forEach(p => {
-                const findingsKey = `findings_${p.id}`
-                const storedFindings = localStorage.getItem(findingsKey)
-                if (storedFindings) {
-                    try {
-                        const findings = JSON.parse(storedFindings)
-                        findings.forEach((f: any) => {
+        projects.forEach(p => {
+            const findingsKey = `findings_${p.id}`
+            const storedFindings = localStorage.getItem(findingsKey)
+            if (storedFindings) {
+                try {
+                    const findings = JSON.parse(storedFindings)
+                    findings.forEach((f: any) => {
                             activityList.push({
                                 id: `find-${f.id}`,
                                 type: 'finding' as const,
@@ -244,24 +244,24 @@ const useDashboardStore = (getToken: () => Promise<string | null>) => {
                                       <Shield className="w-4 h-4 text-yellow-400" />,
                                 severity: f.severity
                             })
-                        })
-                    } catch (e) { }
-                }
-            })
-            
-            // Add client activities
-            clients.forEach((c: any) => {
-                activityList.push({
-                    id: `client-${c.id}`,
-                    type: 'client' as const,
+                    })
+                } catch (e) { }
+            }
+        })
+        
+        // Add client activities
+        clients.forEach((c: any) => {
+            activityList.push({
+                id: `client-${c.id}`,
+                type: 'client' as const,
                     title: 'Client Added',
-                    description: `${c.name} added to portfolio`,
+                description: `${c.name} added to portfolio`,
                     timestamp: c.created_at || c.createdAt || new Date().toISOString(),
                     timestampText: formatRelativeTime(new Date(c.created_at || c.createdAt || new Date())),
-                    icon: <Users className="w-4 h-4 text-emerald-400" />,
-                    severity: c.status
-                })
+                icon: <Users className="w-4 h-4 text-emerald-400" />,
+                severity: c.status
             })
+        })
             
             // Add report activities
             reports.forEach((r: any) => {
@@ -276,19 +276,19 @@ const useDashboardStore = (getToken: () => Promise<string | null>) => {
                     severity: r.status
                 })
             })
-            
-            // Sort by most recent and take top 5
-            const activity = activityList
-                .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-                .slice(0, 5)
+        
+        // Sort by most recent and take top 5
+        const activity = activityList
+            .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+            .slice(0, 5)
 
-            setData({
-                activeProject,
-                upcomingProjects: upcoming,
-                stats: {
-                    totalFindings,
-                    criticalFindings,
-                    activeClients: clients.length,
+        setData({
+            activeProject,
+            upcomingProjects: upcoming,
+            stats: {
+                totalFindings,
+                criticalFindings,
+                activeClients: clients.length,
                     completedProjects: projects.filter(p => p.status === 'Completed' || p.status === 'COMPLETED').length
                 },
                 recentActivity: activity
@@ -306,7 +306,7 @@ const useDashboardStore = (getToken: () => Promise<string | null>) => {
 // --- Components ---
 
 const HeroCard = ({ 
-    project,
+    project, 
     criticalCount,
     onStartProject,
     onResumeReport,
@@ -382,16 +382,16 @@ const HeroCard = ({
                 <div className="mt-8 space-y-6">
                     <div className="flex flex-wrap gap-3">
                         {projectCriticalCount > 0 && (
-                            <Badge variant="destructive" className="px-3 py-1 text-sm gap-1.5">
-                                <AlertTriangle className="w-3.5 h-3.5" />
+                        <Badge variant="destructive" className="px-3 py-1 text-sm gap-1.5">
+                            <AlertTriangle className="w-3.5 h-3.5" />
                                 {projectCriticalCount} Critical Issue{projectCriticalCount !== 1 ? 's' : ''}
-                            </Badge>
+                        </Badge>
                         )}
                         {daysUntilDue <= 7 && daysUntilDue > 0 && (
-                            <Badge variant="secondary" className="px-3 py-1 text-sm gap-1.5 bg-orange-500/10 text-orange-500 hover:bg-orange-500/20 border-orange-500/20">
-                                <Clock className="w-3.5 h-3.5" />
+                        <Badge variant="secondary" className="px-3 py-1 text-sm gap-1.5 bg-orange-500/10 text-orange-500 hover:bg-orange-500/20 border-orange-500/20">
+                            <Clock className="w-3.5 h-3.5" />
                                 Due in {daysUntilDue} Day{daysUntilDue !== 1 ? 's' : ''}
-                            </Badge>
+                        </Badge>
                         )}
                         {daysUntilDue <= 0 && (
                             <Badge variant="destructive" className="px-3 py-1 text-sm gap-1.5">
@@ -689,20 +689,20 @@ const PulseFeed = () => {
                             
                             {/* Content */}
                             <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2">
                                     <h4 className="font-medium text-sm truncate">
                                         {event.title}
                                     </h4>
-                                    <Badge 
-                                        variant="outline" 
-                                        className={cn(
+                                <Badge 
+                                    variant="outline" 
+                                    className={cn(
                                             "text-[9px] px-1.5 py-0 capitalize flex-shrink-0",
                                             getTypeBadgeClass(event.type)
-                                        )}
-                                    >
+                                    )}
+                                >
                                         {event.type}
-                                    </Badge>
-                                </div>
+                                </Badge>
+                            </div>
                                 <p className="text-muted-foreground text-xs truncate mt-0.5">
                                     {event.description}
                                 </p>
@@ -762,8 +762,8 @@ export default function Dashboard() {
             } catch (e) {
                 console.error('Failed to fetch clients:', e)
                 // Fallback to localStorage
-                const storedClients = JSON.parse(localStorage.getItem('clients') || '[]')
-                setClients(storedClients)
+        const storedClients = JSON.parse(localStorage.getItem('clients') || '[]')
+        setClients(storedClients)
             }
         }
         
@@ -829,7 +829,7 @@ export default function Dashboard() {
                 }
             } catch (e) {
                 console.log('No existing reports found, will create new one')
-            }
+        }
             
             // No report exists - create one
             const response = await api.post('/v1/reports/', {
@@ -844,11 +844,11 @@ export default function Dashboard() {
             navigate(`/reports/${response.data.id}`)
         } catch (error: any) {
             console.error('Failed to open/create report:', error)
-            toast({
+        toast({
                 title: 'Error',
                 description: error.response?.data?.detail || 'Failed to open report',
                 variant: 'destructive',
-            })
+        })
         }
     }
     
@@ -980,7 +980,7 @@ export default function Dashboard() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Row 1: Focus Zone + Horizon */}
                 <HeroCard 
-                    project={data.activeProject}
+                    project={data.activeProject} 
                     criticalCount={data.stats.criticalFindings}
                     onStartProject={handleStartProject}
                     onResumeReport={handleResumeReport}

@@ -218,15 +218,15 @@ export function AddClientDialog({ open, onOpenChange, onClientAdded, editingClie
                 phone: clientData.contact_phone || formData.phone,
                 tags: formData.tags,
                 notes: formData.notes || '',
-                lastActivity: 'Just now',
-                lastActivityDate: new Date(),
-                projectsCount: 0,
-                reportsCount: 0,
-                totalFindings: 0,
+            lastActivity: 'Just now',
+            lastActivityDate: new Date(),
+            projectsCount: 0,
+            reportsCount: 0,
+            totalFindings: 0,
                 findingsBySeverity: { critical: 0, high: 0, medium: 0, low: 0 },
                 createdAt: new Date(clientData.created_at),
                 updatedAt: new Date(clientData.updated_at),
-            }
+        }
 
             onClientAdded?.(frontendClientData)
         onOpenChange(false)
@@ -439,20 +439,20 @@ export function AddClientDialog({ open, onOpenChange, onClientAdded, editingClie
                                         'Inactive': { dot: 'bg-amber-500', selected: 'border-amber-500/50 bg-amber-500/10 text-amber-400' },
                                     }
                                     return (
-                                        <button
-                                            key={status}
-                                            type="button"
-                                            onClick={() => updateField('status', status)}
-                                            className={cn(
+                                    <button
+                                        key={status}
+                                        type="button"
+                                        onClick={() => updateField('status', status)}
+                                        className={cn(
                                                 "inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium transition-all duration-200",
                                                 isSelected
                                                     ? statusColors[status].selected
                                                     : "border-zinc-700/50 bg-zinc-800/30 text-zinc-400 hover:border-zinc-600 hover:bg-zinc-800/50 hover:text-zinc-300"
-                                            )}
-                                        >
+                                        )}
+                                    >
                                             <span className={cn("w-2 h-2 rounded-full", statusColors[status].dot)} />
-                                            {status}
-                                        </button>
+                                        {status}
+                                    </button>
                                     )
                                 })}
                             </div>
@@ -472,20 +472,20 @@ export function AddClientDialog({ open, onOpenChange, onClientAdded, editingClie
                                         'High': { dot: 'bg-red-500', selected: 'border-red-500/50 bg-red-500/10 text-red-400' },
                                     }
                                     return (
-                                        <button
-                                            key={risk}
-                                            type="button"
-                                            onClick={() => updateField('riskLevel', risk)}
-                                            className={cn(
+                                    <button
+                                        key={risk}
+                                        type="button"
+                                        onClick={() => updateField('riskLevel', risk)}
+                                        className={cn(
                                                 "inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium transition-all duration-200",
                                                 isSelected
                                                     ? riskColors[risk].selected
                                                     : "border-zinc-700/50 bg-zinc-800/30 text-zinc-400 hover:border-zinc-600 hover:bg-zinc-800/50 hover:text-zinc-300"
-                                            )}
-                                        >
+                                        )}
+                                    >
                                             <span className={cn("w-2 h-2 rounded-full", riskColors[risk].dot)} />
-                                            {risk}
-                                        </button>
+                                        {risk}
+                                    </button>
                                     )
                                 })}
                             </div>

@@ -204,7 +204,7 @@ export default function ReportBuilder() {
             const token = await getToken()
             if (!token || projects.length === 0) return
             
-            const data: Record<string, any> = {}
+        const data: Record<string, any> = {}
             
             // Fetch findings for each project in parallel
             await Promise.all(projects.map(async (project) => {
@@ -215,15 +215,15 @@ export default function ReportBuilder() {
                     
                     if (response.data && Array.isArray(response.data)) {
                         const findings = response.data
-                        const breakdown = { critical: 0, high: 0, medium: 0, low: 0 }
-                        findings.forEach((f: any) => {
+                    const breakdown = { critical: 0, high: 0, medium: 0, low: 0 }
+                    findings.forEach((f: any) => {
                             const severity = f.severity?.toUpperCase()
                             if (severity === 'CRITICAL') breakdown.critical++
                             else if (severity === 'HIGH') breakdown.high++
                             else if (severity === 'MEDIUM') breakdown.medium++
                             else if (severity === 'LOW') breakdown.low++
-                        })
-                        data[project.id] = { count: findings.length, severity: breakdown }
+                    })
+                    data[project.id] = { count: findings.length, severity: breakdown }
                     } else {
                         data[project.id] = { count: 0, severity: { critical: 0, high: 0, medium: 0, low: 0 } }
                     }
@@ -233,7 +233,7 @@ export default function ReportBuilder() {
                 }
             }))
             
-            setProjectFindingsData(data)
+        setProjectFindingsData(data)
         }
         
         fetchFindingsCounts()
