@@ -120,9 +120,11 @@ export default function Clients() {
           headers: { Authorization: `Bearer ${token}` }
         })
         
-        if (response.data && Array.isArray(response.data) && response.data.length > 0) {
-          // Map API data to Client interface
-          const apiClients: Client[] = response.data.map((c: any) => {
+        if (response.data && Array.isArray(response.data)) {
+          console.log(`Fetched ${response.data.length} clients from API`)
+          if (response.data.length > 0) {
+             // Map API data to Client interface
+             const apiClients: Client[] = response.data.map((c: any) => {
             const logo = typeof c.logo_url === 'string' ? c.logo_url.trim() : ''
             const normalizedLogo = logo.startsWith('http://') || logo.startsWith('https://') ? logo : ''
 

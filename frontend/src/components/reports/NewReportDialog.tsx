@@ -132,9 +132,13 @@ export function NewReportDialog({ children, onReportCreated }: NewReportDialogPr
             })
             
             console.log(`Total projects fetched: ${apiProjects.length}, Active (non-archived): ${activeProjects.length}`)
-            console.log('Active projects:', activeProjects.map(p => ({ id: p.id, name: p.name, status: p.status })))
-            
-            setProjects(activeProjects)
+            // If filtering removes everything but we had projects, fallback to showing everything to avoid "No projects found" confusion
+            if (activeProjects.length === 0 && apiProjects.length > 0) {
+                 console.warn('Filtering removed all projects. Showing all projects as fallback.')
+                 setProjects(apiProjects)
+            } else {
+                setProjects(activeProjects)
+            }
         } catch (error: any) {
             console.error('Failed to fetch projects from API:', error)
             if (error.response) {
