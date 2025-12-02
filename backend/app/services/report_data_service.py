@@ -624,6 +624,28 @@ class ReportDataService:
         client_data = base_dict.get("client", {})
         primary_color = client_data.get("primary_color") or "#10b981"
         
+        # Get project data
+        project_data = base_dict.get("project", {})
+        
+        # Parse affected assets for findings
+        def parse_affected_assets(finding):
+            """Parse affected assets from JSON string to list."""
+            assets_json = finding.get("affected_assets_json")
+            if not assets_json:
+                return []
+            try:
+                assets_list = json.loads(assets_json) if isinstance(assets_json, str) else assets_json
+                if isinstance(assets_list, list):
+                    # Extract URLs from objects or use strings directly
+                    return [
+                        asset.get("url", asset) if isinstance(asset, dict) else asset
+                        for asset in assets_list
+                        if asset
+                    ]
+            except (json.JSONDecodeError, TypeError):
+                pass
+            return []
+        
         # Map to new template structure
         mapped_dict = {
             # Report object (new structure)
@@ -645,10 +667,18 @@ class ReportDataService:
             # Client object (with logo and primary_color)
             "client": {
                 **client_data,
-                "logo": client_data.get("logo_base64", None),
+                "logo": client_data.get("logo_base64") or client_data.get("logo_url"),  # Prefer base64, fallback to URL
                 "primary_color": primary_color,
             },
-            # Findings (ensure description_html, remediation_html, finding_id, evidence_html, and evidence_items are present)
+            # Project object (with all fields needed by template)
+            "project": {
+                **project_data,
+                "lead_tester": project_data.get("name", "Security Team"),  # Default to project name or "Security Team"
+                "start_date": project_data.get("start_date", ""),
+                "end_date": project_data.get("end_date", ""),
+                "scope": project_data.get("scope", []),
+            },
+            # Findings (ensure description_html, remediation_html, finding_id, evidence_html, evidence_items, assets, and references are present)
             "findings": [
                 {
                     **finding,
@@ -658,11 +688,13 @@ class ReportDataService:
                     "remediation_html": finding.get("remediation_html", ""),
                     "evidence_html": finding.get("evidence_html", ""),
                     "evidence_items": finding.get("evidence_items", []),
+                    "assets": parse_affected_assets(finding),  # Parse affected assets to list
+                    "references": finding.get("references", []),  # Ensure references is a list
                 }
                 for finding in base_dict.get("findings", [])
             ],
             # Keep all other fields for backward compatibility
-            **{k: v for k, v in base_dict.items() if k not in ["report_title", "generated_at", "report_id", "executive_summary_html", "stats", "client", "findings"]}
+            **{k: v for k, v in base_dict.items() if k not in ["report_title", "generated_at", "report_id", "executive_summary_html", "stats", "client", "findings", "project"]}
         }
         
         return mapped_dict

@@ -38,7 +38,7 @@ class Settings(BaseSettings):
     GRACE_PERIOD_DAYS: int = 30
     
     # CORS
-    CORS_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:5173"]
+    CORS_ORIGINS: list[str] = ["http://localhost", "http://localhost:80", "http://localhost:3000", "http://localhost:5173", "http://127.0.0.1", "http://127.0.0.1:80"]
     
     # File storage
     UPLOAD_DIR: str = "./uploads"
