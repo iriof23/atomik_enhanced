@@ -59,12 +59,12 @@ export const authApi = {
 // Clients API
 export const clientsApi = {
     list: async () => {
-        const response = await api.get('/clients')
+        const response = await api.get('/clients/')
         return response.data
     },
 
     create: async (data: any) => {
-        const response = await api.post('/clients', data)
+        const response = await api.post('/clients/', data)
         return response.data
     },
 }
@@ -72,12 +72,12 @@ export const clientsApi = {
 // Projects API
 export const projectsApi = {
     list: async () => {
-        const response = await api.get('/projects')
+        const response = await api.get('/projects/')
         return response.data
     },
 
     create: async (data: any) => {
-        const response = await api.post('/projects', data)
+        const response = await api.post('/projects/', data)
         return response.data
     },
 }
@@ -85,12 +85,12 @@ export const projectsApi = {
 // Findings API
 export const findingsApi = {
     list: async () => {
-        const response = await api.get('/findings')
+        const response = await api.get('/findings/')
         return response.data
     },
 
     create: async (data: any) => {
-        const response = await api.post('/findings', data)
+        const response = await api.post('/findings/', data)
         return response.data
     },
 }
@@ -98,12 +98,12 @@ export const findingsApi = {
 // Reports API
 export const reportsApi = {
     list: async () => {
-        const response = await api.get('/reports')
+        const response = await api.get('/reports/')
         return response.data
     },
 
     create: async (data: any) => {
-        const response = await api.post('/reports', data)
+        const response = await api.post('/reports/', data)
         return response.data
     },
 }

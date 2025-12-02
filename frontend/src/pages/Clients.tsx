@@ -116,7 +116,7 @@ export default function Clients() {
     try {
       const token = await getToken()
       if (token) {
-        const response = await api.get('/clients', {
+        const response = await api.get('/clients/', {
           headers: { Authorization: `Bearer ${token}` }
         })
         

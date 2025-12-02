@@ -133,7 +133,7 @@ export default function FindingsTabContent({ projectId: propProjectId, onUpdate 
                 remediation: vuln.recommendation || '',
             }
 
-            const response = await api.post('/findings', payload, {
+            const response = await api.post('/findings/', payload, {
                 headers: { Authorization: `Bearer ${token}` }
             })
 
@@ -177,7 +177,7 @@ export default function FindingsTabContent({ projectId: propProjectId, onUpdate 
 
             // Create all findings in parallel
             const createPromises = selectedVulns.map(vuln => 
-                api.post('/findings', {
+                api.post('/findings/', {
                     title: vuln.title,
                     description: vuln.description || '',
                     severity: vuln.severity === 'Info' ? 'Informational' : vuln.severity,

@@ -85,7 +85,7 @@ export default function ProjectTeamManager({
                     return
                 }
 
-                const response = await api.get('/v1/projects/available-members', {
+                const response = await api.get('/v1/projects/available-members/', {
                     headers: {
                         Authorization: `Bearer ${token}`
                     }

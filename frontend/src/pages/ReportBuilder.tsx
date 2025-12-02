@@ -77,7 +77,7 @@ export default function ReportBuilder() {
                     return
                 }
                 
-                const response = await api.get('/v1/projects', {
+                const response = await api.get('/v1/projects/', {
                     headers: { Authorization: `Bearer ${token}` }
                 })
                 

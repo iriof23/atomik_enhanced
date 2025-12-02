@@ -116,7 +116,7 @@ const useDashboardStore = (getToken: () => Promise<string | null>) => {
                 if (token) {
                     // Fetch real projects from API
                     try {
-                        const projectsRes = await api.get('/v1/projects', {
+                        const projectsRes = await api.get('/v1/projects/', {
                             headers: { Authorization: `Bearer ${token}` }
                         })
                         if (projectsRes.data && Array.isArray(projectsRes.data)) {
@@ -144,7 +144,7 @@ const useDashboardStore = (getToken: () => Promise<string | null>) => {
                     
                     // Fetch real clients from API
                     try {
-                        const clientsRes = await api.get('/clients', {
+                        const clientsRes = await api.get('/clients/', {
                             headers: { Authorization: `Bearer ${token}` }
                         })
                         if (clientsRes.data && Array.isArray(clientsRes.data)) {
@@ -752,7 +752,7 @@ export default function Dashboard() {
             try {
                 const token = await getToken()
                 if (token) {
-                    const response = await api.get('/clients', {
+                    const response = await api.get('/clients/', {
                         headers: { Authorization: `Bearer ${token}` }
                     })
                     if (response.data && Array.isArray(response.data)) {

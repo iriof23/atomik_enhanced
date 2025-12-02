@@ -79,7 +79,7 @@ export function NewReportDialog({ children, onReportCreated }: NewReportDialogPr
 
             // Fetch all projects - no query params
             console.log('Fetching projects from /v1/projects...')
-            const response = await api.get('/v1/projects', {
+            const response = await api.get('/v1/projects/', {
                 headers: { Authorization: `Bearer ${token}` }
             })
             
