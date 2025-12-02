@@ -167,11 +167,14 @@ async def create_finding(
             detail="Access denied"
         )
     
+    # Convert severity to uppercase to match database enum
+    severity_upper = finding_data.severity.upper() if finding_data.severity else "MEDIUM"
+    
     finding = await db.finding.create(
         data={
             "title": finding_data.title,
             "description": finding_data.description,
-            "severity": finding_data.severity,
+            "severity": severity_upper,
             "projectId": finding_data.project_id,
             "createdById": current_user.id,
             "cvssScore": finding_data.cvss_score,

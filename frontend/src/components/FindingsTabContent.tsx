@@ -54,11 +54,24 @@ export default function FindingsTabContent({ projectId: propProjectId, onUpdate 
 
     // Helper function to map API FindingResponse to ProjectFinding
     const mapApiFindingToProjectFinding = (apiFinding: any): ProjectFinding => {
+        // Convert uppercase severity from API to title case for frontend
+        const mapSeverity = (sev: string): ProjectFinding['severity'] => {
+            const severityMap: Record<string, ProjectFinding['severity']> = {
+                'CRITICAL': 'Critical',
+                'HIGH': 'High',
+                'MEDIUM': 'Medium',
+                'LOW': 'Low',
+                'INFO': 'Informational',
+                'INFORMATIONAL': 'Informational',
+            }
+            return severityMap[sev?.toUpperCase()] || 'Medium'
+        }
+        
         return {
             id: apiFinding.id,
             owaspId: apiFinding.cve_id || '',
             title: apiFinding.title,
-            severity: apiFinding.severity as ProjectFinding['severity'],
+            severity: mapSeverity(apiFinding.severity),
             cvssScore: apiFinding.cvss_score || undefined,
             cvssVector: apiFinding.cvss_vector || undefined,
             status: (apiFinding.status === 'OPEN' ? 'Open' : 
