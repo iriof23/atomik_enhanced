@@ -913,22 +913,16 @@ export default function Dashboard() {
     }
     
     const handleFindingAdded = (finding: any) => {
-        // For findings without a project, save to a global findings list
-        const existingFindings = JSON.parse(localStorage.getItem('global_findings') || '[]')
-        const updatedFindings = [...existingFindings, {
-            ...finding,
-            createdAt: new Date().toISOString(),
-            status: 'Draft'
-        }]
-        localStorage.setItem('global_findings', JSON.stringify(updatedFindings))
+        // Finding was already saved to the API by AddFindingDialog
+        // Just log activity and show success toast
         
         // Log activity
         logFindingAdded(finding.title, finding.severity || 'Medium', 'Library', finding.id)
         
         // Show success toast
         toast({
-            title: "✓ Finding Added Successfully",
-            description: `${finding.title} has been added to your findings library.`,
+            title: "✓ Finding Template Created",
+            description: `${finding.title} has been added to your custom templates in the Findings Database.`,
         })
     }
     

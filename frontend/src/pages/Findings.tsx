@@ -16,7 +16,8 @@ import {
     MoreHorizontal,
     ChevronLeft,
     ChevronRight,
-    Eye
+    Eye,
+    Loader2
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -40,13 +41,17 @@ import { vulnerabilityDatabase } from '../data/vulnerabilities'
 import { AddFindingDialog } from '@/components/AddFindingDialog'
 import { EditFindingModal, ProjectFinding } from '@/components/EditFindingModal'
 import { useToast } from "@/components/ui/use-toast"
+import { useAuth } from '@clerk/clerk-react'
+import { api } from '@/lib/api'
 
 export default function Findings() {
+    const { getToken } = useAuth()
     const [activeTab, setActiveTab] = useState<'system' | 'custom'>('system')
     const [searchQuery, setSearchQuery] = useState('')
     const [selectedCategory, setSelectedCategory] = useState<string>('All')
     const [selectedSeverity, setSelectedSeverity] = useState<string>('All')
     const [customFindings, setCustomFindings] = useState<any[]>([])
+    const [isLoadingCustom, setIsLoadingCustom] = useState(false)
     const [addDialogOpen, setAddDialogOpen] = useState(false)
     const [editingFinding, setEditingFinding] = useState<any>(null)
     const fileInputRef = useRef<HTMLInputElement>(null)
@@ -56,23 +61,61 @@ export default function Findings() {
     const [currentPage, setCurrentPage] = useState(1)
     const itemsPerPage = 10
 
-    // Load custom findings from localStorage
-    useEffect(() => {
-        const saved = localStorage.getItem('customFindings')
-        if (saved) {
-            try {
-                setCustomFindings(JSON.parse(saved))
-            } catch (e) {
-                console.error('Failed to parse custom findings', e)
-            }
-        }
-    }, [])
+    // Load custom findings from API
+    const fetchCustomFindings = async () => {
+        setIsLoadingCustom(true)
+        try {
+            const token = await getToken()
+            if (!token) return
 
-    // Save custom findings to localStorage
-    const saveCustomFindings = (findings: any[]) => {
-        setCustomFindings(findings)
-        localStorage.setItem('customFindings', JSON.stringify(findings))
+            const response = await api.get('/templates/', {
+                params: { type: 'FINDING' },
+                headers: { Authorization: `Bearer ${token}` }
+            })
+
+            if (response.data && Array.isArray(response.data)) {
+                // Map API response to the format expected by UI
+                const mappedFindings = response.data.map((template: any) => {
+                    let content = {}
+                    try {
+                        content = JSON.parse(template.content)
+                    } catch (e) {
+                        console.error('Failed to parse template content:', e)
+                    }
+                    
+                    return {
+                        id: template.id,
+                        title: template.name,
+                        description: (content as any).description || template.description || '',
+                        severity: (content as any).severity || 'Medium',
+                        category: (content as any).category || 'Web',
+                        remediation: (content as any).remediation || '',
+                        evidence: (content as any).evidence || '',
+                        owasp_reference: (content as any).owasp_reference || '',
+                        cvss_vector: (content as any).cvss_vector || '',
+                        isCustom: true,
+                        created_at: template.created_at,
+                        updated_at: template.updated_at
+                    }
+                })
+                setCustomFindings(mappedFindings)
+            }
+        } catch (error) {
+            console.error('Failed to fetch custom findings:', error)
+            toast({
+                title: 'Error',
+                description: 'Failed to load custom templates',
+                variant: 'destructive'
+            })
+        } finally {
+            setIsLoadingCustom(false)
+        }
     }
+
+    // Load custom findings on mount
+    useEffect(() => {
+        fetchCustomFindings()
+    }, [])
 
     // Reset pagination when filters change
     useEffect(() => {
@@ -123,8 +166,9 @@ export default function Findings() {
     }
 
     const handleAddFinding = (newFinding: any) => {
-        const updatedFindings = [newFinding, ...customFindings]
-        saveCustomFindings(updatedFindings)
+        // Finding was already saved to API by AddFindingDialog
+        // Just update local state and show toast
+        setCustomFindings(prev => [newFinding, ...prev])
         toast({
             title: "Finding Added",
             description: "New custom finding has been added to your templates.",
@@ -132,29 +176,97 @@ export default function Findings() {
         setActiveTab('custom')
     }
 
-    const handleDuplicate = (finding: any) => {
-        const duplicatedFinding = {
-            ...finding,
-            id: `custom-${Date.now()}`,
-            title: `${finding.title} (Copy)`,
-            isCustom: true
+    const handleDuplicate = async (finding: any) => {
+        try {
+            const token = await getToken()
+            if (!token) {
+                toast({
+                    title: 'Error',
+                    description: 'Authentication required',
+                    variant: 'destructive'
+                })
+                return
+            }
+
+            // Create the finding content as JSON
+            const findingContent = {
+                severity: finding.severity,
+                category: finding.category,
+                description: finding.description,
+                remediation: finding.remediation || finding.recommendation || '',
+                evidence: finding.evidence || '',
+                owasp_reference: finding.owasp_reference || finding.owasp_id || '',
+                cvss_vector: finding.cvss_vector || ''
+            }
+
+            // Call the templates API to create a duplicate FINDING template
+            const response = await api.post('/templates/', {
+                name: `${finding.title} (Copy)`,
+                description: finding.description?.replace(/<[^>]*>/g, '').substring(0, 200) || '',
+                type: 'FINDING',
+                content: JSON.stringify(findingContent),
+                is_public: false
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
+            })
+
+            // Map API response to the format expected by the UI
+            const duplicatedFinding = {
+                id: response.data.id,
+                title: response.data.name,
+                ...findingContent,
+                isCustom: true,
+                created_at: response.data.created_at,
+                updated_at: response.data.updated_at
+            }
+
+            setCustomFindings(prev => [duplicatedFinding, ...prev])
+            toast({
+                title: "Finding Duplicated",
+                description: "Finding has been copied to My Templates.",
+            })
+            setActiveTab('custom')
+        } catch (error) {
+            console.error('Failed to duplicate finding:', error)
+            toast({
+                title: 'Error',
+                description: 'Failed to duplicate finding',
+                variant: 'destructive'
+            })
         }
-        const updatedFindings = [duplicatedFinding, ...customFindings]
-        saveCustomFindings(updatedFindings)
-        toast({
-            title: "Finding Duplicated",
-            description: "Finding has been copied to My Templates.",
-        })
-        setActiveTab('custom')
     }
 
-    const handleDelete = (id: string) => {
-        const updatedFindings = customFindings.filter(f => f.id !== id)
-        saveCustomFindings(updatedFindings)
-        toast({
-            title: "Finding Deleted",
-            description: "Template has been removed.",
-        })
+    const handleDelete = async (id: string) => {
+        try {
+            const token = await getToken()
+            if (!token) {
+                toast({
+                    title: 'Error',
+                    description: 'Authentication required',
+                    variant: 'destructive'
+                })
+                return
+            }
+
+            // Call the templates API to delete
+            await api.delete(`/templates/${id}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            })
+
+            // Update local state
+            setCustomFindings(prev => prev.filter(f => f.id !== id))
+            toast({
+                title: "Finding Deleted",
+                description: "Template has been removed.",
+            })
+        } catch (error) {
+            console.error('Failed to delete finding:', error)
+            toast({
+                title: 'Error',
+                description: 'Failed to delete template',
+                variant: 'destructive'
+            })
+        }
     }
 
     const handleEdit = (finding: any) => {
@@ -175,38 +287,90 @@ export default function Findings() {
         setEditingFinding(mappedFinding)
     }
 
-    const handleUpdateFinding = (updatedFinding: ProjectFinding) => {
-        const updatedCustomFindings = customFindings.map(f => 
-            f.id === updatedFinding.id ? {
-                ...f,
-                title: updatedFinding.title,
+    const handleUpdateFinding = async (updatedFinding: ProjectFinding) => {
+        try {
+            const token = await getToken()
+            if (!token) {
+                toast({
+                    title: 'Error',
+                    description: 'Authentication required',
+                    variant: 'destructive'
+                })
+                return
+            }
+
+            // Find the original finding to get category and other fields
+            const originalFinding = customFindings.find(f => f.id === updatedFinding.id)
+
+            // Create the finding content as JSON
+            const findingContent = {
                 severity: updatedFinding.severity,
+                category: originalFinding?.category || 'Web',
                 description: updatedFinding.description,
                 remediation: updatedFinding.recommendations,
                 evidence: updatedFinding.evidence,
+                owasp_reference: originalFinding?.owasp_reference || '',
+                cvss_vector: originalFinding?.cvss_vector || '',
                 references: updatedFinding.references
-            } : f
-        )
-        saveCustomFindings(updatedCustomFindings)
-        setEditingFinding(null)
-        toast({
-            title: "Finding Updated",
-            description: "Changes have been saved to your template.",
-        })
+            }
+
+            // Call the templates API to update
+            await api.put(`/templates/${updatedFinding.id}`, {
+                name: updatedFinding.title,
+                description: updatedFinding.description?.replace(/<[^>]*>/g, '').substring(0, 200) || '',
+                content: JSON.stringify(findingContent)
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
+            })
+
+            // Update local state
+            setCustomFindings(prev => prev.map(f => 
+                f.id === updatedFinding.id ? {
+                    ...f,
+                    title: updatedFinding.title,
+                    severity: updatedFinding.severity,
+                    description: updatedFinding.description,
+                    remediation: updatedFinding.recommendations,
+                    evidence: updatedFinding.evidence,
+                    references: updatedFinding.references
+                } : f
+            ))
+            setEditingFinding(null)
+            toast({
+                title: "Finding Updated",
+                description: "Changes have been saved to your template.",
+            })
+        } catch (error) {
+            console.error('Failed to update finding:', error)
+            toast({
+                title: 'Error',
+                description: 'Failed to update template',
+                variant: 'destructive'
+            })
+        }
     }
 
     const handleImportClick = () => {
         fileInputRef.current?.click()
     }
 
-    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0]
         if (!file) return
 
-        setTimeout(() => {
-            const importedFinding = {
-                id: `imported-${Date.now()}`,
-                title: `Imported: ${file.name.split('.')[0]} Vulnerability`,
+        try {
+            const token = await getToken()
+            if (!token) {
+                toast({
+                    title: 'Error',
+                    description: 'Authentication required',
+                    variant: 'destructive'
+                })
+                return
+            }
+
+            // Create the finding content
+            const findingContent = {
                 severity: 'High',
                 category: 'Network',
                 description: 'This finding was imported from an external scanner report.',
@@ -214,17 +378,42 @@ export default function Findings() {
                 owasp_reference: 'N/A'
             }
 
-            const updatedFindings = [importedFinding, ...customFindings]
-            saveCustomFindings(updatedFindings)
+            // Call the templates API to create
+            const response = await api.post('/templates/', {
+                name: `Imported: ${file.name.split('.')[0]} Vulnerability`,
+                description: 'Imported from external scanner report',
+                type: 'FINDING',
+                content: JSON.stringify(findingContent),
+                is_public: false
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
+            })
 
+            const importedFinding = {
+                id: response.data.id,
+                title: response.data.name,
+                ...findingContent,
+                isCustom: true,
+                created_at: response.data.created_at,
+                updated_at: response.data.updated_at
+            }
+
+            setCustomFindings(prev => [importedFinding, ...prev])
             toast({
                 title: "Import Successful",
                 description: `Successfully imported findings from ${file.name}`,
             })
-
-            if (fileInputRef.current) fileInputRef.current.value = ''
             setActiveTab('custom')
-        }, 1000)
+        } catch (error) {
+            console.error('Failed to import finding:', error)
+            toast({
+                title: 'Error',
+                description: 'Failed to import finding',
+                variant: 'destructive'
+            })
+        } finally {
+            if (fileInputRef.current) fileInputRef.current.value = ''
+        }
     }
 
     return (
@@ -329,7 +518,12 @@ export default function Findings() {
 
             {/* Main Content - High Density Table */}
             <div className="flex-1 min-h-0 bg-card rounded-lg border border-border overflow-hidden shadow-sm flex flex-col">
-                {filteredFindings.length === 0 ? (
+                {activeTab === 'custom' && isLoadingCustom ? (
+                    <div className="flex-1 flex flex-col items-center justify-center text-center py-12 text-muted-foreground">
+                        <Loader2 className="w-8 h-8 animate-spin text-primary mb-4" />
+                        <p>Loading custom templates...</p>
+                    </div>
+                ) : filteredFindings.length === 0 ? (
                     <div className="flex-1 flex flex-col items-center justify-center text-center py-12 text-muted-foreground">
                         {activeTab === 'custom' && !searchQuery ? (
                             <>
