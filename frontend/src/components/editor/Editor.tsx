@@ -102,32 +102,34 @@ export const Editor = ({
         editorProps: {
             attributes: {
                 class: cn(
-                    'prose prose-invert prose-sm max-w-none focus:outline-none space-y-4',
+                    'prose prose-invert prose-base max-w-none focus:outline-none w-full',
 
                     // Headings
                     'prose-headings:font-semibold prose-headings:text-zinc-100',
-                    '[&_h1]:text-2xl [&_h1]:font-bold [&_h1]:tracking-tight [&_h1]:text-white [&_h1]:mt-6 [&_h1]:mb-4',
-                    '[&_h2]:text-xl [&_h2]:font-semibold [&_h2]:tracking-tight [&_h2]:text-zinc-100 [&_h2]:mt-4 [&_h2]:mb-2',
-                    '[&_h3]:text-lg [&_h3]:font-medium [&_h3]:text-zinc-200',
+                    '[&_h1]:text-xl [&_h1]:font-bold [&_h1]:tracking-tight [&_h1]:text-white [&_h1]:mt-4 [&_h1]:mb-2',
+                    '[&_h2]:text-lg [&_h2]:font-semibold [&_h2]:tracking-tight [&_h2]:text-zinc-100 [&_h2]:mt-3 [&_h2]:mb-2',
+                    '[&_h3]:text-base [&_h3]:font-medium [&_h3]:text-zinc-200 [&_h3]:mt-2 [&_h3]:mb-1',
 
-                    // Text
-                    'prose-p:text-zinc-300 prose-p:leading-7',
+                    // Text - Full width, justified text for better readability
+                    'prose-p:text-zinc-300 prose-p:leading-normal prose-p:my-3',
+                    '[&_p]:text-base [&_p]:leading-normal [&_p]:my-3 [&_p]:text-justify',
                     'prose-a:text-primary prose-a:no-underline hover:prose-a:underline',
                     'prose-strong:text-zinc-100 prose-strong:font-semibold',
-                    'prose-ul:list-disc prose-ul:pl-6 prose-ol:list-decimal prose-ol:pl-6',
-                    'prose-li:marker:text-zinc-500',
+                    'prose-em:text-zinc-200 prose-em:italic',
+                    'prose-ul:list-disc prose-ul:pl-5 prose-ul:my-3 prose-ol:list-decimal prose-ol:pl-5 prose-ol:my-3',
+                    'prose-li:marker:text-zinc-500 prose-li:my-1 [&_li]:text-base',
 
                     // Code Blocks (Terminal Style)
-                    'prose-code:rounded prose-code:bg-zinc-900 prose-code:px-1 prose-code:py-0.5 prose-code:text-zinc-100 prose-code:before:content-none prose-code:after:content-none',
-                    '[&_pre]:bg-[#1e1e1e] [&_pre]:border [&_pre]:border-zinc-700 [&_pre]:rounded-md [&_pre]:p-4 [&_pre]:font-mono [&_pre]:text-sm [&_pre]:text-zinc-300',
-                    '[&_pre]:relative [&_pre]:pt-12', // Extra padding for "window" header
-                    '[&_pre::before]:content-[""] [&_pre::before]:absolute [&_pre::before]:top-4 [&_pre::before]:left-4 [&_pre::before]:w-3 [&_pre::before]:h-3 [&_pre::before]:rounded-full [&_pre::before]:bg-[#ff5f56] [&_pre::before]:shadow-[1.2rem_0_0_#ffbd2e,2.4rem_0_0_#27c93f]', // Mac window dots
+                    'prose-code:rounded prose-code:bg-zinc-900 prose-code:px-1.5 prose-code:py-0.5 prose-code:text-zinc-100 prose-code:before:content-none prose-code:after:content-none prose-code:text-sm',
+                    '[&_pre]:bg-[#1e1e1e] [&_pre]:border [&_pre]:border-zinc-700 [&_pre]:rounded-md [&_pre]:p-4 [&_pre]:font-mono [&_pre]:text-sm [&_pre]:text-zinc-300 [&_pre]:my-3',
+                    '[&_pre]:relative [&_pre]:pt-10', // Extra padding for "window" header
+                    '[&_pre::before]:content-[""] [&_pre::before]:absolute [&_pre::before]:top-3 [&_pre::before]:left-3 [&_pre::before]:w-2.5 [&_pre::before]:h-2.5 [&_pre::before]:rounded-full [&_pre::before]:bg-[#ff5f56] [&_pre::before]:shadow-[1rem_0_0_#ffbd2e,2rem_0_0_#27c93f]', // Mac window dots
 
                     // Blockquotes (Callout Style)
-                    '[&_blockquote]:bg-zinc-900/50 [&_blockquote]:border-l-4 [&_blockquote]:border-emerald-500 [&_blockquote]:py-2 [&_blockquote]:px-4 [&_blockquote]:not-italic [&_blockquote]:text-zinc-300 [&_blockquote]:rounded-r-md [&_blockquote]:my-4',
+                    '[&_blockquote]:bg-zinc-900/50 [&_blockquote]:border-l-4 [&_blockquote]:border-emerald-500 [&_blockquote]:py-2 [&_blockquote]:px-4 [&_blockquote]:not-italic [&_blockquote]:text-zinc-300 [&_blockquote]:rounded-r-md [&_blockquote]:my-3 [&_blockquote]:text-base',
 
-                    // Layout
-                    'min-h-[400px] w-full h-auto [&_.ProseMirror]:min-h-[400px] [&_.ProseMirror]:h-auto'
+                    // Layout - Full width
+                    'min-h-[150px] w-full h-auto [&_.ProseMirror]:min-h-[150px] [&_.ProseMirror]:h-auto [&_.ProseMirror]:w-full'
                 ),
             },
             handleDrop: (view, event, _slice, moved) => {
@@ -300,8 +302,8 @@ export const Editor = ({
             className={cn(
                 'relative w-full rounded-md border bg-transparent transition-all duration-200 cursor-text',
                 showDropZone
-                    ? 'min-h-[400px] border-dashed border-2 border-zinc-700 hover:border-zinc-600'
-                    : 'min-h-[400px] h-auto border-zinc-800/50 focus-within:border-zinc-500 focus-within:ring-1 focus-within:ring-zinc-600',
+                    ? 'min-h-[200px] border-dashed border-2 border-zinc-700 hover:border-zinc-600'
+                    : 'min-h-[150px] h-auto border-zinc-800/50 focus-within:border-zinc-500 focus-within:ring-1 focus-within:ring-zinc-600',
                 'p-0', // Removed padding to let toolbar sit flush if desired, or manage padding in toolbar/content
                 className
             )}
@@ -332,8 +334,8 @@ export const Editor = ({
                 onChange={handleFileInputChange}
             />
             {editable && <EditorToolbar editor={editor} />}
-            <div className="p-4">
-                <EditorContent editor={editor} />
+            <div className="p-4 w-full">
+                <EditorContent editor={editor} className="w-full" />
             </div>
         </div>
     );

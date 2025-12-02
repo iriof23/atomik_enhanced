@@ -18,7 +18,7 @@
 
     <style>
 
-        /* --- 1. DESIGN TOKENS --- */
+        /* --- 1. PREMIUM VARIABLES --- */
 
         :root {
 
@@ -26,9 +26,11 @@
 
             --primary-dim: {{ client.primary_color | default('#10b981') }}15;
 
-            --dark: #050505;
+            --dark: #09090b;
 
             --slate: #64748b;
+
+            --light-gray: #f8fafc;
 
             --border: #e2e8f0;
 
@@ -56,9 +58,9 @@
 
             size: A4;
 
-            margin-top: 30mm;
+            margin-top: 35mm;    /* Clear Header */
 
-            margin-bottom: 20mm;
+            margin-bottom: 25mm; /* Clear Footer */
 
             margin-left: 20mm;
 
@@ -68,7 +70,9 @@
 
 
 
-        @page :first { margin: 0 !important; } /* Full Bleed Cover */
+        /* Full Bleed Cover Override */
+
+        @page :first { margin: 0 !important; }
 
 
 
@@ -78,9 +82,9 @@
 
             font-size: 10pt;
 
-            line-height: 1.5;
+            line-height: 1.6;
 
-            color: #1e293b;
+            color: #334155;
 
             margin: 0;
 
@@ -98,7 +102,15 @@
 
 
 
-        /* --- 3. COVER PAGE (Keep exactly as approved) --- */
+        h1, h2, h3, h4 { margin: 0; font-weight: 700; color: #0f172a; }
+
+        p { margin-bottom: 1.2em; }
+
+        a { color: var(--primary); text-decoration: none; }
+
+
+
+        /* --- 3. COVER PAGE (Keep approved design) --- */
 
         .cover-page {
 
@@ -120,9 +132,23 @@
 
         }
 
-        .cover-bar { position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: var(--primary); box-shadow: 0 0 20px var(--primary-dim); }
+        
+
+        .cover-bar { 
+
+            position: absolute; left: 0; top: 0; bottom: 0; width: 8px; 
+
+            background: var(--primary); 
+
+            box-shadow: 0 0 40px var(--primary);
+
+        }
+
+        
 
         .cover-content { padding: 0 25mm; }
+
+        
 
         .confidential-pill {
 
@@ -130,173 +156,245 @@
 
             border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.02);
 
-            padding: 6px 12px; border-radius: 100px; display: inline-block; margin-bottom: 30px;
+            padding: 8px 16px; border-radius: 100px; display: inline-block; margin-bottom: 40px;
 
-            text-transform: uppercase; letter-spacing: 1px;
+            text-transform: uppercase; letter-spacing: 2px;
 
         }
 
-        h1.cover-title { font-size: 42pt; font-weight: 700; line-height: 1.1; color: #ffffff; margin: 0; letter-spacing: -0.03em; }
+        
+
+        h1.cover-title { 
+
+            font-size: 38pt; font-weight: 800; line-height: 1.1; 
+
+            color: #ffffff; margin: 0; letter-spacing: -0.03em; 
+
+        }
+
+        
 
         .cover-footer {
 
             position: absolute; bottom: 0; left: 0; right: 0; padding: 20mm 25mm;
 
-            border-top: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2);
+            border-top: 1px solid rgba(255,255,255,0.1); 
+
+            background: rgba(0,0,0,0.4); backdrop-filter: blur(20px);
 
             display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;
 
         }
 
-        .cf-label { font-family: 'JetBrains Mono'; font-size: 7pt; color: #52525b; text-transform: uppercase; display: block; margin-bottom: 5px; }
+        .cf-label { font-family: 'JetBrains Mono'; font-size: 7pt; color: #9ca3af; text-transform: uppercase; display: block; margin-bottom: 6px; letter-spacing: 1px; }
 
-        .cf-value { font-size: 10pt; font-weight: 600; color: #fff; }
+        .cf-value { font-size: 11pt; font-weight: 600; color: #fff; }
 
 
 
-        /* --- 4. INTERNAL LAYOUT --- */
+        /* --- 4. INTERNAL HEADER --- */
 
         .running-header {
 
-            position: fixed; top: -20mm; left: 0; right: 0; height: 10mm;
+            position: fixed; 
+
+            top: -25mm; 
+
+            left: 0; right: 0; height: 15mm;
 
             display: flex; justify-content: space-between; align-items: center;
 
-            border-bottom: 2px solid var(--primary); background: #fff; padding-bottom: 5px; z-index: 100;
+            border-bottom: 1px solid var(--border); 
+
+            background: #fff; 
+
+            padding-bottom: 10px; 
+
+            z-index: 100;
 
         }
 
-        .rh-logo { font-weight: 800; color: var(--dark); font-size: 11pt; }
+        .rh-logo { font-weight: 800; color: var(--dark); font-size: 11pt; display: flex; align-items: center; gap: 10px; }
 
-        .rh-meta { font-family: 'JetBrains Mono'; font-size: 8pt; color: var(--slate); text-transform: uppercase; }
+        .rh-meta { font-family: 'JetBrains Mono'; font-size: 8pt; color: var(--slate); text-transform: uppercase; letter-spacing: 1px; }
 
 
 
         h2.section-title {
 
-            font-size: 16pt; text-transform: uppercase; letter-spacing: 0.05em; color: var(--dark); 
+            font-size: 18pt; text-transform: uppercase; letter-spacing: 0.05em; color: var(--dark); 
 
-            border-bottom: 2px solid var(--dark); padding-bottom: 10px; margin-bottom: 30px; margin-top: 0;
-
-        }
-
-
-
-        /* --- 5. PROJECT DASHBOARD (Testing Info Chart) --- */
-
-        .project-meta-grid {
-
-            display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 40px;
-
-        }
-
-        .meta-card {
-
-            border: 1px solid var(--border); border-radius: 6px; padding: 15px;
-
-            background: #f8fafc;
-
-        }
-
-        .meta-card-label {
-
-            font-size: 8pt; text-transform: uppercase; color: var(--slate); font-weight: 700; margin-bottom: 5px;
-
-        }
-
-        .meta-card-value {
-
-            font-size: 11pt; font-weight: 600; color: var(--dark);
+            border-bottom: 2px solid var(--dark); padding-bottom: 15px; margin-bottom: 40px; margin-top: 0;
 
         }
 
 
 
-        /* Scope Box */
+        /* --- 5. PROJECT INFO (THE REDESIGN) --- */
 
-        .scope-box {
+        /* This replaces the floating cards with a solid Spec Sheet */
 
-            border: 1px solid var(--border); border-radius: 6px; padding: 20px; margin-bottom: 30px;
+        .spec-sheet {
+
+            border: 1px solid var(--border);
+
+            border-radius: 8px;
+
+            overflow: hidden;
+
+            margin-bottom: 40px;
+
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.03);
 
         }
 
-        .scope-item {
 
-            font-family: 'JetBrains Mono'; font-size: 9pt; padding: 8px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center;
+
+        .spec-header {
+
+            background: var(--dark);
+
+            color: white;
+
+            padding: 12px 25px;
+
+            font-size: 9pt;
+
+            font-weight: 700;
+
+            text-transform: uppercase;
+
+            letter-spacing: 1px;
+
+            border-bottom: 3px solid var(--primary); /* Atomik Green Accent */
+
+            display: flex; justify-content: space-between;
 
         }
 
-        .scope-item:last-child { border-bottom: none; }
-
-        .scope-icon { color: var(--primary); margin-right: 10px; }
 
 
+        .spec-grid {
 
-        /* --- 6. SUMMARY CHARTS (CSS Bars) --- */
+            display: grid;
+
+            grid-template-columns: 1fr 1fr 1fr;
+
+        }
+
+
+
+        .spec-item {
+
+            padding: 20px 25px;
+
+            border-right: 1px solid var(--border);
+
+            border-bottom: 1px solid var(--border);
+
+            background: #fff;
+
+        }
+
+        .spec-item:nth-child(3n) { border-right: none; } /* Remove right border on last col */
+
+        
+
+        .spec-full { grid-column: 1 / -1; border-right: none; } /* Full width rows */
+
+
+
+        .spec-label {
+
+            font-family: 'JetBrains Mono';
+
+            font-size: 7pt;
+
+            color: var(--primary); /* Green Label */
+
+            text-transform: uppercase;
+
+            margin-bottom: 6px;
+
+            display: block;
+
+            letter-spacing: 0.5px;
+
+        }
+
+
+
+        .spec-value {
+
+            font-size: 11pt;
+
+            font-weight: 600;
+
+            color: var(--dark);
+
+        }
+
+
+
+        /* --- 6. SUMMARY CHARTS --- */
 
         .risk-dashboard {
 
-            display: flex; gap: 30px; align-items: stretch; margin-bottom: 40px;
-
-        }
-
-        .risk-donut-container {
-
-            width: 150px; text-align: center; display: flex; flex-direction: column; justify-content: center;
+            display: flex; gap: 40px; align-items: center; margin-bottom: 50px; padding: 25px; border: 1px solid var(--border); border-radius: 12px;
 
         }
 
         .risk-circle {
 
-            width: 100px; height: 100px; border-radius: 50%; border: 8px solid var(--dark);
+            width: 120px; height: 120px; border-radius: 50%; border: 10px solid var(--dark);
 
-            margin: 0 auto 10px auto; display: flex; flex-direction: column; justify-content: center;
+            display: flex; flex-direction: column; justify-content: center; align-items: center; flex-shrink: 0;
 
         }
 
         .risk-grid {
 
-            flex-grow: 1; display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px;
+            flex-grow: 1; display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px;
 
         }
 
         .risk-stat-box {
 
-            border: 1px solid var(--border); border-radius: 6px; padding: 15px; text-align: center;
+            padding: 10px; text-align: center; border-right: 1px solid var(--border);
 
         }
 
-        .rs-num { font-size: 20pt; font-weight: 800; display: block; }
+        .risk-stat-box:last-child { border-right: none; }
 
-        .rs-lbl { font-size: 7pt; font-weight: 700; text-transform: uppercase; color: var(--slate); }
+        
+
+        .rs-num { font-size: 24pt; font-weight: 800; display: block; line-height: 1; margin-bottom: 5px; }
+
+        .rs-lbl { font-size: 7pt; font-weight: 700; text-transform: uppercase; color: var(--slate); letter-spacing: 1px; }
 
 
 
-        /* --- 7. DETAILED FINDING GRID (The New Requirement) --- */
+        /* --- 7. FINDING CARD --- */
 
         .finding-card {
 
-            border: 1px solid var(--border); margin-bottom: 30px;
+            border: 1px solid var(--border); margin-bottom: 50px;
 
-            page-break-inside: avoid; background: #fff; border-radius: 6px; overflow: hidden;
+            page-break-inside: avoid; background: #fff; border-radius: 8px; overflow: hidden;
 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
 
         }
 
 
 
-        /* A. The Colored Strip */
-
         .finding-header-strip {
 
-            padding: 8px 20px; color: white; font-weight: 700; font-size: 10pt;
+            padding: 12px 25px; color: white; font-weight: 700; font-size: 11pt;
 
             display: flex; justify-content: space-between; align-items: center;
 
         }
-
-        /* Severity Colors */
 
         .bg-CRITICAL { background: var(--sev-critical); }
 
@@ -310,23 +408,19 @@
 
 
 
-        /* B. The Metadata Grid (Boxy & Gray) */
-
         .finding-meta-grid {
 
             display: grid; grid-template-columns: 2fr 1fr; 
 
             border-bottom: 1px solid var(--border);
 
-            background: #f8fafc;
+            background: var(--light-gray);
 
         }
 
-        
-
         .meta-cell {
 
-            padding: 12px 20px;
+            padding: 15px 25px;
 
             border-right: 1px solid var(--border);
 
@@ -336,51 +430,43 @@
 
         .meta-cell:last-child { border-right: none; }
 
-        .meta-cell-full { grid-column: span 2; border-right: none; }
-
-
+        
 
         .f-label {
 
             display: block; font-family: 'JetBrains Mono'; font-size: 7pt; font-weight: 700; 
 
-            text-transform: uppercase; color: var(--slate); margin-bottom: 4px;
+            text-transform: uppercase; color: var(--slate); margin-bottom: 6px; letter-spacing: 0.5px;
 
         }
 
-        .f-value { font-size: 10pt; font-weight: 600; color: var(--dark); }
+        .f-value { font-size: 11pt; font-weight: 600; color: var(--dark); }
 
-        .f-value-mono { font-family: 'JetBrains Mono'; font-size: 9pt; }
+        .f-value-mono { font-family: 'JetBrains Mono'; font-size: 9pt; color: var(--dark); }
 
 
 
-        /* C. The Content Body */
+        .finding-content { padding: 30px 30px; }
 
-        .finding-content { padding: 25px 30px; }
-
-        
-
-        .content-section { margin-bottom: 25px; }
+        .content-section { margin-bottom: 30px; }
 
         .content-title {
 
-            font-size: 9pt; font-weight: 700; text-transform: uppercase; 
+            font-size: 9pt; font-weight: 800; text-transform: uppercase; 
 
             color: var(--dark); border-bottom: 2px solid var(--primary); 
 
-            display: inline-block; margin-bottom: 10px; padding-bottom: 2px;
+            display: inline-block; margin-bottom: 15px; padding-bottom: 4px; letter-spacing: 0.5px;
 
         }
 
 
 
-        /* Evidence Images */
+        .evidence-container { margin-top: 20px; border: 1px solid var(--border); padding: 10px; background: #fff; border-radius: 6px; }
 
-        .evidence-container { margin-top: 15px; border: 1px solid var(--border); padding: 5px; background: #fafafa; }
+        .evidence-container img { width: 100%; display: block; border-radius: 4px; }
 
-        .evidence-container img { width: 100%; display: block; }
-
-        .evidence-caption { text-align: center; font-size: 8pt; color: var(--slate); padding: 5px; font-family: 'JetBrains Mono'; }
+        .evidence-caption { margin-top: 10px; text-align: center; font-size: 8pt; color: var(--slate); font-family: 'JetBrains Mono'; }
 
 
 
@@ -392,17 +478,19 @@
 
             display: flex; justify-content: space-between; align-items: center;
 
-            font-size: 7pt; color: var(--slate); text-transform: uppercase; letter-spacing: 0.05em;
+            font-size: 8pt; color: var(--slate); text-transform: uppercase; letter-spacing: 1px;
+
+            border-top: 1px solid var(--border); padding-top: 10px;
 
         }
 
         
 
-        /* Markdown */
+        .markdown-body ul { padding-left: 20px; }
 
-        .markdown-body { font-size: 10pt; color: #334155; }
+        .markdown-body li { margin-bottom: 5px; }
 
-        .markdown-body pre { background: #f1f5f9; padding: 10px; border: 1px solid var(--border); border-radius: 4px; white-space: pre-wrap; font-family: 'JetBrains Mono'; font-size: 8pt; }
+        .markdown-body pre { background: var(--light-gray); padding: 15px; border: 1px solid var(--border); border-radius: 6px; white-space: pre-wrap; font-family: 'JetBrains Mono'; font-size: 9pt; }
 
     </style>
 
@@ -416,7 +504,7 @@
 
         <div class="rh-logo">
 
-            {% if client.logo %}<img src="{{ client.logo }}" style="height: 25px; margin-right: 10px;">{% endif %}
+            {% if client.logo %}<img src="{{ client.logo }}" style="height: 25px; margin-right: 15px;">{% endif %}
 
             <span>{{ client.name }}</span>
 
@@ -442,7 +530,7 @@
 
         <div class="cover-footer">
 
-            <div>
+            <div style="text-align: left;">
 
                 <span class="cf-label">PREPARED FOR</span>
 
@@ -474,69 +562,87 @@
 
     <div class="page-break">
 
-        <h2 class="section-title">Project Information</h2>
+        <h2 class="section-title">Project Overview</h2>
 
         
 
-        <div class="project-meta-grid">
+        <div class="spec-sheet">
 
-            <div class="meta-card">
+            <div class="spec-header">
 
-                <div class="meta-card-label">Report Name</div>
+                <span>Engagement Details</span>
 
-                <div class="meta-card-value">{{ report.title }}</div>
-
-            </div>
-
-            <div class="meta-card">
-
-                <div class="meta-card-label">Lead Assigned</div>
-
-                <div class="meta-card-value">{{ project.lead_tester or 'Security Team' }}</div>
+                <span style="opacity: 0.7;">CONFIDENTIAL</span>
 
             </div>
 
-            <div class="meta-card">
+            <div class="spec-grid">
 
-                <div class="meta-card-label">Testing Dates</div>
+                <div class="spec-item spec-full">
 
-                <div class="meta-card-value">{{ project.start_date }} - {{ project.end_date }}</div>
+                    <span class="spec-label">Report Name</span>
 
-            </div>
-
-            <div class="meta-card">
-
-                <div class="meta-card-label">Delivery Date</div>
-
-                <div class="meta-card-value">{{ report.date }}</div>
-
-            </div>
-
-        </div>
-
-
-
-        <h2 class="section-title">Assessment Scope</h2>
-
-        <div class="scope-box">
-
-            {% if project.scope %}
-
-                {% for item in project.scope %}
-
-                <div class="scope-item">
-
-                    <span class="scope-icon">Target:</span> {{ item }}
+                    <div class="spec-value" style="font-size: 14pt;">{{ report.title }}</div>
 
                 </div>
 
-                {% endfor %}
 
-            {% else %}
 
-                <div class="scope-item">No specific scope items defined.</div>
+                <div class="spec-item">
 
-            {% endif %}
+                    <span class="spec-label">Lead Tester</span>
+
+                    <div class="spec-value">{{ project.lead_tester or 'Security Team' }}</div>
+
+                </div>
+
+                <div class="spec-item">
+
+                    <span class="spec-label">Testing Period</span>
+
+                    <div class="spec-value">{{ project.start_date }} - {{ project.end_date }}</div>
+
+                </div>
+
+                <div class="spec-item">
+
+                    <span class="spec-label">Delivery Date</span>
+
+                    <div class="spec-value">{{ report.date }}</div>
+
+                </div>
+
+
+
+                <div class="spec-item spec-full" style="background: #fafafa;">
+
+                    <span class="spec-label" style="color: var(--slate); margin-bottom: 10px;">Assessment Scope</span>
+
+                    <div style="font-family: 'JetBrains Mono'; font-size: 9pt;">
+
+                        {% if project.scope %}
+
+                            {% for item in project.scope %}
+
+                            <div style="margin-bottom: 5px;">
+
+                                <span style="color: var(--primary); margin-right: 8px;">></span> {{ item }}
+
+                            </div>
+
+                            {% endfor %}
+
+                        {% else %}
+
+                            No scope items defined.
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+            </div>
 
         </div>
 
@@ -556,11 +662,11 @@
 
                 <div class="risk-circle">
 
-                    <span style="font-size: 24pt; font-weight: 800;">{{ findings|length }}</span>
+                    <span style="font-size: 32pt; font-weight: 800; line-height: 1;">{{ findings|length }}</span>
+
+                    <span style="font-size: 7pt; font-weight: 700; text-transform: uppercase; color: var(--slate); margin-top: 5px;">Total</span>
 
                 </div>
-
-                <span style="font-size: 8pt; font-weight: 700; text-transform: uppercase; color: var(--slate);">Total Issues</span>
 
             </div>
 
@@ -728,11 +834,11 @@
 
                     <div class="content-title">References</div>
 
-                    <ul class="markdown-body" style="padding-left: 20px;">
+                    <ul class="markdown-body">
 
                         {% for ref in finding.references %}
 
-                        <li><a href="{{ ref }}" style="color: var(--primary);">{{ ref }}</a></li>
+                        <li><a href="{{ ref }}" target="_blank">{{ ref }}</a></li>
 
                         {% endfor %}
 
