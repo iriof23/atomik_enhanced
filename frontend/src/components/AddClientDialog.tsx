@@ -187,7 +187,7 @@ export function AddClientDialog({ open, onOpenChange, onClientAdded, editingClie
             const frontendClientData = {
                 id: clientData.id,
                 name: clientData.name,
-                logoUrl: formData.logoUrl || '🏢',
+                logoUrl: formData.logoUrl || '',
                 status: formData.status,
                 riskLevel: formData.riskLevel,
                 industry: formData.industry,
@@ -328,16 +328,16 @@ export function AddClientDialog({ open, onOpenChange, onClientAdded, editingClie
 
                         <div className="space-y-2">
                             <Label htmlFor="logoUrl" className="flex items-center gap-2">
-                                Logo URL or Emoji
+                                Logo URL (optional)
                             </Label>
                             <Input
                                 id="logoUrl"
-                                placeholder="🏢 or https://example.com/logo.png"
+                                placeholder="https://example.com/logo.png"
                                 value={formData.logoUrl}
                                 onChange={(e) => updateField('logoUrl', e.target.value)}
                             />
                             <p className="text-xs text-muted-foreground">
-                                Enter an emoji or a URL to an image
+                                Enter a URL to your company logo image
                             </p>
                         </div>
                     </div>

@@ -24,7 +24,8 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
-  Loader2
+  Loader2,
+  Building2
 } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
@@ -124,7 +125,7 @@ export default function Clients() {
           const apiClients: Client[] = response.data.map((c: any) => ({
             id: c.id,
             name: c.name,
-            logoUrl: '🏢',
+            logoUrl: '',
             status: c.status || 'Active',
             riskLevel: c.risk_level || 'Medium',
             industry: c.industry || 'Technology',
@@ -933,7 +934,13 @@ function TableView({ clients, onView, onEdit, onDelete, onDuplicate, onArchive, 
               <tr key={client.id} className="hover:bg-muted/50 transition-colors">
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center gap-3">
-                    <div className="text-2xl">{client.logoUrl}</div>
+                    {client.logoUrl ? (
+                      <img src={client.logoUrl} alt={client.name} className="w-10 h-10 rounded object-cover" />
+                    ) : (
+                      <div className="w-10 h-10 rounded bg-muted flex items-center justify-center">
+                        <Building2 className="w-5 h-5 text-muted-foreground" />
+                      </div>
+                    )}
                     <div>
                       <div className="font-medium text-foreground">{client.name}</div>
                       <div className="text-sm text-muted-foreground">{client.industry}</div>

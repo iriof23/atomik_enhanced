@@ -87,7 +87,7 @@ export default function ReportBuilder() {
                         id: p.id,
                         name: p.name,
                         clientName: p.client_name || 'Unknown Client',
-                        clientLogoUrl: '🏢',
+                        clientLogoUrl: '',
                         status: p.status === 'PLANNING' ? 'Planning' : 
                                 p.status === 'IN_PROGRESS' ? 'In Progress' : 
                                 p.status === 'COMPLETED' ? 'Completed' : 'In Progress',
@@ -350,7 +350,7 @@ export default function ReportBuilder() {
                                     id: p.id,
                                     name: p.name,
                                     clientName: p.client_name || 'Unknown Client',
-                                    clientLogoUrl: '🏢',
+                                    clientLogoUrl: '',
                                     status: p.status === 'PLANNING' ? 'Planning' : 
                                             p.status === 'IN_PROGRESS' ? 'In Progress' : 
                                             p.status === 'COMPLETED' ? 'Completed' : 'In Progress',

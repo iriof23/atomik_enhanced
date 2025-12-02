@@ -893,7 +893,7 @@ export default function Dashboard() {
                 startDate: new Date(),
                 endDate: new Date(project.endDate),
                 clientId: '1',
-                clientLogoUrl: '🏢'
+                clientLogoUrl: ''
             })
         }
     }

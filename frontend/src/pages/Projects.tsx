@@ -186,7 +186,7 @@ export default function Projects() {
                     const mappedClients = response.data.map((c: any) => ({
                         id: c.id,
                         name: c.name,
-                        logoUrl: '🏢' // Default icon
+                        logoUrl: '' // No default icon
                     }))
                     console.log('Fetched clients for dropdown:', mappedClients)
                     setClients(mappedClients)
@@ -234,7 +234,7 @@ export default function Projects() {
                         name: p.name,
                         clientId: p.client_id,
                         clientName: p.client_name,
-                        clientLogoUrl: '🏢',
+                        clientLogoUrl: '',
                         type: 'Web App' as const,
                         status: mapApiStatus(p.status),
                         priority: 'Medium' as const,

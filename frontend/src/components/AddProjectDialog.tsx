@@ -42,7 +42,8 @@ import {
     Cloud,
     Wifi,
     FileCode,
-    Loader2
+    Loader2,
+    Building2
 } from 'lucide-react'
 import { useToast } from '@/components/ui/use-toast'
 import { cn } from '@/lib/utils'
@@ -272,7 +273,7 @@ export function AddProjectDialog({ open, onOpenChange, onProjectAdded, clients, 
                 description: projectData.description,
                 clientId: projectData.client_id,
                 clientName: projectData.client_name || selectedClient?.name || 'Unknown Client',
-                clientLogoUrl: selectedClient?.logoUrl || '🏢',
+                clientLogoUrl: selectedClient?.logoUrl || '',
                 type: formData.type,
                 status: projectData.status || 'Planning',
                 priority: formData.priority,
@@ -421,7 +422,11 @@ export function AddProjectDialog({ open, onOpenChange, onProjectAdded, clients, 
                                                 clients.map((client) => (
                                                     <SelectItem key={client.id} value={client.id}>
                                                         <span className="flex items-center gap-2">
-                                                            <span>{client.logoUrl || '🏢'}</span>
+                                                            {client.logoUrl ? (
+                                                                <img src={client.logoUrl} alt="" className="w-4 h-4 rounded object-cover" />
+                                                            ) : (
+                                                                <Building2 className="w-4 h-4 text-muted-foreground" />
+                                                            )}
                                                             {client.name}
                                                         </span>
                                                     </SelectItem>
