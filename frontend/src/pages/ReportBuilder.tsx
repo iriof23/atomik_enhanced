@@ -513,8 +513,8 @@ export default function ReportBuilder() {
                                             </>
                                         ) : (
                                             <>
-                                                Open Editor
-                                                <ArrowUpRight className="w-4 h-4 ml-2" />
+                                        Open Editor
+                                        <ArrowUpRight className="w-4 h-4 ml-2" />
                                             </>
                                         )}
                                     </Button>

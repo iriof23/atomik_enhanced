@@ -196,34 +196,34 @@ export function AddClientDialog({ open, onOpenChange, onClientAdded, editingClie
                 email: clientData.contact_email || formData.email,
                 phone: clientData.contact_phone || formData.phone,
                 tags: formData.tags,
-                lastActivity: 'Just now',
-                lastActivityDate: new Date(),
-                projectsCount: 0,
-                reportsCount: 0,
-                totalFindings: 0,
+            lastActivity: 'Just now',
+            lastActivityDate: new Date(),
+            projectsCount: 0,
+            reportsCount: 0,
+            totalFindings: 0,
                 findingsBySeverity: { critical: 0, high: 0, medium: 0, low: 0 },
                 createdAt: new Date(clientData.created_at),
                 updatedAt: new Date(clientData.updated_at),
-            }
+        }
 
             onClientAdded?.(frontendClientData)
-            onOpenChange(false)
+        onOpenChange(false)
 
-            // Reset form
-            setStep(1)
-            setFormData({
-                name: '',
-                industry: '',
-                companySize: 'SMB',
-                logoUrl: '',
-                primaryContact: '',
-                email: '',
-                phone: '',
-                status: 'Prospect',
-                riskLevel: 'Medium',
-                tags: [],
-                notes: ''
-            })
+        // Reset form
+        setStep(1)
+        setFormData({
+            name: '',
+            industry: '',
+            companySize: 'SMB',
+            logoUrl: '',
+            primaryContact: '',
+            email: '',
+            phone: '',
+            status: 'Prospect',
+            riskLevel: 'Medium',
+            tags: [],
+            notes: ''
+        })
         } catch (error: any) {
             console.error('Failed to create/update client:', error)
             toast({
@@ -545,7 +545,7 @@ export function AddClientDialog({ open, onOpenChange, onClientAdded, editingClie
                                 {isSubmitting ? (
                                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                                 ) : (
-                                    <CheckCircle2 className="h-4 w-4 mr-2" />
+                                <CheckCircle2 className="h-4 w-4 mr-2" />
                                 )}
                                 {isSubmitting ? 'Saving...' : (editingClient ? 'Update Client' : 'Create Client')}
                             </Button>

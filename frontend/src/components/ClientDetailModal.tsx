@@ -252,36 +252,36 @@ export default function ClientDetailModal({ client, open, onClose, onEdit }: Cli
                                 </div>
                             ) : (
                                 associatedProjects.map((project) => (
-                                    <div
-                                        key={project.id}
-                                        className="flex items-center justify-between p-2 rounded-lg border border-border hover:bg-accent/50 transition-colors"
-                                    >
-                                        <div className="flex-1">
-                                            <p className="text-sm font-medium">{project.name}</p>
-                                            <div className="flex items-center gap-1.5 mt-0.5">
-                                                <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                                                    {project.status}
-                                                </Badge>
-                                                <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                                                    {project.priority}
-                                                </Badge>
-                                            </div>
+                                <div
+                                    key={project.id}
+                                    className="flex items-center justify-between p-2 rounded-lg border border-border hover:bg-accent/50 transition-colors"
+                                >
+                                    <div className="flex-1">
+                                        <p className="text-sm font-medium">{project.name}</p>
+                                        <div className="flex items-center gap-1.5 mt-0.5">
+                                            <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                                                {project.status}
+                                            </Badge>
+                                            <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                                                {project.priority}
+                                            </Badge>
                                         </div>
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-24">
-                                                <div className="flex items-center justify-between text-[10px] text-muted-foreground mb-0.5">
-                                                    <span>Progress</span>
-                                                    <span>{project.progress}%</span>
-                                                </div>
-                                                <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                                                    <div
-                                                        className="h-full bg-primary rounded-full transition-all"
-                                                        style={{ width: `${project.progress}%` }}
-                                                    />
-                                                </div>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-24">
+                                            <div className="flex items-center justify-between text-[10px] text-muted-foreground mb-0.5">
+                                                <span>Progress</span>
+                                                <span>{project.progress}%</span>
+                                            </div>
+                                            <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                                                <div
+                                                    className="h-full bg-primary rounded-full transition-all"
+                                                    style={{ width: `${project.progress}%` }}
+                                                />
                                             </div>
                                         </div>
                                     </div>
+                                </div>
                                 ))
                             )}
                         </div>

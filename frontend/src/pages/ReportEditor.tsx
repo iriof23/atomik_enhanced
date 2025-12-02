@@ -144,12 +144,12 @@ export default function ReportEditor() {
     useEffect(() => {
         if (reportData?.project_id) {
             fetchFindingsCount()
-            
+        
             // Refresh count periodically (every 5 seconds) to catch updates
-            const interval = setInterval(() => {
+        const interval = setInterval(() => {
                 fetchFindingsCount()
             }, 5000)
-
+        
             return () => clearInterval(interval)
         } else {
             setActualFindingsCount(0)
@@ -223,7 +223,7 @@ export default function ReportEditor() {
                 headers: { Authorization: `Bearer ${token}` }
             })
             
-            setHasUnsavedChanges(false)
+        setHasUnsavedChanges(false)
             toast({
                 title: 'Saved',
                 description: 'Report saved successfully.',
@@ -330,8 +330,8 @@ export default function ReportEditor() {
                                     </>
                                 ) : (
                                     <>
-                                        <Save className="w-4 h-4 mr-2" />
-                                        {hasUnsavedChanges ? 'Save Changes' : 'Saved'}
+                                <Save className="w-4 h-4 mr-2" />
+                                {hasUnsavedChanges ? 'Save Changes' : 'Saved'}
                                     </>
                                 )}
                             </Button>
@@ -453,7 +453,7 @@ function NarrativeTab({
             executiveSummary: updated.executiveSummary,
             methodology: updated.methodology,
             narrative_scope: updated.scope
-        })
+    })
     }
 
     return (

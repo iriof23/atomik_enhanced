@@ -18,9 +18,6 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
-import { useAuth } from '@clerk/clerk-react'
-import { api } from '@/lib/api'
-import { Loader2 } from 'lucide-react'
 
 interface AddFindingDialogProps {
     open: boolean
@@ -29,8 +26,6 @@ interface AddFindingDialogProps {
 }
 
 export function AddFindingDialog({ open, onOpenChange, onFindingAdded }: AddFindingDialogProps) {
-    const { getToken } = useAuth()
-    const [isSubmitting, setIsSubmitting] = useState(false)
     const [formData, setFormData] = useState({
         title: '',
         severity: 'Medium',
@@ -58,56 +53,16 @@ export function AddFindingDialog({ open, onOpenChange, onFindingAdded }: AddFind
         }
     }, [open])
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
-        setIsSubmitting(true)
 
-        try {
-            const token = await getToken()
-            if (!token) {
-                throw new Error('Authentication required')
-            }
-
-            // Create the finding content as JSON
-            const findingContent = {
-                severity: formData.severity,
-                category: formData.category,
-                description: formData.description,
-                remediation: formData.remediation,
-                evidence: formData.evidence,
-                owasp_reference: formData.owasp_reference,
-                cvss_vector: formData.cvss_vector
-            }
-
-            // Call the templates API to create a FINDING template
-            const response = await api.post('/templates/', {
-                name: formData.title,
-                description: formData.description.replace(/<[^>]*>/g, '').substring(0, 200), // Strip HTML for description
-                type: 'FINDING',
-                content: JSON.stringify(findingContent),
-                is_public: false
-            }, {
-                headers: { Authorization: `Bearer ${token}` }
-            })
-
-            // Map API response to the format expected by the UI
-            const newFinding = {
-                id: response.data.id,
-                title: response.data.name,
-                ...JSON.parse(response.data.content),
-                isCustom: true,
-                created_at: response.data.created_at,
-                updated_at: response.data.updated_at
-            }
-
-            onFindingAdded(newFinding)
-            onOpenChange(false)
-        } catch (error: any) {
-            console.error('Failed to create finding template:', error)
-            // Could add toast notification here for error
-        } finally {
-            setIsSubmitting(false)
+        const newFinding = {
+            id: `custom-${Date.now()}`,
+            ...formData
         }
+
+        onFindingAdded(newFinding)
+        onOpenChange(false)
     }
 
     // Refined Input styles - Technical Look
@@ -257,24 +212,16 @@ export function AddFindingDialog({ open, onOpenChange, onFindingAdded }: AddFind
                         type="button" 
                         variant="ghost" 
                         onClick={() => onOpenChange(false)}
-                        disabled={isSubmitting}
                         className="text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800"
                     >
                         Cancel
                     </Button>
                     <Button 
                         onClick={handleSubmit}
-                        disabled={!formData.title || !formData.description || isSubmitting}
+                        disabled={!formData.title || !formData.description}
                         className="bg-emerald-600 hover:bg-emerald-500 text-white font-medium px-6"
                     >
-                        {isSubmitting ? (
-                            <>
-                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                Saving...
-                            </>
-                        ) : (
-                            'Add Finding'
-                        )}
+                        Add Finding
                     </Button>
                 </div>
             </DialogContent>
