@@ -28,7 +28,7 @@
 
             --dark: #09090b;
 
-            --slate: #334155;
+            --slate: #334155; /* The Premium Dark Grey you wanted */
 
             --light-gray: #f8fafc;
 
@@ -42,11 +42,11 @@
 
             --sev-high: #c2410c;     --sev-high-bg: #fff7ed;
 
-            --sev-medium: #eab308;   --sev-medium-bg: #fefce8;
+            --sev-medium: #b45309;   --sev-medium-bg: #fefce8;
 
-            --sev-low: #10b981;      --sev-low-bg: #ecfdf5;
+            --sev-low: #047857;      --sev-low-bg: #ecfdf5;
 
-            --sev-info: #3b82f6;     --sev-info-bg: #eff6ff;
+            --sev-info: #1d4ed8;     --sev-info-bg: #eff6ff;
 
         }
 
@@ -58,15 +58,13 @@
 
             size: A4;
 
-            margin: 20mm;
+            margin: 20mm; /* Clean margins, no headers to mess it up */
 
         }
 
 
 
-        /* Full Bleed Cover Override */
-
-        @page :first { margin: 0 !important; }
+        @page :first { margin: 0 !important; } /* Full Bleed Cover */
 
 
 
@@ -85,6 +83,7 @@
             background: #fff;
 
             -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
 
         }
 
@@ -104,7 +103,7 @@
 
 
 
-        /* --- 3. COVER PAGE --- */
+        /* --- 3. COVER PAGE (Keep exactly as approved) --- */
 
         .cover-page {
 
@@ -126,13 +125,9 @@
 
         }
 
-        
-
         .cover-bar { position: absolute; left: 0; top: 0; bottom: 0; width: 8px; background: var(--primary); box-shadow: 0 0 40px var(--primary); }
 
         .cover-content { padding: 0 25mm; }
-
-        
 
         .confidential-pill {
 
@@ -146,11 +141,7 @@
 
         }
 
-        
-
         h1.cover-title { font-size: 38pt; font-weight: 800; line-height: 1.1; color: #ffffff; margin: 0; letter-spacing: -0.03em; }
-
-        
 
         .cover-footer {
 
@@ -182,107 +173,181 @@
 
         
 
+        /* New Green Title for Scope/Summary */
+
         h2.section-title-green {
 
-            font-size: 18pt; text-transform: uppercase; letter-spacing: 0.05em; color: var(--primary); 
+            font-size: 14pt; /* Slightly smaller than main headers */
 
-            border-bottom: 2px solid var(--primary); padding-bottom: 15px; margin-bottom: 30px; margin-top: 40px;
+            text-transform: uppercase; 
 
-        }
+            letter-spacing: 0.05em; 
 
+            color: var(--primary); /* ATOMIK GREEN */
 
+            border-bottom: 2px solid var(--primary); 
 
-        /* --- 5. TABLE OF CONTENTS (NEW) --- */
+            padding-bottom: 10px; 
 
-        .toc-container {
+            margin-bottom: 20px; 
 
-            margin-top: 20px;
+            margin-top: 40px;
 
-            border-top: 1px solid var(--border);
-
-        }
-
-        .toc-row {
-
-            display: flex;
-
-            justify-content: space-between;
-
-            align-items: center;
-
-            padding: 18px 0;
-
-            border-bottom: 1px solid var(--border);
-
-        }
-
-        .toc-row:last-child { border-bottom: none; }
-
-        
-
-        .toc-title {
-
-            font-size: 11pt;
-
-            font-weight: 600;
-
-            color: var(--dark);
-
-            text-transform: uppercase;
-
-            letter-spacing: 0.5px;
-
-        }
-
-        
-
-        .toc-page {
-
-            font-family: 'JetBrains Mono', monospace;
-
-            font-size: 10pt;
-
-            color: var(--slate);
-
-            font-weight: 500;
+            font-weight: 800;
 
         }
 
 
 
-        /* --- 6. ENGAGEMENT DETAILS --- */
+        /* --- 5. ENGAGEMENT DETAILS (THE "BEST OF BOTH WORLDS" FIX) --- */
 
-        .engagement-card { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 40px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); }
+        /* Single Consolidated Card */
 
-        .engagement-header { background: var(--dark); color: white; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid var(--primary); }
+        .engagement-card {
+
+            border: 1px solid var(--border);
+
+            border-radius: 8px;
+
+            overflow: hidden;
+
+            margin-bottom: 40px;
+
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03); /* Very subtle lift */
+
+        }
+
+
+
+        /* Dark Header (Like Screen 1) */
+
+        .engagement-header {
+
+            background: var(--dark);
+
+            color: white;
+
+            padding: 15px 25px;
+
+            display: flex; justify-content: space-between; align-items: center;
+
+            border-bottom: 3px solid var(--primary); /* Atomic Green Line */
+
+        }
 
         .eh-title { font-weight: 800; text-transform: uppercase; letter-spacing: 1px; font-size: 10pt; }
 
         .eh-tag { font-family: 'JetBrains Mono'; font-size: 8pt; opacity: 0.8; letter-spacing: 1px; }
 
-        .engagement-grid { display: grid; grid-template-columns: 1fr 1fr; background: #fff; }
 
-        .eng-cell { padding: 20px 25px; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+
+        /* The Grid (Structure of Screen 2) */
+
+        .engagement-grid {
+
+            display: grid; grid-template-columns: 1fr 1fr; background: #fff;
+
+        }
+
+        
+
+        .eng-cell {
+
+            padding: 25px;
+
+            border-right: 1px solid var(--border);
+
+            border-bottom: 1px solid var(--border);
+
+        }
 
         .eng-cell-full { grid-column: 1 / -1; border-right: none; }
 
         .eng-cell:nth-child(even) { border-right: none; }
 
-        .eng-label { display: block; font-size: 9pt; color: var(--primary); font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
-
-        .eng-value { font-size: 11pt; font-weight: 600; color: var(--slate); font-family: 'Inter', sans-serif; }
-
-        .eng-date { font-family: 'JetBrains Mono', monospace; letter-spacing: -0.5px; }
-
-        .scope-section { background: #fafafa; padding: 25px; }
-
-        .scope-item { font-family: 'JetBrains Mono'; font-size: 11pt; color: var(--dark); margin-bottom: 5px; display: flex; align-items: center; }
-
-        .scope-arrow { color: var(--primary); margin-right: 10px; font-weight: bold; }
 
 
+        /* Labels: Big, Green, Bold */
 
-        /* --- 7. SUMMARY CHARTS --- */
+        .eng-label {
+
+            display: block; 
+
+            font-size: 9pt; 
+
+            color: var(--primary); /* Atomic Green */
+
+            font-weight: 800; 
+
+            text-transform: uppercase; 
+
+            letter-spacing: 0.5px; 
+
+            margin-bottom: 10px;
+
+        }
+
+
+
+        /* Values: Premium Slate */
+
+        .eng-value {
+
+            font-size: 11pt; 
+
+            font-weight: 600; 
+
+            color: var(--slate); 
+
+            font-family: 'Inter', sans-serif;
+
+        }
+
+        /* Dates: Mono & Slate */
+
+        .eng-date {
+
+            font-family: 'JetBrains Mono', monospace; 
+
+            color: var(--slate); 
+
+            letter-spacing: -0.5px;
+
+        }
+
+
+
+        /* Scope Footer (Integrated) */
+
+        .scope-section {
+
+            background: #fafafa;
+
+            padding: 25px;
+
+        }
+
+        .scope-item {
+
+            font-family: 'JetBrains Mono'; 
+
+            font-size: 11pt; /* Bigger for readability */
+
+            color: var(--dark);
+
+            margin-bottom: 5px;
+
+            display: flex; align-items: center;
+
+        }
+
+        .scope-arrow { color: var(--primary); margin-right: 15px; font-weight: bold; }
+
+
+
+
+
+        /* --- 6. SUMMARY CHARTS --- */
 
         .risk-dashboard {
 
@@ -310,7 +375,7 @@
 
 
 
-        /* --- 8. FINDINGS SUMMARY TABLE --- */
+        /* --- 7. FINDINGS SUMMARY TABLE --- */
 
         .findings-table-card { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 40px; }
 
@@ -332,7 +397,7 @@
 
 
 
-        /* --- 9. DETAILED FINDING CARD --- */
+        /* --- 8. DETAILED FINDING CARD --- */
 
         .finding-card { border: 1px solid var(--border); margin-bottom: 50px; page-break-inside: avoid; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
 
@@ -348,17 +413,23 @@
 
         .bg-INFO { background: var(--sev-info); }
 
+        
+
         .finding-meta-grid { display: grid; grid-template-columns: 2fr 1fr; border-bottom: 1px solid var(--border); background: var(--light-gray); }
 
         .meta-cell { padding: 15px 25px; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }
 
         .meta-cell:last-child { border-right: none; }
 
+        
+
         .f-label { display: block; font-family: 'JetBrains Mono'; font-size: 7pt; font-weight: 700; text-transform: uppercase; color: var(--slate); margin-bottom: 6px; letter-spacing: 0.5px; }
 
         .f-value { font-size: 11pt; font-weight: 600; color: var(--dark); }
 
         .f-value-mono { font-family: 'JetBrains Mono'; font-size: 9pt; color: var(--dark); }
+
+        
 
         .finding-content { padding: 30px 30px; }
 
@@ -432,57 +503,7 @@
 
     <div class="page-break">
 
-        <h2 class="section-title">Table of Contents</h2>
-
-        <div class="toc-container">
-
-            <div class="toc-row">
-
-                <span class="toc-title">1. Engagement Details</span>
-
-                <span class="toc-page">03</span>
-
-            </div>
-
-            <div class="toc-row">
-
-                <span class="toc-title">2. Summary of Findings</span>
-
-                <span class="toc-page">04</span>
-
-            </div>
-
-            <div class="toc-row">
-
-                <span class="toc-title">3. Findings Overview</span>
-
-                <span class="toc-page">05</span>
-
-            </div>
-
-            <div class="toc-row">
-
-                <span class="toc-title">4. Executive Narrative</span>
-
-                <span class="toc-page">06</span>
-
-            </div>
-
-            <div class="toc-row">
-
-                <span class="toc-title">5. Detailed Findings</span>
-
-                <span class="toc-page">07</span>
-
-            </div>
-
-        </div>
-
-    </div>
-
-
-
-    <div class="page-break">
+        
 
         <div class="engagement-card">
 
@@ -494,6 +515,8 @@
 
             </div>
 
+
+
             <div class="engagement-grid">
 
                 <div class="eng-cell eng-cell-full">
@@ -504,6 +527,8 @@
 
                 </div>
 
+
+
                 <div class="eng-cell">
 
                     <span class="eng-label">Lead Tester</span>
@@ -512,6 +537,8 @@
 
                 </div>
 
+
+
                 <div class="eng-cell">
 
                     <span class="eng-label">Testing Period</span>
@@ -519,6 +546,8 @@
                     <div class="eng-value eng-date">{{ project.start_date }} - {{ project.end_date }}</div>
 
                 </div>
+
+
 
                 <div class="eng-cell">
 
@@ -529,6 +558,8 @@
                 </div>
 
             </div>
+
+
 
             <div class="scope-section">
 
@@ -672,7 +703,7 @@
 
 
 
-        <h2 class="section-title">Executive Narrative</h2>
+        <h2 class="section-title-green">Executive Narrative</h2>
 
         <div class="markdown-body">
 
