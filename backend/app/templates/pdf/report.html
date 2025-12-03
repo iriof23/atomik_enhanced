@@ -56,8 +56,8 @@
         
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            font-size: 9.5pt;
-            line-height: 1.65;
+            font-size: 10.5pt; /* INCREASED from 9.5pt */
+            line-height: 1.7;
             color: #1e293b;
             margin: 0;
             background: #fff;
@@ -152,18 +152,19 @@
         }
         
         .cover-title {
-            font-size: 44px;
+            font-size: 46px;
             font-weight: 800;
             line-height: 1.1;
             letter-spacing: -0.03em;
             margin: 0;
-            max-width: 600px;
+            max-width: 650px;
+            color: #ffffff !important; /* FIXED: Ensure white text on dark background */
         }
         
         .cover-subtitle {
-            font-size: 16px;
+            font-size: 18px;
             font-weight: 400;
-            color: var(--slate-light);
+            color: #9ca3af; /* Light gray, not blue-ish */
             margin-top: 20px;
             letter-spacing: 0.5px;
         }
@@ -232,7 +233,7 @@
         }
         
         .toc-section-title {
-            font-size: 11px;
+            font-size: 12px; /* INCREASED */
             font-weight: 700;
             color: var(--primary);
             text-transform: uppercase;
@@ -245,7 +246,7 @@
         .toc-item {
             display: flex;
             align-items: center;
-            padding: 10px 0;
+            padding: 12px 0; /* INCREASED */
             border-bottom: 1px solid transparent;
             transition: all 0.2s;
         }
@@ -256,15 +257,15 @@
         
         .toc-item-number {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 10px;
+            font-size: 11px; /* INCREASED */
             font-weight: 600;
             color: var(--slate-light);
-            width: 30px;
+            width: 35px;
             flex-shrink: 0;
         }
         
         .toc-item-title {
-            font-size: 11px;
+            font-size: 12px; /* INCREASED */
             font-weight: 500;
             color: var(--slate);
             flex: 1;
@@ -283,20 +284,20 @@
         
         .toc-item-page {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 10px;
+            font-size: 11px; /* INCREASED */
             font-weight: 700;
             color: var(--dark);
-            width: 25px;
+            width: 28px;
             text-align: right;
         }
         
         .toc-severity {
             display: inline-block;
-            font-size: 8px;
+            font-size: 9px; /* INCREASED */
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            padding: 3px 8px;
+            padding: 4px 10px; /* INCREASED */
             border-radius: 4px;
             margin-left: 10px;
             flex-shrink: 0;
@@ -326,7 +327,7 @@
         }
         
         .engagement-header-title {
-            font-size: 11px;
+            font-size: 12px; /* INCREASED */
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 1.5px;
@@ -334,7 +335,7 @@
         
         .engagement-header-badge {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 9px;
+            font-size: 10px; /* INCREASED */
             font-weight: 600;
             color: var(--primary);
             letter-spacing: 1px;
@@ -359,7 +360,7 @@
         .engagement-cell.full { grid-column: 1 / -1; border-right: none; }
         
         .engagement-label {
-            font-size: 9px;
+            font-size: 10px; /* INCREASED */
             font-weight: 700;
             color: var(--primary);
             text-transform: uppercase;
@@ -368,7 +369,7 @@
         }
         
         .engagement-value {
-            font-size: 13px;
+            font-size: 14px; /* INCREASED */
             font-weight: 600;
             color: var(--dark);
             line-height: 1.4;
@@ -376,7 +377,7 @@
         
         .engagement-value.mono {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 12px;
+            font-size: 13px; /* INCREASED */
             letter-spacing: -0.3px;
         }
         
@@ -395,9 +396,9 @@
             display: flex;
             align-items: center;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 11px;
+            font-size: 12px; /* INCREASED */
             color: var(--dark);
-            padding: 6px 0;
+            padding: 7px 0;
         }
         
         .scope-item::before {
@@ -428,7 +429,7 @@
         }
         
         .section-title-green {
-            font-size: 13px;
+            font-size: 14px; /* INCREASED */
             font-weight: 700;
             color: var(--primary);
             text-transform: uppercase;
@@ -503,7 +504,7 @@
         }
         
         .risk-stat-label {
-            font-size: 9px;
+            font-size: 10px; /* INCREASED */
             font-weight: 700;
             color: var(--slate-light);
             text-transform: uppercase;
@@ -526,7 +527,7 @@
         .findings-table th {
             background: var(--dark);
             color: white;
-            font-size: 9px;
+            font-size: 10px; /* INCREASED */
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 1px;
@@ -536,7 +537,7 @@
         
         .findings-table td {
             padding: 14px 20px;
-            font-size: 11px;
+            font-size: 12px; /* INCREASED */
             color: var(--slate);
             border-bottom: 1px solid var(--border);
         }
@@ -557,11 +558,11 @@
         
         .severity-badge {
             display: inline-block;
-            font-size: 9px;
+            font-size: 10px; /* INCREASED */
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            padding: 4px 10px;
+            padding: 5px 12px; /* INCREASED */
             border-radius: 5px;
         }
         .severity-badge.critical { background: var(--critical-bg); color: var(--critical); border: 1px solid var(--critical-border); }
@@ -594,7 +595,7 @@
         .finding-header.info { background: var(--info); }
         
         .finding-header-label {
-            font-size: 10px;
+            font-size: 11px; /* INCREASED */
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 1.5px;
@@ -602,7 +603,7 @@
         
         .finding-header-id {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 11px;
+            font-size: 12px; /* INCREASED */
             font-weight: 600;
         }
         
@@ -622,7 +623,7 @@
         
         .finding-meta-label {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 8px;
+            font-size: 9px; /* INCREASED */
             font-weight: 700;
             color: var(--slate-light);
             text-transform: uppercase;
@@ -631,14 +632,14 @@
         }
         
         .finding-meta-value {
-            font-size: 12px;
+            font-size: 13px; /* INCREASED */
             font-weight: 600;
             color: var(--dark);
         }
         
         .finding-meta-value.mono {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 11px;
+            font-size: 12px; /* INCREASED */
         }
         
         .finding-content {
@@ -651,7 +652,7 @@
         .finding-section:last-child { margin-bottom: 0; }
         
         .finding-section-title {
-            font-size: 10px;
+            font-size: 11px; /* INCREASED */
             font-weight: 800;
             color: var(--dark);
             text-transform: uppercase;
@@ -663,9 +664,9 @@
         }
         
         .finding-section-content {
-            font-size: 10pt;
+            font-size: 11pt; /* INCREASED */
             color: var(--slate);
-            line-height: 1.7;
+            line-height: 1.75;
         }
         
         .finding-section-content ul {
@@ -683,7 +684,7 @@
             border-radius: 6px;
             padding: 14px;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 9pt;
+            font-size: 10pt; /* INCREASED */
             overflow-x: auto;
             white-space: pre-wrap;
         }
@@ -712,7 +713,7 @@
             padding: 10px 14px;
             background: var(--light);
             font-family: 'JetBrains Mono', monospace;
-            font-size: 9px;
+            font-size: 10px; /* INCREASED */
             color: var(--slate-light);
             text-align: center;
             border-top: 1px solid var(--border);
@@ -720,7 +721,7 @@
 
         /* --- 11. EXECUTIVE NARRATIVE --- */
         .narrative {
-            font-size: 10.5pt;
+            font-size: 11pt; /* INCREASED */
             color: var(--slate);
             line-height: 1.8;
         }
