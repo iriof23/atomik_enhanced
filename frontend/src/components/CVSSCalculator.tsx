@@ -82,10 +82,10 @@ export default function CVSSCalculator({ vector, onUpdate }: CVSSCalculatorProps
     }
 
     const getSeverityColor = (s: number) => {
-        if (s >= 9.0) return 'text-red-600 bg-red-100 dark:bg-red-900/30'
-        if (s >= 7.0) return 'text-orange-600 bg-orange-100 dark:bg-orange-900/30'
-        if (s >= 4.0) return 'text-yellow-600 bg-yellow-100 dark:bg-yellow-900/30'
-        return 'text-green-600 bg-green-100 dark:bg-green-900/30'
+        if (s >= 9.0) return 'text-white bg-gradient-to-r from-red-600 to-red-700 shadow-sm'
+        if (s >= 7.0) return 'text-white bg-gradient-to-r from-orange-500 to-orange-600 shadow-sm'
+        if (s >= 4.0) return 'text-white bg-gradient-to-r from-amber-500 to-amber-600 shadow-sm'
+        return 'text-white bg-gradient-to-r from-emerald-500 to-emerald-600 shadow-sm'
     }
 
     const getSeverityLabel = (s: number) => {

@@ -244,15 +244,15 @@ export default function ReportEditor() {
     const getStatusColor = (status: string) => {
         switch (status) {
             case 'In Progress':
-                return 'bg-emerald-100 text-emerald-700'
+                return 'bg-slate-800 text-white shadow-sm border-0'
             case 'Planning':
-                return 'bg-emerald-100 text-emerald-700'
+                return 'bg-slate-200 text-slate-700 shadow-sm border-0'
             case 'Completed':
-                return 'bg-slate-100 text-slate-700'
+                return 'bg-emerald-600 text-white shadow-sm border-0'
             case 'On Hold':
-                return 'bg-amber-100 text-amber-700'
+                return 'bg-amber-600 text-white shadow-sm border-0'
             default:
-                return 'bg-slate-100 text-slate-600'
+                return 'bg-slate-200 text-slate-700 shadow-sm border-0'
         }
     }
 
@@ -808,22 +808,22 @@ function PreviewTab({ settings, project }: { settings: any; project: any }) {
                             <h2 className="text-sm font-semibold text-slate-900 mb-3" style={{ color: settings.primaryColor }}>
                                 Findings Summary
                             </h2>
-                            <div className="grid grid-cols-4 gap-3">
-                                <div className="text-center p-3 bg-red-50 rounded-xl">
-                                    <p className="text-xl font-bold text-red-600">{project.findingsBySeverity.critical}</p>
-                                    <p className="text-xs text-slate-500">Critical</p>
+                            <div className="grid grid-cols-4 gap-2">
+                                <div className="text-center p-3 bg-gradient-to-br from-red-600 to-red-700 rounded-xl shadow-sm">
+                                    <p className="text-xl font-bold text-white">{project.findingsBySeverity.critical}</p>
+                                    <p className="text-[10px] font-semibold uppercase tracking-wider text-white/80">Critical</p>
                                 </div>
-                                <div className="text-center p-3 bg-orange-50 rounded-xl">
-                                    <p className="text-xl font-bold text-orange-600">{project.findingsBySeverity.high}</p>
-                                    <p className="text-xs text-slate-500">High</p>
+                                <div className="text-center p-3 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-sm">
+                                    <p className="text-xl font-bold text-white">{project.findingsBySeverity.high}</p>
+                                    <p className="text-[10px] font-semibold uppercase tracking-wider text-white/80">High</p>
                                 </div>
-                                <div className="text-center p-3 bg-amber-50 rounded-xl">
-                                    <p className="text-xl font-bold text-amber-600">{project.findingsBySeverity.medium}</p>
-                                    <p className="text-xs text-slate-500">Medium</p>
+                                <div className="text-center p-3 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl shadow-sm">
+                                    <p className="text-xl font-bold text-white">{project.findingsBySeverity.medium}</p>
+                                    <p className="text-[10px] font-semibold uppercase tracking-wider text-white/80">Medium</p>
                                 </div>
-                                <div className="text-center p-3 bg-emerald-50 rounded-xl">
-                                    <p className="text-xl font-bold text-emerald-600">{project.findingsBySeverity.low}</p>
-                                    <p className="text-xs text-slate-500">Low</p>
+                                <div className="text-center p-3 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl shadow-sm">
+                                    <p className="text-xl font-bold text-white">{project.findingsBySeverity.low}</p>
+                                    <p className="text-[10px] font-semibold uppercase tracking-wider text-white/80">Low</p>
                                 </div>
                             </div>
                         </div>

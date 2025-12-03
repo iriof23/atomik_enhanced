@@ -121,20 +121,20 @@ type ViewMode = 'card' | 'table' | 'timeline'
 
 const getStatusColor = (status: Project['status']) => {
     switch (status) {
-        case 'In Progress': return 'bg-emerald-500 hover:bg-emerald-600 text-white'
-        case 'Planning': return 'bg-emerald-500 hover:bg-emerald-600 text-white'
-        case 'On Hold': return 'bg-amber-500 hover:bg-amber-600 text-white'
-        case 'Completed': return 'bg-slate-500 hover:bg-slate-600 text-white'
-        case 'Cancelled': return 'bg-slate-400 hover:bg-slate-500 text-white'
+        case 'In Progress': return 'bg-slate-800 text-white shadow-sm border-0'
+        case 'Planning': return 'bg-slate-200 text-slate-700 shadow-sm border-0'
+        case 'On Hold': return 'bg-amber-600 text-white shadow-sm border-0'
+        case 'Completed': return 'bg-emerald-600 text-white shadow-sm border-0'
+        case 'Cancelled': return 'bg-slate-500 text-white shadow-sm border-0'
     }
 }
 
 const getPriorityColor = (priority: Project['priority']) => {
     switch (priority) {
-        case 'Critical': return 'border-red-200 bg-red-50 text-red-700'
-        case 'High': return 'border-orange-200 bg-orange-50 text-orange-700'
-        case 'Medium': return 'border-amber-200 bg-amber-50 text-amber-700'
-        case 'Low': return 'border-emerald-200 bg-emerald-50 text-emerald-700'
+        case 'Critical': return 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-sm border-0'
+        case 'High': return 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-sm border-0'
+        case 'Medium': return 'bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-sm border-0'
+        case 'Low': return 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-sm border-0'
     }
 }
 

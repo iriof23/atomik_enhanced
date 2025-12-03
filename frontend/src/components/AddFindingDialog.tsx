@@ -2,10 +2,6 @@ import { useState, useEffect } from 'react'
 import {
     Dialog,
     DialogContent,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogDescription,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -18,12 +14,20 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
-import { Plus, X } from 'lucide-react'
+import { Shield, X, AlertTriangle, Flame, AlertCircle, Info, FileText, Wrench, Camera } from 'lucide-react'
 
 interface AddFindingDialogProps {
     open: boolean
     onOpenChange: (open: boolean) => void
     onFindingAdded: (finding: any) => void
+}
+
+const severityConfig = {
+    Critical: { icon: AlertTriangle, color: 'text-white', bg: 'bg-gradient-to-r from-red-600 to-red-700', border: 'border-0' },
+    High: { icon: Flame, color: 'text-white', bg: 'bg-gradient-to-r from-orange-500 to-orange-600', border: 'border-0' },
+    Medium: { icon: AlertCircle, color: 'text-white', bg: 'bg-gradient-to-r from-amber-500 to-amber-600', border: 'border-0' },
+    Low: { icon: Info, color: 'text-white', bg: 'bg-gradient-to-r from-emerald-500 to-emerald-600', border: 'border-0' },
+    Info: { icon: Info, color: 'text-white', bg: 'bg-gradient-to-r from-slate-500 to-slate-600', border: 'border-0' },
 }
 
 export function AddFindingDialog({ open, onOpenChange, onFindingAdded }: AddFindingDialogProps) {
@@ -38,7 +42,6 @@ export function AddFindingDialog({ open, onOpenChange, onFindingAdded }: AddFind
         cvss_vector: ''
     })
 
-    // Reset form when dialog opens
     useEffect(() => {
         if (open) {
             setFormData({
@@ -56,190 +59,256 @@ export function AddFindingDialog({ open, onOpenChange, onFindingAdded }: AddFind
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
-
         const newFinding = {
             id: `custom-${Date.now()}`,
             ...formData
         }
-
         onFindingAdded(newFinding)
         onOpenChange(false)
     }
 
-    // Refined Input styles - Light Theme
-    const inputStyle = "h-9 bg-white border-slate-200 text-slate-900 text-sm focus-visible:ring-2 focus-visible:ring-emerald-500/20 focus-visible:border-emerald-500 placeholder:text-slate-400 focus-visible:ring-offset-0"
-    const labelStyle = "text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5 block"
+    const currentSeverity = severityConfig[formData.severity as keyof typeof severityConfig] || severityConfig.Medium
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-4xl h-[90vh] flex flex-col gap-0 p-0 bg-white border-slate-200 overflow-hidden [&>button]:hidden sm:rounded-xl shadow-2xl">
-                {/* Header - Fixed */}
-                <div className="px-8 py-6 border-b border-slate-200 bg-white shrink-0 flex justify-between items-start">
-                    <div>
-                        <DialogHeader className="mb-0">
-                            <DialogTitle className="text-xl text-slate-900 font-semibold">Add Custom Finding</DialogTitle>
-                            <DialogDescription className="text-slate-500 mt-1.5">
-                                Create a new vulnerability template for your findings database.
-                            </DialogDescription>
-                        </DialogHeader>
+            <DialogContent className="max-w-4xl h-[85vh] flex flex-col gap-0 p-0 bg-white border-slate-200 overflow-hidden [&>button]:hidden sm:rounded-2xl shadow-2xl">
+                {/* Premium Header */}
+                <div className="px-6 py-5 border-b border-slate-100 bg-gradient-to-b from-slate-50/80 to-white shrink-0">
+                    <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg">
+                                <Shield className="w-6 h-6 text-white" />
+                            </div>
+                            <div>
+                                <h2 className="text-lg font-bold text-slate-900 tracking-tight">New Vulnerability Template</h2>
+                                <p className="text-xs text-slate-500 mt-0.5">Create a reusable finding for your security assessments</p>
+                            </div>
+                        </div>
+                        <button 
+                            onClick={() => onOpenChange(false)}
+                            className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+                        >
+                            <X className="w-4 h-4" />
+                        </button>
                     </div>
-                    <button 
-                        onClick={() => onOpenChange(false)}
-                        className="text-slate-400 hover:text-slate-600 transition-colors"
-                    >
-                        <X className="w-5 h-5" />
-                    </button>
                 </div>
 
-                <div className="px-8 py-6 border-b border-slate-100 bg-slate-50/50 shrink-0">
-                     <div className="grid gap-6">
-                        {/* Title Row */}
-                        <div>
-                            <label className={labelStyle}>Title</label>
-                            <Input
-                                value={formData.title}
-                                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                placeholder="e.g. Broken Access Control"
-                                className={cn(inputStyle, "text-base font-medium")}
-                                autoFocus
-                            />
-                        </div>
-
-                        {/* Metadata Grid */}
-                        <div className="grid grid-cols-2 gap-8">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className={labelStyle}>Severity</label>
-                                    <Select
-                                        value={formData.severity}
-                                        onValueChange={(value) => setFormData({ ...formData, severity: value })}
-                                    >
-                                        <SelectTrigger className={inputStyle}>
-                                            <SelectValue placeholder="Select severity" />
-                                        </SelectTrigger>
-                                        <SelectContent className="bg-white border-slate-200 text-slate-900">
-                                            <SelectItem value="Critical">Critical</SelectItem>
-                                            <SelectItem value="High">High</SelectItem>
-                                            <SelectItem value="Medium">Medium</SelectItem>
-                                            <SelectItem value="Low">Low</SelectItem>
-                                            <SelectItem value="Info">Info</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div>
-                                    <label className={labelStyle}>Category</label>
-                                    <Select
-                                        value={formData.category}
-                                        onValueChange={(value) => setFormData({ ...formData, category: value })}
-                                    >
-                                        <SelectTrigger className={inputStyle}>
-                                            <SelectValue placeholder="Select category" />
-                                        </SelectTrigger>
-                                        <SelectContent className="bg-white border-slate-200 text-slate-900">
-                                            <SelectItem value="Web">Web</SelectItem>
-                                            <SelectItem value="Mobile">Mobile</SelectItem>
-                                            <SelectItem value="Network">Network</SelectItem>
-                                            <SelectItem value="Cloud">Cloud</SelectItem>
-                                            <SelectItem value="Database">Database</SelectItem>
-                                            <SelectItem value="Other">Other</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
+                {/* Split Layout: Sidebar + Content */}
+                <div className="flex-1 flex overflow-hidden">
+                    {/* Left Sidebar - Metadata */}
+                    <div className="w-72 shrink-0 bg-slate-50/80 border-r border-slate-100 p-5 overflow-y-auto scrollbar-thin">
+                        <div className="space-y-5">
+                            {/* Title */}
+                            <div>
+                                <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2 block">
+                                    Finding Title
+                                </label>
+                                <Input
+                                    value={formData.title}
+                                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                                    placeholder="e.g. SQL Injection"
+                                    className="h-9 bg-white border-slate-200 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus-visible:ring-emerald-500/20 focus-visible:border-emerald-500"
+                                    autoFocus
+                                />
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className={labelStyle}>OWASP Reference</label>
+                            {/* Severity */}
+                            <div>
+                                <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2 block">
+                                    Severity
+                                </label>
+                                <Select
+                                    value={formData.severity}
+                                    onValueChange={(value) => setFormData({ ...formData, severity: value })}
+                                >
+                                    <SelectTrigger className={cn(
+                                        "h-9 bg-white border text-sm font-medium",
+                                        currentSeverity.border,
+                                        currentSeverity.color
+                                    )}>
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-white border-slate-200">
+                                        {Object.entries(severityConfig).map(([level, config]) => {
+                                            const Icon = config.icon
+                                            return (
+                                                <SelectItem key={level} value={level} className="text-sm">
+                                                    <div className="flex items-center gap-2">
+                                                        <Icon className={cn("w-3.5 h-3.5", config.color)} />
+                                                        <span className={config.color}>{level}</span>
+                                                    </div>
+                                                </SelectItem>
+                                            )
+                                        })}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {/* Category */}
+                            <div>
+                                <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2 block">
+                                    Category
+                                </label>
+                                <Select
+                                    value={formData.category}
+                                    onValueChange={(value) => setFormData({ ...formData, category: value })}
+                                >
+                                    <SelectTrigger className="h-9 bg-white border-slate-200 text-sm text-slate-900">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-white border-slate-200">
+                                        <SelectItem value="Web">Web Application</SelectItem>
+                                        <SelectItem value="Mobile">Mobile</SelectItem>
+                                        <SelectItem value="Network">Network</SelectItem>
+                                        <SelectItem value="Cloud">Cloud Infrastructure</SelectItem>
+                                        <SelectItem value="API">API Security</SelectItem>
+                                        <SelectItem value="Database">Database</SelectItem>
+                                        <SelectItem value="Other">Other</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div className="border-t border-slate-200 pt-5">
+                                <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-3">
+                                    References
+                                </p>
+                                
+                                {/* OWASP */}
+                                <div className="mb-4">
+                                    <label className="text-[10px] text-slate-500 mb-1.5 block">OWASP ID</label>
                                     <Input
                                         value={formData.owasp_reference}
                                         onChange={(e) => setFormData({ ...formData, owasp_reference: e.target.value })}
-                                        placeholder="e.g. A01:2021"
-                                        className={cn(inputStyle, "font-mono text-xs")}
+                                        placeholder="A01:2021"
+                                        className="h-8 bg-white border-slate-200 text-xs font-mono text-slate-700 placeholder:text-slate-400"
                                     />
                                 </div>
+
+                                {/* CVSS */}
                                 <div>
-                                    <label className={labelStyle}>CVSS Vector</label>
+                                    <label className="text-[10px] text-slate-500 mb-1.5 block">CVSS Vector</label>
                                     <Input
                                         value={formData.cvss_vector}
                                         onChange={(e) => setFormData({ ...formData, cvss_vector: e.target.value })}
-                                        placeholder="CVSS:3.1/..."
-                                        className={cn(inputStyle, "font-mono text-xs tracking-tight")}
+                                        placeholder="CVSS:3.1/AV:N/AC:L/..."
+                                        className="h-8 bg-white border-slate-200 text-[10px] font-mono text-slate-700 placeholder:text-slate-400"
                                     />
+                                </div>
+                            </div>
+
+                            {/* Quick Stats Preview */}
+                            <div className="border-t border-slate-200 pt-5">
+                                <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-3">
+                                    Preview
+                                </p>
+                                <div className={cn(
+                                    "p-3 rounded-lg border",
+                                    currentSeverity.bg,
+                                    currentSeverity.border
+                                )}>
+                                    <div className="flex items-center gap-2 mb-2">
+                                        {(() => {
+                                            const Icon = currentSeverity.icon
+                                            return <Icon className={cn("w-4 h-4", currentSeverity.color)} />
+                                        })()}
+                                        <span className={cn("text-xs font-semibold uppercase", currentSeverity.color)}>
+                                            {formData.severity}
+                                        </span>
+                                    </div>
+                                    <p className="text-sm font-medium text-slate-900 truncate">
+                                        {formData.title || 'Untitled Finding'}
+                                    </p>
+                                    <p className="text-[10px] text-slate-500 mt-1">
+                                        {formData.category} • {formData.owasp_reference || 'No OWASP ref'}
+                                    </p>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                
-                {/* Content Area - Scrollable */}
-                <div className="flex-1 overflow-y-auto bg-white">
-                    <div className="px-8 py-8 max-w-3xl mx-auto space-y-10">
-                        {/* Description */}
-                        <section className="space-y-3">
-                            <h3 className="text-sm font-medium text-slate-900 flex items-center gap-2">
-                                Description <span className="text-red-500">*</span>
-                            </h3>
-                            <div className="rounded-lg border border-slate-200 bg-slate-50/30 min-h-[200px]">
+
+                    {/* Right Content - Editors */}
+                    <div className="flex-1 overflow-y-auto bg-white scrollbar-thin">
+                        <div className="p-8 space-y-8">
+                            {/* Description */}
+                            <section>
+                                <div className="flex items-center gap-2 mb-4">
+                                    <FileText className="w-4 h-4 text-slate-400" />
+                                    <h3 className="text-sm font-semibold text-slate-900">Description</h3>
+                                    <span className="text-red-500 text-xs">*</span>
+                                </div>
                                 <Editor
                                     content={formData.description}
                                     onChange={(html) => setFormData({ ...formData, description: html })}
-                                    placeholder="Detailed description of the vulnerability..."
-                                    className="min-h-[200px] prose-sm max-w-none p-4"
+                                    placeholder="Describe the vulnerability, its impact, and how it was discovered..."
+                                    frameless
+                                    className="min-h-[180px]"
                                 />
-                            </div>
-                        </section>
+                            </section>
 
-                        {/* Remediation */}
-                        <section className="space-y-3">
-                            <h3 className="text-sm font-medium text-slate-900 flex items-center gap-2">
-                                Remediation <span className="text-red-500">*</span>
-                            </h3>
-                            <div className="rounded-lg border border-slate-200 bg-slate-50/30 min-h-[150px]">
+                            {/* Remediation */}
+                            <section className="pt-6 border-t border-slate-100">
+                                <div className="flex items-center gap-2 mb-4">
+                                    <Wrench className="w-4 h-4 text-slate-400" />
+                                    <h3 className="text-sm font-semibold text-slate-900">Remediation</h3>
+                                    <span className="text-red-500 text-xs">*</span>
+                                </div>
                                 <Editor
                                     content={formData.remediation}
                                     onChange={(html) => setFormData({ ...formData, remediation: html })}
-                                    placeholder="Steps to fix or mitigate the issue..."
-                                    className="min-h-[150px] prose-sm max-w-none p-4"
+                                    placeholder="Provide clear steps to fix or mitigate this vulnerability..."
+                                    frameless
+                                    className="min-h-[150px]"
                                 />
-                            </div>
-                        </section>
+                            </section>
 
-                        {/* Proof of Concept & Evidence */}
-                        <section className="space-y-3 pb-8">
-                            <div className="flex items-center justify-between">
-                                <h3 className="text-sm font-medium text-slate-900">Proof of Concept & Evidence</h3>
-                                <span className="text-xs text-slate-500">Optional</span>
-                            </div>
-                            <div className="rounded-lg border border-slate-200 bg-slate-50/30 min-h-[200px]">
-                                <Editor
-                                    content={formData.evidence}
-                                    onChange={(html) => setFormData({ ...formData, evidence: html })}
-                                    placeholder="Proof of concept..."
-                                    variant="evidence"
-                                    className="min-h-[200px] prose-sm max-w-none p-4"
-                                />
-                            </div>
-                        </section>
+                            {/* Evidence */}
+                            <section className="pt-6 border-t border-slate-100">
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className="flex items-center gap-2">
+                                        <Camera className="w-4 h-4 text-slate-400" />
+                                        <h3 className="text-sm font-semibold text-slate-900">Proof of Concept</h3>
+                                    </div>
+                                    <span className="text-[10px] text-slate-400 uppercase tracking-wide">Optional</span>
+                                </div>
+                                <div className="border-2 border-dashed border-emerald-100 bg-emerald-50/20 rounded-xl p-1 hover:border-emerald-200 transition-colors">
+                                    <Editor
+                                        content={formData.evidence}
+                                        onChange={(html) => setFormData({ ...formData, evidence: html })}
+                                        placeholder="Add screenshots, code snippets, or step-by-step reproduction..."
+                                        variant="evidence"
+                                        className="min-h-[160px]"
+                                    />
+                                </div>
+                            </section>
+                        </div>
                     </div>
                 </div>
 
-                {/* Footer - Fixed */}
-                <div className="px-8 py-5 border-t border-slate-200 bg-white shrink-0 flex justify-end gap-3">
-                    <Button 
-                        type="button" 
-                        variant="ghost" 
-                        onClick={() => onOpenChange(false)}
-                        className="text-slate-500 hover:text-slate-900 hover:bg-slate-100"
-                    >
-                        Cancel
-                    </Button>
-                    <Button 
-                        onClick={handleSubmit}
-                        disabled={!formData.title || !formData.description}
-                        className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-6"
-                    >
-                        Add Finding
-                    </Button>
+                {/* Premium Footer */}
+                <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/30 shrink-0 flex items-center justify-between">
+                    <p className="text-[10px] text-slate-400">
+                        {formData.title ? '✓ Title' : '○ Title'} • {formData.description ? '✓ Description' : '○ Description'} • {formData.remediation ? '✓ Remediation' : '○ Remediation'}
+                    </p>
+                    <div className="flex gap-2">
+                        <Button 
+                            type="button" 
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onOpenChange(false)}
+                            className="text-slate-500 hover:text-slate-900 hover:bg-slate-100 text-xs"
+                        >
+                            Cancel
+                        </Button>
+                        <Button 
+                            onClick={handleSubmit}
+                            size="sm"
+                            disabled={!formData.title || !formData.description}
+                            className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-5 shadow-sm disabled:opacity-50"
+                        >
+                            <Shield className="w-3.5 h-3.5 mr-1.5" />
+                            Add Finding
+                        </Button>
+                    </div>
                 </div>
             </DialogContent>
         </Dialog>

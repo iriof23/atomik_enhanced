@@ -317,15 +317,15 @@ export default function ReportBuilder() {
     const getStatusColor = (status: string) => {
         switch (status) {
             case 'In Progress':
-                return 'bg-emerald-100 text-emerald-700 border-emerald-200'
+                return 'bg-slate-800 text-white shadow-sm border-0'
             case 'Planning':
-                return 'bg-emerald-100 text-emerald-700 border-emerald-200'
+                return 'bg-slate-200 text-slate-700 shadow-sm border-0'
             case 'Completed':
-                return 'bg-slate-100 text-slate-700 border-slate-200'
+                return 'bg-emerald-600 text-white shadow-sm border-0'
             case 'On Hold':
-                return 'bg-amber-100 text-amber-700 border-amber-200'
+                return 'bg-amber-600 text-white shadow-sm border-0'
             default:
-                return 'bg-slate-100 text-slate-600 border-slate-200'
+                return 'bg-slate-200 text-slate-700 shadow-sm border-0'
         }
     }
 
@@ -546,27 +546,27 @@ export default function ReportBuilder() {
                                         <>
                                             {/* 2. Health Strip & 3. Risk Viz */}
                                             <div className="space-y-4">
-                                                {/* Health Strip */}
-                                                <div className="grid grid-cols-5 gap-4">
-                                                    <div className="bg-slate-50 rounded-xl p-4 text-center">
-                                                        <div className="text-xs text-slate-500 font-medium mb-1">Total</div>
+                                                {/* Health Strip - Premium solid colors */}
+                                                <div className="grid grid-cols-5 gap-3">
+                                                    <div className="bg-slate-100 rounded-xl p-4 text-center">
+                                                        <div className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider mb-1">Total</div>
                                                         <div className="text-2xl font-bold text-slate-900">{findings.count}</div>
                                                     </div>
-                                                    <div className="bg-red-50 rounded-xl p-4 text-center">
-                                                        <div className="text-xs text-red-600 font-medium mb-1">Critical</div>
-                                                        <div className="text-2xl font-bold text-red-600">{findings.severity.critical}</div>
+                                                    <div className="bg-gradient-to-br from-red-600 to-red-700 rounded-xl p-4 text-center shadow-sm">
+                                                        <div className="text-[10px] text-white/80 font-semibold uppercase tracking-wider mb-1">Critical</div>
+                                                        <div className="text-2xl font-bold text-white">{findings.severity.critical}</div>
                                                     </div>
-                                                    <div className="bg-orange-50 rounded-xl p-4 text-center">
-                                                        <div className="text-xs text-orange-600 font-medium mb-1">High</div>
-                                                        <div className="text-2xl font-bold text-orange-600">{findings.severity.high}</div>
+                                                    <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl p-4 text-center shadow-sm">
+                                                        <div className="text-[10px] text-white/80 font-semibold uppercase tracking-wider mb-1">High</div>
+                                                        <div className="text-2xl font-bold text-white">{findings.severity.high}</div>
                                                     </div>
-                                                    <div className="bg-amber-50 rounded-xl p-4 text-center">
-                                                        <div className="text-xs text-amber-600 font-medium mb-1">Medium</div>
-                                                        <div className="text-2xl font-bold text-amber-600">{findings.severity.medium}</div>
+                                                    <div className="bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl p-4 text-center shadow-sm">
+                                                        <div className="text-[10px] text-white/80 font-semibold uppercase tracking-wider mb-1">Medium</div>
+                                                        <div className="text-2xl font-bold text-white">{findings.severity.medium}</div>
                                                     </div>
-                                                    <div className="bg-emerald-50 rounded-xl p-4 text-center">
-                                                        <div className="text-xs text-emerald-600 font-medium mb-1">Low</div>
-                                                        <div className="text-2xl font-bold text-emerald-600">{findings.severity.low}</div>
+                                                    <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl p-4 text-center shadow-sm">
+                                                        <div className="text-[10px] text-white/80 font-semibold uppercase tracking-wider mb-1">Low</div>
+                                                        <div className="text-2xl font-bold text-white">{findings.severity.low}</div>
                                                     </div>
                                                 </div>
 

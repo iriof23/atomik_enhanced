@@ -115,14 +115,14 @@ export default function Findings() {
     const endIndex = Math.min(startIndex + itemsPerPage, totalItems)
     const currentFindings = filteredFindings.slice(startIndex, endIndex)
 
-    // Helper for Severity Colors
+    // Helper for Severity Colors - Premium solid gradients
     const getSeverityColor = (severity: string) => {
         switch (severity) {
-            case 'Critical': return 'bg-red-50 text-red-700 border-red-200'
-            case 'High': return 'bg-orange-50 text-orange-700 border-orange-200'
-            case 'Medium': return 'bg-amber-50 text-amber-700 border-amber-200'
-            case 'Low': return 'bg-emerald-50 text-emerald-700 border-emerald-200'
-            default: return 'bg-blue-50 text-blue-700 border-blue-200'
+            case 'Critical': return 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-sm border-0'
+            case 'High': return 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-sm border-0'
+            case 'Medium': return 'bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-sm border-0'
+            case 'Low': return 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-sm border-0'
+            default: return 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-sm border-0'
         }
     }
 

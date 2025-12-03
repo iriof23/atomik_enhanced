@@ -17,22 +17,35 @@ const badgeVariants = cva(
                     "border border-border text-foreground",
                 success:
                     "border border-transparent bg-green-500 text-white hover:bg-green-500/80",
-                // Severity variants (matching screenshot style)
+                // Severity variants - Premium solid colors with white text
                 critical:
-                    "border border-red-200 bg-red-100 text-red-700 dark:border-red-800 dark:bg-red-900/30 dark:text-red-400",
+                    "border-0 bg-gradient-to-r from-red-600 to-red-700 text-white shadow-sm",
                 high:
-                    "border border-orange-200 bg-orange-100 text-orange-700 dark:border-orange-800 dark:bg-orange-900/30 dark:text-orange-400",
+                    "border-0 bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-sm",
                 medium:
-                    "border border-yellow-200 bg-yellow-100 text-yellow-700 dark:border-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
+                    "border-0 bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-sm",
                 low:
-                    "border border-green-200 bg-green-100 text-green-700 dark:border-green-800 dark:bg-green-900/30 dark:text-green-400",
+                    "border-0 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-sm",
                 info:
-                    "border border-blue-200 bg-blue-100 text-blue-700 dark:border-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
-                // Priority variants (from screenshot)
+                    "border-0 bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-sm",
+                // Status variants - Subtle but solid
+                planning:
+                    "border-0 bg-slate-200 text-slate-700 shadow-sm",
+                in_progress:
+                    "border-0 bg-slate-800 text-white shadow-sm",
+                review:
+                    "border-0 bg-blue-600 text-white shadow-sm",
+                completed:
+                    "border-0 bg-emerald-600 text-white shadow-sm",
+                on_hold:
+                    "border-0 bg-amber-600 text-white shadow-sm",
+                cancelled:
+                    "border-0 bg-slate-500 text-white shadow-sm",
+                // Priority variants - Solid colors
                 urgent:
-                    "border border-orange-200 bg-orange-50 text-orange-600",
+                    "border-0 bg-gradient-to-r from-red-600 to-red-700 text-white shadow-sm",
                 normal:
-                    "border border-slate-200 bg-slate-50 text-slate-600",
+                    "border-0 bg-slate-600 text-white shadow-sm",
             },
         },
         defaultVariants: {

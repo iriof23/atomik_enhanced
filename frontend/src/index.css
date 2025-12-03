@@ -443,6 +443,71 @@
 }
 
 /* =========================================
+   PREMIUM THIN SCROLLBAR (for modals/dialogs)
+   ========================================= */
+
+/* Ultra-refined scrollbar for premium feel */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: #e2e8f0 transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 5px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 12px 0;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: #e2e8f0;
+  border-radius: 100px;
+  border: 1px solid transparent;
+  background-clip: padding-box;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: #cbd5e1;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:active {
+  background: #94a3b8;
+}
+
+/* Scrollbar only visible on hover (ultra premium) */
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  transition: background 0.2s ease, opacity 0.2s ease;
+}
+
+/* Dark mode support */
+.dark .scrollbar-thin {
+  scrollbar-color: #374151 transparent;
+}
+
+.dark .scrollbar-thin::-webkit-scrollbar-thumb {
+  background: #374151;
+}
+
+.dark .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: #4b5563;
+}
+
+/* Hide scrollbar until hover (optional - ultra minimal) */
+.scrollbar-fade::-webkit-scrollbar-thumb {
+  background: transparent;
+}
+
+.scrollbar-fade:hover::-webkit-scrollbar-thumb {
+  background: #e2e8f0;
+}
+
+.dark .scrollbar-fade:hover::-webkit-scrollbar-thumb {
+  background: #374151;
+}
+
+/* =========================================
    ATOMIK DESIGN SYSTEM UTILITIES
    ========================================= */
 

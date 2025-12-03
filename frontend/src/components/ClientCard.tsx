@@ -73,11 +73,11 @@ export function ClientCard({
 
     const getStatusColor = (status: string) => {
         switch (status) {
-            case 'Active': return 'bg-emerald-500'
-            case 'Inactive': return 'bg-yellow-500'
-            case 'Prospect': return 'bg-blue-500'
-            case 'Archived': return 'bg-zinc-500'
-            default: return 'bg-zinc-500'
+            case 'Active': return 'bg-emerald-600'
+            case 'Inactive': return 'bg-slate-500'
+            case 'Prospect': return 'bg-blue-600'
+            case 'Archived': return 'bg-slate-400'
+            default: return 'bg-slate-400'
         }
     }
 

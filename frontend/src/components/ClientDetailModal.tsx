@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Mail, Phone, Building2, Users, FileText, Activity, Edit, Trash2, Loader2, Tag, StickyNote, Globe } from 'lucide-react'
 import { api } from '@/lib/api'
+import { cn } from '@/lib/utils'
 
 interface Client {
     id: string
@@ -63,7 +64,6 @@ export default function ClientDetailModal({ client, open, onClose, onEdit, onDel
         low: 0
     })
 
-    // Fetch associated projects and their findings when client changes
     useEffect(() => {
         const fetchProjectsAndFindings = async () => {
             if (!client?.id || !open) return
@@ -77,7 +77,6 @@ export default function ClientDetailModal({ client, open, onClose, onEdit, onDel
                     return
                 }
 
-                // Fetch projects filtered by client_id
                 const response = await api.get(`/projects/?client_id=${client.id}`, {
                     headers: { Authorization: `Bearer ${token}` }
                 })
@@ -89,12 +88,11 @@ export default function ClientDetailModal({ client, open, onClose, onEdit, onDel
                         id: p.id,
                         name: p.name,
                         status: mapStatus(p.status),
-                        priority: 'Medium', // Default priority
+                        priority: 'Medium',
                         progress: calculateProgress(p.status),
                     }))
                     setAssociatedProjects(projects)
 
-                    // Fetch findings for all projects
                     let allFindings: any[] = []
                     for (const project of response.data) {
                         try {
@@ -109,7 +107,6 @@ export default function ClientDetailModal({ client, open, onClose, onEdit, onDel
                         }
                     }
 
-                    // Calculate findings by severity
                     const severityCounts = {
                         critical: 0,
                         high: 0,
@@ -145,7 +142,6 @@ export default function ClientDetailModal({ client, open, onClose, onEdit, onDel
         fetchProjectsAndFindings()
     }, [client?.id, open, getToken])
 
-    // Map API status to display status
     const mapStatus = (status: string): string => {
         const statusMap: Record<string, string> = {
             'PLANNING': 'Planning',
@@ -157,7 +153,6 @@ export default function ClientDetailModal({ client, open, onClose, onEdit, onDel
         return statusMap[status?.toUpperCase()] || status || 'Planning'
     }
 
-    // Calculate progress based on status
     const calculateProgress = (status: string): number => {
         const progressMap: Record<string, number> = {
             'PLANNING': 10,
@@ -174,86 +169,122 @@ export default function ClientDetailModal({ client, open, onClose, onEdit, onDel
     const getStatusColor = (status: string) => {
         switch (status) {
             case 'Active':
-                return 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
+                return 'bg-emerald-600 text-white shadow-sm border-0'
             case 'Inactive':
-                return 'bg-gray-500/10 text-gray-400 border-gray-500/20'
+                return 'bg-slate-500 text-white shadow-sm border-0'
             case 'Prospect':
-                return 'bg-teal-500/10 text-teal-400 border-teal-500/20'
+                return 'bg-blue-600 text-white shadow-sm border-0'
             default:
-                return 'bg-gray-500/10 text-gray-400 border-gray-500/20'
+                return 'bg-slate-200 text-slate-700 shadow-sm border-0'
         }
     }
 
-
-
     return (
         <Dialog open={open} onOpenChange={onClose}>
-            <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
-                <DialogHeader>
-                    <div className="flex items-start justify-between">
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0 gap-0 bg-white border-slate-200 sm:rounded-xl scrollbar-thin">
+                {/* Header */}
+                <div className="p-6 border-b border-slate-100 bg-white sticky top-0 z-10">
+                    <div className="flex items-start justify-between mb-4">
                         <div className="flex items-center gap-4">
-                            <Avatar className="h-12 w-12 rounded-lg">
-                                <AvatarFallback className="rounded-lg bg-primary/10 text-primary font-semibold text-lg">
+                            <Avatar className="h-14 w-14 rounded-xl border border-slate-100 shadow-sm">
+                                <AvatarFallback className="rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white font-semibold text-lg">
                                     {client.name.slice(0, 2).toUpperCase()}
                                 </AvatarFallback>
                             </Avatar>
                             <div>
-                                <DialogTitle className="text-xl">{client.name}</DialogTitle>
-                                <p className="text-muted-foreground text-sm mt-0.5">{client.primaryContact}</p>
+                                <DialogTitle className="text-2xl font-bold text-slate-900">{client.name}</DialogTitle>
+                                <p className="text-sm text-slate-500 mt-0.5 flex items-center gap-2">
+                                    <Users className="w-3.5 h-3.5" />
+                                    {client.primaryContact}
+                                </p>
                             </div>
                         </div>
-                        <Badge className={`${getStatusColor(client.status)} mr-8`}>{client.status}</Badge>
+                        <span className={cn(
+                            "px-2.5 py-1 rounded-full text-xs font-medium border",
+                            getStatusColor(client.status)
+                        )}>
+                            {client.status}
+                        </span>
                     </div>
-                </DialogHeader>
 
-                <div className="space-y-4 mt-4">
+                    {/* Stats Row */}
+                    <div className="grid grid-cols-3 gap-4 mt-6">
+                        <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
+                            <div className="flex items-center justify-between mb-1">
+                                <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Projects</span>
+                                <FileText className="w-4 h-4 text-emerald-600" />
+                            </div>
+                            <p className="text-2xl font-bold text-slate-900">
+                                {loadingProjects ? <Loader2 className="w-5 h-5 animate-spin" /> : associatedProjects.length}
+                            </p>
+                        </div>
+                        <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
+                            <div className="flex items-center justify-between mb-1">
+                                <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Findings</span>
+                                <Activity className="w-4 h-4 text-amber-500" />
+                            </div>
+                            <p className="text-2xl font-bold text-slate-900">
+                                {loadingProjects ? <Loader2 className="w-5 h-5 animate-spin" /> : totalFindings}
+                            </p>
+                        </div>
+                        <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
+                            <div className="flex items-center justify-between mb-1">
+                                <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Critical</span>
+                                <Activity className="w-4 h-4 text-red-500" />
+                            </div>
+                            <p className="text-2xl font-bold text-slate-900">
+                                {loadingProjects ? <Loader2 className="w-5 h-5 animate-spin" /> : findingsBySeverity.critical}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="p-6 space-y-8">
                     {/* Contact Information */}
-                    <div className="bg-card border border-border rounded-lg p-3">
-                        <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
-                            <Mail className="w-5 h-5 text-primary" />
-                            Contact Information
+                    <div>
+                        <h3 className="text-sm font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                            <Building2 className="w-4 h-4 text-slate-400" />
+                            Organization Details
                         </h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            <div className="flex items-center gap-2">
-                                <Mail className="w-4 h-4 text-muted-foreground" />
-                                <div>
-                                    <p className="text-xs text-muted-foreground">Email</p>
-                                    <p className="text-sm font-medium">{client.email || '—'}</p>
+                        <div className="grid grid-cols-2 gap-y-6 gap-x-8">
+                            <div>
+                                <p className="text-xs text-slate-500 mb-1">Email Address</p>
+                                <div className="flex items-center gap-2 text-sm font-medium text-slate-900">
+                                    <Mail className="w-3.5 h-3.5 text-slate-400" />
+                                    {client.email || '—'}
                                 </div>
                             </div>
-                            {client.phone && (
-                                <div className="flex items-center gap-2">
-                                    <Phone className="w-4 h-4 text-muted-foreground" />
-                                    <div>
-                                        <p className="text-xs text-muted-foreground">Phone</p>
-                                        <p className="text-sm font-medium">{client.phone}</p>
-                                    </div>
-                                </div>
-                            )}
-                            <div className="flex items-center gap-2">
-                                <Building2 className="w-4 h-4 text-muted-foreground" />
-                                <div>
-                                    <p className="text-xs text-muted-foreground">Industry</p>
-                                    <p className="text-sm font-medium">{client.industry || '—'}</p>
+                            <div>
+                                <p className="text-xs text-slate-500 mb-1">Phone Number</p>
+                                <div className="flex items-center gap-2 text-sm font-medium text-slate-900">
+                                    <Phone className="w-3.5 h-3.5 text-slate-400" />
+                                    {client.phone || '—'}
                                 </div>
                             </div>
-                            <div className="flex items-center gap-2">
-                                <Users className="w-4 h-4 text-muted-foreground" />
-                                <div>
-                                    <p className="text-xs text-muted-foreground">Company Size</p>
-                                    <p className="text-sm font-medium">{client.companySize || '—'}</p>
+                            <div>
+                                <p className="text-xs text-slate-500 mb-1">Industry</p>
+                                <div className="flex items-center gap-2 text-sm font-medium text-slate-900">
+                                    <Building2 className="w-3.5 h-3.5 text-slate-400" />
+                                    {client.industry || '—'}
+                                </div>
+                            </div>
+                            <div>
+                                <p className="text-xs text-slate-500 mb-1">Company Size</p>
+                                <div className="flex items-center gap-2 text-sm font-medium text-slate-900">
+                                    <Users className="w-3.5 h-3.5 text-slate-400" />
+                                    {client.companySize || '—'}
                                 </div>
                             </div>
                             {client.logoUrl && (
-                                <div className="flex items-center gap-2 md:col-span-2">
-                                    <Globe className="w-4 h-4 text-muted-foreground" />
-                                    <div>
-                                        <p className="text-xs text-muted-foreground">Website</p>
+                                <div className="col-span-2">
+                                    <p className="text-xs text-slate-500 mb-1">Website</p>
+                                    <div className="flex items-center gap-2 text-sm font-medium">
+                                        <Globe className="w-3.5 h-3.5 text-slate-400" />
                                         <a 
                                             href={client.logoUrl.startsWith('http') ? client.logoUrl : `https://${client.logoUrl}`}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="text-sm font-medium text-primary hover:underline"
+                                            className="text-emerald-600 hover:text-emerald-700 hover:underline transition-colors"
                                         >
                                             {client.logoUrl}
                                         </a>
@@ -263,142 +294,96 @@ export default function ClientDetailModal({ client, open, onClose, onEdit, onDel
                         </div>
                     </div>
 
-                    {/* Stats Cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                        <div className="bg-card border border-border rounded-lg p-3">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-xs text-muted-foreground">Total Projects</p>
-                                    <p className="text-xl font-bold mt-0.5">
-                                        {loadingProjects ? <Loader2 className="w-4 h-4 animate-spin" /> : associatedProjects.length}
-                                    </p>
-                                </div>
-                                <div className="p-2 bg-primary/10 rounded-lg">
-                                    <FileText className="w-5 h-5 text-primary" />
-                                </div>
-                            </div>
-                        </div>
-                        <div className="bg-card border border-border rounded-lg p-3">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-xs text-muted-foreground">Total Findings</p>
-                                    <p className="text-xl font-bold mt-0.5">
-                                        {loadingProjects ? <Loader2 className="w-4 h-4 animate-spin" /> : totalFindings}
-                                    </p>
-                                </div>
-                                <div className="p-2 bg-amber-500/10 rounded-lg">
-                                    <Activity className="w-5 h-5 text-amber-500" />
-                                </div>
-                            </div>
-                        </div>
-                        <div className="bg-card border border-border rounded-lg p-3">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-xs text-muted-foreground">Critical Issues</p>
-                                    <p className="text-xl font-bold mt-0.5 text-red-500">
-                                        {loadingProjects ? <Loader2 className="w-4 h-4 animate-spin" /> : findingsBySeverity.critical}
-                                    </p>
-                                </div>
-                                <div className="p-2 bg-red-500/10 rounded-lg">
-                                    <Activity className="w-5 h-5 text-red-500" />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Tags */}
-                    {client.tags && client.tags.length > 0 && (
-                        <div className="bg-card border border-border rounded-lg p-3">
-                            <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
-                                <Tag className="w-4 h-4 text-teal-500" />
-                                Tags
-                            </h3>
-                            <div className="flex flex-wrap gap-2">
-                                {client.tags.map((tag) => (
-                                    <Badge key={tag} variant="secondary" className="text-xs">
-                                        #{tag}
-                                    </Badge>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Notes */}
-                    {client.notes && (
-                        <div className="bg-card border border-border rounded-lg p-3">
-                            <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
-                                <StickyNote className="w-4 h-4 text-amber-500" />
-                                Notes
-                            </h3>
-                            <p className="text-sm text-muted-foreground whitespace-pre-wrap">{client.notes}</p>
-                        </div>
-                    )}
-
                     {/* Associated Projects */}
-                    <div className="bg-card border border-border rounded-lg p-3">
-                        <h3 className="text-sm font-semibold mb-3">Associated Projects</h3>
-                        <div className="space-y-2">
+                    <div>
+                        <h3 className="text-sm font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                            <FileText className="w-4 h-4 text-slate-400" />
+                            Active Projects
+                        </h3>
+                        <div className="space-y-3">
                             {loadingProjects ? (
-                                <div className="flex items-center justify-center py-4">
-                                    <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
-                                    <span className="ml-2 text-sm text-muted-foreground">Loading projects...</span>
+                                <div className="text-center py-8 border border-dashed border-slate-200 rounded-xl bg-slate-50/50">
+                                    <Loader2 className="w-5 h-5 animate-spin text-slate-400 mx-auto" />
                                 </div>
                             ) : associatedProjects.length === 0 ? (
-                                <div className="text-center py-4 text-muted-foreground">
-                                    <FileText className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                                    <p className="text-sm">No projects associated with this client yet</p>
+                                <div className="text-center py-8 border border-dashed border-slate-200 rounded-xl bg-slate-50/50">
+                                    <p className="text-sm text-slate-500">No projects found</p>
                                 </div>
                             ) : (
                                 associatedProjects.map((project) => (
-                                <div
-                                    key={project.id}
-                                    className="flex items-center justify-between p-2 rounded-lg border border-border hover:bg-accent/50 transition-colors"
-                                >
-                                    <div className="flex-1">
-                                        <p className="text-sm font-medium">{project.name}</p>
-                                        <div className="flex items-center gap-1.5 mt-0.5">
-                                            <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                                                {project.status}
-                                            </Badge>
-                                            <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                                                {project.priority}
-                                            </Badge>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-24">
-                                            <div className="flex items-center justify-between text-[10px] text-muted-foreground mb-0.5">
-                                                <span>Progress</span>
-                                                <span>{project.progress}%</span>
+                                    <div
+                                        key={project.id}
+                                        className="group flex items-center justify-between p-3 rounded-xl border border-slate-200 hover:border-emerald-200 hover:shadow-sm transition-all bg-white"
+                                    >
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-sm font-medium text-slate-900 truncate">{project.name}</p>
+                                            <div className="flex items-center gap-2 mt-1.5">
+                                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-600">
+                                                    {project.status}
+                                                </span>
+                                                <span className="text-slate-300">•</span>
+                                                <span className="text-xs text-slate-500">{project.priority} Priority</span>
                                             </div>
-                                            <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                                                <div
-                                                    className="h-full bg-primary rounded-full transition-all"
+                                        </div>
+                                        <div className="w-24 ml-4">
+                                            <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                                                <div 
+                                                    className="h-full bg-emerald-500 rounded-full transition-all duration-500"
                                                     style={{ width: `${project.progress}%` }}
                                                 />
                                             </div>
                                         </div>
                                     </div>
-                                </div>
                                 ))
                             )}
                         </div>
                     </div>
 
-                    {/* Action Buttons */}
-                    <div className="flex items-center gap-3 pt-3 border-t border-border">
-                        <Button onClick={() => onEdit(client)} className="flex-1" size="sm">
+                    {/* Additional Info: Tags & Notes */}
+                    {(client.tags.length > 0 || client.notes) && (
+                        <div className="grid grid-cols-1 gap-6 pt-6 border-t border-slate-100">
+                            {client.tags.length > 0 && (
+                                <div>
+                                    <h3 className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-3">Tags</h3>
+                                    <div className="flex flex-wrap gap-2">
+                                        {client.tags.map((tag) => (
+                                            <span key={tag} className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
+                                                #{tag}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                            
+                            {client.notes && (
+                                <div>
+                                    <h3 className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">Notes</h3>
+                                    <p className="text-xs text-slate-600 leading-relaxed bg-slate-50 p-3 rounded-lg border border-slate-100">
+                                        {client.notes}
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+
+                {/* Footer Actions */}
+                <div className="p-4 border-t border-slate-100 bg-slate-50/50 sticky bottom-0 flex items-center justify-between">
+                    <Button 
+                        variant="ghost" 
+                        onClick={() => onDelete?.(client)}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Delete
+                    </Button>
+                    <div className="flex gap-2">
+                        <Button variant="outline" onClick={onClose}>
+                            Close
+                        </Button>
+                        <Button onClick={() => onEdit(client)} className="bg-emerald-600 hover:bg-emerald-700 text-white">
                             <Edit className="w-4 h-4 mr-2" />
                             Edit Client
-                        </Button>
-                        <Button 
-                            variant="outline" 
-                            className="flex-1 text-red-500 hover:text-red-600 hover:bg-red-500/10 border-red-500/30" 
-                            size="sm"
-                            onClick={() => onDelete?.(client)}
-                        >
-                            <Trash2 className="w-4 h-4 mr-2" />
-                            Delete Client
                         </Button>
                     </div>
                 </div>

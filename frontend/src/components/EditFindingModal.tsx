@@ -3,12 +3,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Editor } from '@/components/editor/Editor';
-import { Trash2, Save, Globe, Plus, X, Shield, AlertCircle } from 'lucide-react';
+import { Trash2, Save, Globe, Plus, X, Shield, AlertCircle, FileText, Wrench, Camera, Link2, AlertTriangle, Flame, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
     Dialog,
     DialogContent,
-    DialogClose,
 } from "@/components/ui/dialog";
 import {
     Select,
@@ -18,7 +17,6 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 
-// Define types locally for now, ideally should be shared
 export interface ProjectFinding {
     id: string;
     owaspId: string;
@@ -46,16 +44,25 @@ interface EditFindingModalProps {
     onClose: () => void;
     onUpdate: (finding: ProjectFinding) => void;
     onDelete: () => void;
-    isEditable?: boolean; // Whether the title can be edited (true for custom templates)
+    isEditable?: boolean;
 }
+
+const severityConfig = {
+    Critical: { icon: AlertTriangle, color: 'text-white', bg: 'bg-gradient-to-r from-red-600 to-red-700', border: 'border-0', ring: 'ring-red-200' },
+    High: { icon: Flame, color: 'text-white', bg: 'bg-gradient-to-r from-orange-500 to-orange-600', border: 'border-0', ring: 'ring-orange-200' },
+    Medium: { icon: AlertCircle, color: 'text-white', bg: 'bg-gradient-to-r from-amber-500 to-amber-600', border: 'border-0', ring: 'ring-amber-200' },
+    Low: { icon: Info, color: 'text-white', bg: 'bg-gradient-to-r from-emerald-500 to-emerald-600', border: 'border-0', ring: 'ring-emerald-200' },
+    Informational: { icon: Info, color: 'text-white', bg: 'bg-gradient-to-r from-blue-500 to-blue-600', border: 'border-0', ring: 'ring-blue-200' },
+}
+
+// Status uses neutral colors - severity is the urgency indicator
+const statusOptions = ['Open', 'In Progress', 'Fixed', 'Accepted Risk']
 
 export function EditFindingModal({ finding, isOpen, onClose, onUpdate, onDelete, isEditable = false }: EditFindingModalProps) {
     const [localFinding, setLocalFinding] = useState<ProjectFinding | null>(finding);
     const [isDirty, setIsDirty] = useState(false);
     const [newAssetUrl, setNewAssetUrl] = useState('');
-    const [affectedAssetsCount, setAffectedAssetsCount] = useState(0);
 
-    // Generate professional Finding ID
     const generateFindingId = (): string => {
         if (finding?.references) return finding.references;
         let clientPrefix = finding?.project?.client?.name?.slice(0, 3).toUpperCase();
@@ -72,10 +79,8 @@ export function EditFindingModal({ finding, isOpen, onClose, onUpdate, onDelete,
     useEffect(() => {
         setLocalFinding(finding);
         setIsDirty(false);
-        setAffectedAssetsCount(finding?.affectedAssets?.length || 0);
     }, [finding]);
 
-    // Dirty state warning on unload
     useEffect(() => {
         const handleBeforeUnload = (e: BeforeUnloadEvent) => {
             if (isDirty) {
@@ -122,7 +127,6 @@ export function EditFindingModal({ finding, isOpen, onClose, onUpdate, onDelete,
                 instanceCount: 1
             }]
         });
-        setAffectedAssetsCount(localFinding.affectedAssets.length + 1);
         setNewAssetUrl('');
     };
 
@@ -131,120 +135,142 @@ export function EditFindingModal({ finding, isOpen, onClose, onUpdate, onDelete,
         handleChange({
             affectedAssets: localFinding.affectedAssets.filter((_, i) => i !== index)
         });
-        setAffectedAssetsCount(localFinding.affectedAssets.length - 1);
     };
 
     if (!localFinding) return null;
 
+    const currentSeverity = severityConfig[localFinding.severity as keyof typeof severityConfig] || severityConfig.Medium;
+
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
-            <DialogContent className="max-w-[90vw] w-full h-[90vh] p-0 gap-0 bg-white border-slate-200 shadow-2xl flex flex-col overflow-hidden [&>button]:hidden sm:rounded-xl">
+            <DialogContent className="max-w-[90vw] w-full h-[90vh] p-0 gap-0 bg-white border-slate-200 shadow-2xl flex flex-col overflow-hidden [&>button]:hidden sm:rounded-2xl">
                 
-                {/* Header */}
-                <div className="h-auto min-h-[72px] border-b border-slate-200 flex items-center justify-between px-6 py-4 shrink-0 bg-white z-10">
-                    <div className="flex items-center gap-4 flex-1 min-w-0">
-                         <div className="p-2.5 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl shadow-sm hidden sm:flex items-center justify-center">
-                            <Shield className="w-5 h-5 text-white" />
-                        </div>
-                        <div className="flex flex-col min-w-0 gap-1">
-                            {/* Title Row */}
-                            {isEditable ? (
-                                <Input 
-                                    value={localFinding.title} 
-                                    onChange={(e) => handleChange({ title: e.target.value })}
-                                    className="font-semibold text-lg border-none px-0 h-7 focus-visible:ring-0 bg-transparent text-slate-900 placeholder:text-slate-400 shadow-none"
-                                />
-                            ) : (
-                                <h2 className="font-semibold text-lg text-slate-900 truncate">
-                                    {localFinding.title}
-                                </h2>
-                            )}
+                {/* Premium Header */}
+                <div className="border-b border-slate-100 bg-gradient-to-b from-slate-50/80 to-white shrink-0">
+                    <div className="px-6 py-4 flex items-center justify-between">
+                        <div className="flex items-center gap-4 flex-1 min-w-0">
+                            {/* Gradient Shield Icon */}
+                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shrink-0">
+                                <Shield className="w-6 h-6 text-white" />
+                            </div>
                             
-                            {/* Metadata Row - All inline */}
-                            <div className="flex items-center gap-2 text-xs">
-                                <span className={cn(
-                                    'inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold',
-                                    localFinding.severity === 'Critical' && 'bg-red-100 text-red-700',
-                                    localFinding.severity === 'High' && 'bg-orange-100 text-orange-700',
-                                    localFinding.severity === 'Medium' && 'bg-amber-100 text-amber-700',
-                                    localFinding.severity === 'Low' && 'bg-emerald-100 text-emerald-700',
-                                    localFinding.severity === 'Informational' && 'bg-blue-100 text-blue-700'
-                                )}>
-                                    {localFinding.severity}
-                                </span>
-                                <span className="text-slate-300">•</span>
-                                <span className="font-mono text-slate-500">{findingId}</span>
-                                <span className="text-slate-300">•</span>
-                                <span className="text-slate-500">{localFinding.status}</span>
-                                {isDirty && (
-                                    <>
-                                        <span className="text-slate-300">•</span>
-                                        <span className="text-amber-600 font-medium flex items-center gap-1">
-                                            <AlertCircle className="w-3 h-3" />
-                                            Unsaved
-                                        </span>
-                                    </>
+                            <div className="flex flex-col min-w-0 gap-1.5">
+                                {/* Title */}
+                                {isEditable ? (
+                                    <Input 
+                                        value={localFinding.title} 
+                                        onChange={(e) => handleChange({ title: e.target.value })}
+                                        className="font-bold text-xl border-none px-0 h-8 focus-visible:ring-0 bg-transparent text-slate-900 placeholder:text-slate-400 shadow-none"
+                                    />
+                                ) : (
+                                    <h2 className="font-bold text-xl text-slate-900 truncate tracking-tight">
+                                        {localFinding.title}
+                                    </h2>
                                 )}
+                                
+                                {/* Metadata Pills */}
+                                <div className="flex items-center gap-2 text-xs">
+                                    <span className={cn(
+                                        'inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase tracking-wide border',
+                                        currentSeverity.bg, currentSeverity.color, currentSeverity.border
+                                    )}>
+                                        {(() => {
+                                            const Icon = currentSeverity.icon;
+                                            return <Icon className="w-3 h-3" />;
+                                        })()}
+                                        {localFinding.severity}
+                                    </span>
+                                    <span className="text-slate-300">•</span>
+                                    <span className="font-mono text-[11px] text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">{findingId}</span>
+                                    <span className="text-slate-300">•</span>
+                                    <span className="text-[11px] text-slate-500">
+                                        {localFinding.status}
+                                    </span>
+                                    {isDirty && (
+                                        <>
+                                            <span className="text-slate-300">•</span>
+                                            <span className="text-amber-600 font-medium flex items-center gap-1 text-[11px]">
+                                                <span className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse" />
+                                                Unsaved changes
+                                            </span>
+                                        </>
+                                    )}
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        {onDelete && isEditable && (
-                             <Button variant="ghost" size="sm" onClick={onDelete} className="text-slate-400 hover:text-red-600 hover:bg-red-50">
-                                <Trash2 className="w-4 h-4" />
+                        
+                        {/* Actions */}
+                        <div className="flex items-center gap-2">
+                            {onDelete && isEditable && (
+                                <Button variant="ghost" size="sm" onClick={onDelete} className="text-slate-400 hover:text-red-600 hover:bg-red-50">
+                                    <Trash2 className="w-4 h-4" />
+                                </Button>
+                            )}
+                            <Button variant="ghost" size="sm" onClick={handleClose} className="text-slate-500 hover:text-slate-900 text-xs">
+                                Cancel
                             </Button>
-                        )}
-                        <Button variant="outline" size="sm" onClick={handleClose} className="text-slate-600 border-slate-200 hover:bg-slate-50">
-                            Cancel
-                        </Button>
-                         <Button size="sm" onClick={handleSave} disabled={!isDirty} className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm">
-                            <Save className="w-4 h-4 mr-2" />
-                            Save
-                        </Button>
+                            <Button size="sm" onClick={handleSave} disabled={!isDirty} className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm text-xs px-4">
+                                <Save className="w-3.5 h-3.5 mr-1.5" />
+                                Save
+                            </Button>
+                        </div>
                     </div>
                 </div>
 
                 {/* Body Layout */}
-                 <div className="flex-1 min-h-0 grid grid-cols-12">
+                <div className="flex-1 min-h-0 flex">
                     
-                    {/* Sidebar (Metadata) - 25% width with subtle background */}
-                    <div className="col-span-12 md:col-span-3 border-r border-slate-200 bg-slate-50/80 h-full overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:bg-slate-200 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
-                        <div className="p-6 space-y-8">
+                    {/* Sidebar (Metadata) - Wider for better balance */}
+                    <div className="w-80 shrink-0 border-r border-slate-100 bg-slate-50/80 overflow-y-auto scrollbar-thin">
+                        <div className="p-5 space-y-6">
                             
                             {/* Classification */}
-                             <div className="space-y-4">
-                                <h4 className="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
+                            <div className="space-y-4">
+                                <h4 className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
                                     Classification
                                 </h4>
-                                <div className="grid gap-5">
-                                    <div className="space-y-1.5">
-                                        <label className="text-xs font-medium text-slate-700">Severity</label>
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="text-[10px] text-slate-500 mb-1.5 block">Severity</label>
                                         <Select
                                             value={localFinding.severity}
                                             onValueChange={(value) => handleChange({ severity: value as any })}
                                         >
-                                            <SelectTrigger className="w-full h-9 bg-white border-slate-200 text-sm shadow-sm focus:ring-emerald-500/20">
-                                                <SelectValue placeholder="Select severity" />
+                                            <SelectTrigger className={cn(
+                                                "h-9 bg-white text-sm font-medium border",
+                                                currentSeverity.border, currentSeverity.color
+                                            )}>
+                                                <SelectValue />
                                             </SelectTrigger>
-                                            <SelectContent>
-                                                {['Critical', 'High', 'Medium', 'Low', 'Informational'].map(s => (
-                                                    <SelectItem key={s} value={s}>{s}</SelectItem>
-                                                ))}
+                                            <SelectContent className="bg-white border-slate-200">
+                                                {Object.entries(severityConfig).map(([level, config]) => {
+                                                    const Icon = config.icon;
+                                                    return (
+                                                        <SelectItem key={level} value={level} className="text-sm">
+                                                            <div className="flex items-center gap-2">
+                                                                <Icon className={cn("w-3.5 h-3.5", config.color)} />
+                                                                <span className={config.color}>{level}</span>
+                                                            </div>
+                                                        </SelectItem>
+                                                    );
+                                                })}
                                             </SelectContent>
                                         </Select>
                                     </div>
-                                     <div className="space-y-1.5">
-                                        <label className="text-xs font-medium text-slate-700">Status</label>
+                                    <div>
+                                        <label className="text-[10px] text-slate-500 mb-1.5 block">Status</label>
                                         <Select
                                             value={localFinding.status}
                                             onValueChange={(value) => handleChange({ status: value as any })}
                                         >
-                                            <SelectTrigger className="w-full h-9 bg-white border-slate-200 text-sm shadow-sm focus:ring-emerald-500/20">
-                                                <SelectValue placeholder="Select status" />
+                                            <SelectTrigger className="h-9 bg-white text-sm font-medium border-slate-200 text-slate-700">
+                                                <SelectValue />
                                             </SelectTrigger>
-                                            <SelectContent>
-                                                {['Open', 'In Progress', 'Fixed', 'Accepted Risk'].map(s => (
-                                                    <SelectItem key={s} value={s}>{s}</SelectItem>
+                                            <SelectContent className="bg-white border-slate-200">
+                                                {statusOptions.map((status) => (
+                                                    <SelectItem key={status} value={status} className="text-sm text-slate-700">
+                                                        {status}
+                                                    </SelectItem>
                                                 ))}
                                             </SelectContent>
                                         </Select>
@@ -252,50 +278,56 @@ export function EditFindingModal({ finding, isOpen, onClose, onUpdate, onDelete,
                                 </div>
                             </div>
 
-                            <div className="h-px bg-slate-200/60" />
+                            <div className="border-t border-slate-200" />
 
-                             {/* Technical Specs */}
+                            {/* Technical Specs */}
                             <div className="space-y-4">
-                                 <h4 className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Technical Specs</h4>
-                                <div className="space-y-1.5">
-                                    <label className="text-xs font-medium text-slate-700">CVSS Vector</label>
+                                <h4 className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                                    Technical
+                                </h4>
+                                <div>
+                                    <label className="text-[10px] text-slate-500 mb-1.5 block">CVSS Vector</label>
                                     <Input
                                         value={localFinding.cvssVector || ''}
                                         onChange={(e) => handleChange({ cvssVector: e.target.value })}
-                                        className="h-9 font-mono text-xs bg-white border-slate-200 focus:ring-emerald-500/20 focus:border-emerald-500 shadow-sm"
-                                        placeholder="CVSS:3.1/..."
+                                        className="h-8 font-mono text-[10px] bg-white border-slate-200 text-slate-700 placeholder:text-slate-400"
+                                        placeholder="CVSS:3.1/AV:N/AC:L/..."
                                     />
                                 </div>
                             </div>
 
-                            <div className="h-px bg-slate-200/60" />
+                            <div className="border-t border-slate-200" />
 
-                            {/* Assets */}
-                             <div className="space-y-4">
+                            {/* Affected Assets */}
+                            <div className="space-y-3">
                                 <div className="flex items-center justify-between">
-                                    <h4 className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Affected Assets</h4>
-                                    <Badge variant="secondary" className="bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 px-2 shadow-sm">
+                                    <h4 className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                                        Affected Assets
+                                    </h4>
+                                    <span className="text-[10px] font-semibold text-slate-500 bg-white border border-slate-200 px-1.5 py-0.5 rounded">
                                         {localFinding.affectedAssets.length}
-                                    </Badge>
+                                    </span>
                                 </div>
-                                <div className="flex gap-2">
+                                <div className="flex gap-1.5">
                                     <Input
                                         value={newAssetUrl}
                                         onChange={(e) => setNewAssetUrl(e.target.value)}
                                         placeholder="Add URL or IP..."
-                                        className="h-8 text-xs bg-white border-slate-200 focus:ring-emerald-500/20 focus:border-emerald-500 shadow-sm"
+                                        className="h-8 text-xs bg-white border-slate-200 placeholder:text-slate-400"
                                         onKeyDown={(e) => e.key === 'Enter' && handleAddAsset()}
                                     />
-                                    <Button size="sm" variant="outline" onClick={handleAddAsset} disabled={!newAssetUrl.trim()} className="h-8 w-8 p-0 shrink-0 bg-white border-slate-200 text-slate-500 hover:text-slate-900 shadow-sm">
+                                    <Button size="sm" variant="outline" onClick={handleAddAsset} disabled={!newAssetUrl.trim()} className="h-8 w-8 p-0 shrink-0 bg-white border-slate-200">
                                         <Plus className="w-3 h-3" />
                                     </Button>
                                 </div>
-                                 <div className="space-y-2">
+                                <div className="space-y-1.5">
                                     {localFinding.affectedAssets.map((asset, idx) => (
-                                        <div key={idx} className="flex items-center justify-between p-2 bg-white border border-slate-200 rounded-md shadow-sm group hover:border-emerald-200 transition-colors">
+                                        <div key={idx} className="flex items-center justify-between p-2 bg-white border border-slate-200 rounded-lg group hover:border-emerald-200 transition-colors">
                                             <div className="flex items-center gap-2 overflow-hidden">
-                                                <Globe className="w-3 h-3 text-slate-400 flex-shrink-0 group-hover:text-emerald-400" />
-                                                <span className="truncate text-slate-600 font-mono text-xs group-hover:text-slate-900" title={asset.url}>{asset.url}</span>
+                                                <Globe className="w-3 h-3 text-slate-400 shrink-0 group-hover:text-emerald-500" />
+                                                <span className="truncate text-[11px] text-slate-600 font-mono group-hover:text-slate-900" title={asset.url}>
+                                                    {asset.url}
+                                                </span>
                                             </div>
                                             <button onClick={() => removeAsset(idx)} className="text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
                                                 <X className="w-3 h-3" />
@@ -303,84 +335,121 @@ export function EditFindingModal({ finding, isOpen, onClose, onUpdate, onDelete,
                                         </div>
                                     ))}
                                     {localFinding.affectedAssets.length === 0 && (
-                                        <div className="text-xs text-slate-400 text-center py-6 border border-dashed border-slate-200 rounded-md bg-slate-50/50">
-                                            No assets linked
+                                        <div className="flex flex-col items-center justify-center py-6 border border-dashed border-slate-200 rounded-lg bg-white/50">
+                                            <Globe className="w-5 h-5 text-slate-300 mb-2" />
+                                            <p className="text-[10px] text-slate-400">No assets linked</p>
                                         </div>
                                     )}
+                                </div>
+                            </div>
+
+                            {/* Live Preview - Full severity color */}
+                            <div className="border-t border-slate-200 pt-5">
+                                <h4 className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-3">
+                                    Preview
+                                </h4>
+                                <div className={cn(
+                                    "p-4 rounded-xl shadow-sm",
+                                    localFinding.severity === 'Critical' && 'bg-gradient-to-br from-red-600 to-red-700',
+                                    localFinding.severity === 'High' && 'bg-gradient-to-br from-orange-500 to-orange-600',
+                                    localFinding.severity === 'Medium' && 'bg-gradient-to-br from-amber-500 to-amber-600',
+                                    localFinding.severity === 'Low' && 'bg-gradient-to-br from-emerald-500 to-emerald-600',
+                                    localFinding.severity === 'Informational' && 'bg-gradient-to-br from-blue-500 to-blue-600'
+                                )}>
+                                    <div className="flex items-center gap-2 mb-2">
+                                        {(() => {
+                                            const Icon = currentSeverity.icon;
+                                            return <Icon className="w-4 h-4 text-white/90" />;
+                                        })()}
+                                        <span className="text-[10px] font-bold uppercase tracking-wide text-white/90">
+                                            {localFinding.severity}
+                                        </span>
+                                    </div>
+                                    <p className="text-sm font-semibold text-white truncate">
+                                        {localFinding.title || 'Untitled'}
+                                    </p>
+                                    <p className="text-[10px] text-white/70 mt-1.5 font-medium">
+                                        {findingId} • {localFinding.status}
+                                    </p>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* Main Content (Editors) - 75% width */}
-                    <div className="col-span-12 md:col-span-9 h-full overflow-y-auto bg-white scroll-smooth [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:bg-slate-100 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
-                        <div className="p-12 max-w-4xl mx-auto space-y-12 pb-32">
+                    {/* Main Content (Editors) */}
+                    <div className="flex-1 overflow-y-auto bg-white scrollbar-thin">
+                        <div className="p-10 max-w-3xl mx-auto space-y-10 pb-24">
                             
-                             {/* Description - Seamless Editor */}
-                            <section className="group">
+                            {/* Description */}
+                            <section>
+                                <div className="flex items-center gap-2 mb-4">
+                                    <FileText className="w-4 h-4 text-slate-400" />
+                                    <h3 className="text-sm font-semibold text-slate-900">Description</h3>
+                                </div>
+                                <Editor
+                                    content={localFinding.description}
+                                    onChange={(html) => handleChange({ description: html })}
+                                    placeholder="Describe the vulnerability, its impact, and how it was discovered..."
+                                    frameless
+                                    className="min-h-[120px]"
+                                />
+                            </section>
+
+                            {/* Remediation */}
+                            <section className="pt-8 border-t border-slate-100">
+                                <div className="flex items-center gap-2 mb-4">
+                                    <Wrench className="w-4 h-4 text-slate-400" />
+                                    <h3 className="text-sm font-semibold text-slate-900">Remediation</h3>
+                                </div>
+                                <Editor
+                                    content={localFinding.recommendations}
+                                    onChange={(html) => handleChange({ recommendations: html })}
+                                    placeholder="Provide clear steps to fix or mitigate this vulnerability..."
+                                    frameless
+                                    className="min-h-[120px]"
+                                />
+                            </section>
+
+                            {/* Evidence */}
+                            <section className="pt-8 border-t border-slate-100">
                                 <div className="flex items-center justify-between mb-4">
-                                    <h3 className="text-xl font-semibold text-slate-900 tracking-tight">
-                                        Description
-                                    </h3>
+                                    <div className="flex items-center gap-2">
+                                        <Camera className="w-4 h-4 text-slate-400" />
+                                        <h3 className="text-sm font-semibold text-slate-900">Proof of Concept & Evidence</h3>
+                                    </div>
+                                    <span className="text-[10px] text-slate-400 uppercase tracking-wide">Optional</span>
                                 </div>
-                                <div className="min-h-[100px]">
-                                    <Editor
-                                        content={localFinding.description}
-                                        onChange={(html) => handleChange({ description: html })}
-                                        placeholder="Start writing the vulnerability description..."
-                                        frameless
-                                    />
-                                </div>
-                            </section>
-
-                             {/* Remediation - Seamless Editor */}
-                            <section className="group">
-                                <div className="flex items-center justify-between mb-4 border-t border-slate-100 pt-10">
-                                    <h3 className="text-xl font-semibold text-slate-900 tracking-tight">Remediation</h3>
-                                </div>
-                                <div className="min-h-[100px]">
-                                    <Editor
-                                        content={localFinding.recommendations}
-                                        onChange={(html) => handleChange({ recommendations: html })}
-                                        placeholder="Explain how to fix this issue..."
-                                        frameless
-                                    />
-                                </div>
-                            </section>
-
-                             {/* Evidence - Boxed Editor (Dropzone) */}
-                            <section className="group">
-                                <div className="flex items-center justify-between mb-4 border-t border-slate-100 pt-10">
-                                    <h3 className="text-xl font-semibold text-slate-900 tracking-tight">Proof of Concept & Evidence</h3>
-                                </div>
-                                <div className="min-h-[200px]">
+                                <div className="border-2 border-dashed border-emerald-100 bg-emerald-50/20 rounded-xl p-1 hover:border-emerald-200 transition-colors">
                                     <Editor
                                         content={localFinding.evidence || ''}
                                         onChange={(html) => handleChange({ evidence: html })}
-                                        placeholder="Paste screenshots, code blocks, or terminal output here..."
+                                        placeholder="Add screenshots, code snippets, or step-by-step reproduction..."
                                         variant="evidence"
-                                        className="border-2 border-dashed border-emerald-100 bg-emerald-50/20 hover:border-emerald-200 hover:bg-emerald-50/30 transition-colors rounded-xl"
+                                        className="min-h-[150px]"
                                     />
                                 </div>
                             </section>
                             
-                            {/* References - Seamless Editor */}
-                            <section className="group">
-                                <div className="flex items-center justify-between mb-4 border-t border-slate-100 pt-10">
-                                    <h3 className="text-xl font-semibold text-slate-900 tracking-tight">References</h3>
+                            {/* References */}
+                            <section className="pt-8 border-t border-slate-100">
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className="flex items-center gap-2">
+                                        <Link2 className="w-4 h-4 text-slate-400" />
+                                        <h3 className="text-sm font-semibold text-slate-900">References</h3>
+                                    </div>
+                                    <span className="text-[10px] text-slate-400 uppercase tracking-wide">Optional</span>
                                 </div>
-                                <div className="min-h-[50px]">
-                                    <Editor
-                                        content={localFinding.references || ''}
-                                        onChange={(html) => handleChange({ references: html })}
-                                        placeholder="- https://owasp.org/..."
-                                        frameless
-                                    />
-                                </div>
+                                <Editor
+                                    content={localFinding.references || ''}
+                                    onChange={(html) => handleChange({ references: html })}
+                                    placeholder="Add links to OWASP, CVE, or other relevant resources..."
+                                    frameless
+                                    className="min-h-[80px]"
+                                />
                             </section>
                         </div>
                     </div>
-                 </div>
+                </div>
             </DialogContent>
         </Dialog>
     );

@@ -434,29 +434,21 @@ export function AddClientDialog({ open, onOpenChange, onClientAdded, editingClie
                                 Client Status
                             </Label>
                             <div className="flex flex-wrap gap-2">
-                                {(['Prospect', 'Active', 'Inactive'] as const).map((status) => {
-                                    const isSelected = formData.status === status
-                                    const statusStyles: Record<string, { bg: string; text: string; ring: string }> = {
-                                        'Prospect': { bg: 'bg-blue-50', text: 'text-blue-700', ring: 'ring-blue-200' },
-                                        'Active': { bg: 'bg-emerald-50', text: 'text-emerald-700', ring: 'ring-emerald-200' },
-                                        'Inactive': { bg: 'bg-amber-50', text: 'text-amber-700', ring: 'ring-amber-200' },
-                                    }
-                                    return (
-                                        <button
-                                            key={status}
-                                            type="button"
-                                            onClick={() => updateField('status', status)}
-                                            className={cn(
-                                                "px-3.5 py-2 rounded-lg text-sm font-medium transition-all",
-                                                isSelected
-                                                    ? `${statusStyles[status].bg} ${statusStyles[status].text} ring-2 ${statusStyles[status].ring}`
-                                                    : "bg-slate-50 text-slate-600 hover:bg-slate-100"
-                                            )}
-                                        >
-                                            {status}
-                                        </button>
-                                    )
-                                })}
+                                {(['Prospect', 'Active', 'Inactive'] as const).map((status) => (
+                                    <button
+                                        key={status}
+                                        type="button"
+                                        onClick={() => updateField('status', status)}
+                                        className={cn(
+                                            "px-4 py-2 rounded-lg text-sm font-medium transition-all border",
+                                            formData.status === status
+                                                ? "bg-emerald-50 text-emerald-700 border-emerald-200 ring-2 ring-emerald-100"
+                                                : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
+                                        )}
+                                    >
+                                        {status}
+                                    </button>
+                                ))}
                             </div>
                         </div>
 
@@ -466,29 +458,21 @@ export function AddClientDialog({ open, onOpenChange, onClientAdded, editingClie
                                 Risk Level
                             </Label>
                             <div className="flex gap-2">
-                                {(['Low', 'Medium', 'High'] as const).map((risk) => {
-                                    const isSelected = formData.riskLevel === risk
-                                    const riskStyles: Record<string, { bg: string; text: string; ring: string }> = {
-                                        'Low': { bg: 'bg-emerald-50', text: 'text-emerald-700', ring: 'ring-emerald-200' },
-                                        'Medium': { bg: 'bg-amber-50', text: 'text-amber-700', ring: 'ring-amber-200' },
-                                        'High': { bg: 'bg-red-50', text: 'text-red-700', ring: 'ring-red-200' },
-                                    }
-                                    return (
-                                        <button
-                                            key={risk}
-                                            type="button"
-                                            onClick={() => updateField('riskLevel', risk)}
-                                            className={cn(
-                                                "px-3.5 py-2 rounded-lg text-sm font-medium transition-all",
-                                                isSelected
-                                                    ? `${riskStyles[risk].bg} ${riskStyles[risk].text} ring-2 ${riskStyles[risk].ring}`
-                                                    : "bg-slate-50 text-slate-600 hover:bg-slate-100"
-                                            )}
-                                        >
-                                            {risk}
-                                        </button>
-                                    )
-                                })}
+                                {(['Low', 'Medium', 'High'] as const).map((risk) => (
+                                    <button
+                                        key={risk}
+                                        type="button"
+                                        onClick={() => updateField('riskLevel', risk)}
+                                        className={cn(
+                                            "px-4 py-2 rounded-lg text-sm font-medium transition-all border",
+                                            formData.riskLevel === risk
+                                                ? "bg-emerald-50 text-emerald-700 border-emerald-200 ring-2 ring-emerald-100"
+                                                : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
+                                        )}
+                                    >
+                                        {risk}
+                                    </button>
+                                ))}
                             </div>
                         </div>
 

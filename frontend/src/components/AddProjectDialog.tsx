@@ -625,29 +625,21 @@ export function AddProjectDialog({ open, onOpenChange, onProjectAdded, clients, 
                             <div className="space-y-2">
                                 <Label className="text-sm font-medium text-slate-700">Priority Level</Label>
                                 <div className="grid grid-cols-4 gap-2">
-                                    {(['Low', 'Medium', 'High', 'Critical'] as const).map((p) => {
-                                        const priorityStyles: Record<string, { bg: string; text: string; ring: string }> = {
-                                            'Low': { bg: 'bg-emerald-50', text: 'text-emerald-700', ring: 'ring-emerald-200' },
-                                            'Medium': { bg: 'bg-amber-50', text: 'text-amber-700', ring: 'ring-amber-200' },
-                                            'High': { bg: 'bg-orange-50', text: 'text-orange-700', ring: 'ring-orange-200' },
-                                            'Critical': { bg: 'bg-red-50', text: 'text-red-700', ring: 'ring-red-200' },
-                                        }
-                                        return (
-                                            <button
-                                                key={p}
-                                                type="button"
-                                                onClick={() => updateField('priority', p)}
-                                                className={cn(
-                                                    "py-2.5 px-3 rounded-lg text-sm font-medium transition-all",
-                                                    formData.priority === p
-                                                        ? `${priorityStyles[p].bg} ${priorityStyles[p].text} ring-2 ${priorityStyles[p].ring}`
-                                                        : "bg-slate-50 text-slate-600 hover:bg-slate-100"
-                                                )}
-                                            >
-                                                {p}
-                                            </button>
-                                        )
-                                    })}
+                                    {(['Low', 'Medium', 'High', 'Critical'] as const).map((p) => (
+                                        <button
+                                            key={p}
+                                            type="button"
+                                            onClick={() => updateField('priority', p)}
+                                            className={cn(
+                                                "py-2.5 px-3 rounded-lg text-sm font-medium transition-all border",
+                                                formData.priority === p
+                                                    ? "bg-emerald-50 text-emerald-700 border-emerald-200 ring-2 ring-emerald-100"
+                                                    : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
+                                            )}
+                                        >
+                                            {p}
+                                        </button>
+                                    ))}
                                 </div>
                             </div>
 
@@ -660,10 +652,10 @@ export function AddProjectDialog({ open, onOpenChange, onProjectAdded, clients, 
                                             type="button"
                                             onClick={() => updateField('status', s)}
                                             className={cn(
-                                                "py-2.5 px-3 rounded-lg text-sm font-medium transition-all",
+                                                "py-2.5 px-3 rounded-lg text-sm font-medium transition-all border",
                                                 formData.status === s
-                                                    ? "bg-emerald-50 text-emerald-700 ring-2 ring-emerald-200"
-                                                    : "bg-slate-50 text-slate-600 hover:bg-slate-100"
+                                                    ? "bg-emerald-50 text-emerald-700 border-emerald-200 ring-2 ring-emerald-100"
+                                                    : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
                                             )}
                                         >
                                             {s}
