@@ -445,10 +445,10 @@ export default function ProjectDetailModal({
                         variant="ghost" 
                         size="sm"
                         onClick={() => onDelete(project)}
-                        className="text-slate-500 hover:text-red-600 hover:bg-red-50 text-xs"
+                        className="text-slate-500 hover:text-red-600 hover:bg-red-50 text-xs gap-1.5"
                     >
-                        <Trash2 className="w-3.5 h-3.5 mr-1.5" />
-                        Delete
+                        <Trash2 className="w-3.5 h-3.5 shrink-0" />
+                        <span>Delete</span>
                     </Button>
                     <div className="flex gap-2">
                         <Button variant="ghost" size="sm" onClick={onClose} className="text-xs text-slate-600">
@@ -460,20 +460,20 @@ export default function ProjectDetailModal({
                                 variant="outline" 
                                 size="sm"
                                 onClick={() => onStartRetest(project)}
-                                className="text-xs border-amber-200 text-amber-700 hover:bg-amber-50"
+                                className="text-xs border-amber-200 text-amber-700 hover:bg-amber-50 gap-1.5"
                             >
-                                <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
-                                Retest
+                                <RotateCcw className="w-3.5 h-3.5 shrink-0" />
+                                <span>Retest</span>
                             </Button>
                         )}
                         <Button 
                             variant="outline" 
                             size="sm"
                             onClick={() => onGenerateReport(project)}
-                            className="text-xs border-slate-200 text-slate-700 hover:bg-slate-50"
+                            className="text-xs border-slate-200 text-slate-700 hover:bg-slate-50 gap-1.5"
                         >
-                            <FileText className="w-3.5 h-3.5 mr-1.5" />
-                            Report
+                            <FileText className="w-3.5 h-3.5 shrink-0" />
+                            <span>Report</span>
                         </Button>
                         <Button 
                             size="sm"

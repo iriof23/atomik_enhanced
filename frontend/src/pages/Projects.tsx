@@ -803,9 +803,9 @@ export default function Projects() {
                         Manage penetration testing projects and track progress
                     </p>
                 </div>
-                <Button onClick={openAddProjectDialog} className="bg-emerald-600 hover:bg-emerald-700">
-                    <Plus className="w-4 h-4 mr-2" />
-                    New Project
+                <Button onClick={openAddProjectDialog} className="bg-emerald-600 hover:bg-emerald-700 gap-2">
+                    <Plus className="w-4 h-4 shrink-0" />
+                    <span>New Project</span>
                 </Button>
             </div>
 
@@ -848,21 +848,21 @@ export default function Projects() {
                             variant="outline"
                             size="sm"
                             onClick={openFilterDialog}
-                            className="text-slate-600 border-slate-200"
+                            className="text-slate-600 border-slate-200 gap-2"
                         >
-                            <Filter className="h-4 w-4 mr-2" />
-                            Filter
+                            <Filter className="h-4 w-4 shrink-0" />
+                            <span>Filter</span>
                             {Object.keys(appliedFilters).length > 0 && (
-                                <span className="ml-1.5 bg-emerald-600 text-white text-[10px] font-semibold rounded-full w-4 h-4 flex items-center justify-center">
+                                <span className="bg-emerald-600 text-white text-[10px] font-semibold rounded-full w-4 h-4 flex items-center justify-center shrink-0">
                                     {Object.keys(appliedFilters).length}
                                 </span>
                             )}
                         </Button>
 
                         {/* Export Button */}
-                        <Button variant="outline" size="sm" onClick={handleExportProjects} className="text-slate-600 border-slate-200">
-                            <Download className="w-4 h-4 mr-2" />
-                            Export
+                        <Button variant="outline" size="sm" onClick={handleExportProjects} className="text-slate-600 border-slate-200 gap-2">
+                            <Download className="w-4 h-4 shrink-0" />
+                            <span>Export</span>
                         </Button>
 
                         {/* View Mode Switcher */}
@@ -1022,9 +1022,9 @@ export default function Projects() {
                     <p className="text-xs text-slate-500 mb-4 max-w-sm">
                         Get started by creating your first penetration testing project
                     </p>
-                    <Button onClick={openAddProjectDialog} size="sm" className="bg-emerald-600 hover:bg-emerald-700">
-                        <Plus className="h-4 w-4 mr-2" />
-                        Create Project
+                    <Button onClick={openAddProjectDialog} size="sm" className="bg-emerald-600 hover:bg-emerald-700 gap-2">
+                        <Plus className="h-4 w-4 shrink-0" />
+                        <span>Create Project</span>
                     </Button>
                 </Card>
             )}
@@ -1039,9 +1039,9 @@ export default function Projects() {
                     <p className="text-xs text-slate-500 mb-4 max-w-sm">
                         No projects match your current filters. Try adjusting your filters.
                     </p>
-                    <Button variant="outline" size="sm" onClick={clearAllFilters}>
-                        <X className="h-4 w-4 mr-2" />
-                        Clear Filters
+                    <Button variant="outline" size="sm" onClick={clearAllFilters} className="gap-2">
+                        <X className="h-4 w-4 shrink-0" />
+                        <span>Clear Filters</span>
                     </Button>
                 </Card>
             )}

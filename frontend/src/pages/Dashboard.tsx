@@ -575,26 +575,26 @@ const ProjectCard = ({
                         <Button 
                             variant="ghost" 
                             size="sm" 
-                            className="h-7 px-2 text-xs"
+                            className="h-7 px-2 text-xs gap-1"
                             onClick={(e) => {
                                 e.stopPropagation()
                                 onViewDetails(project)
                             }}
                         >
-                            <Eye className="w-3 h-3 mr-1" />
-                            View
+                            <Eye className="w-3 h-3 shrink-0" />
+                            <span>View</span>
                         </Button>
                         <Button 
                             variant="default" 
                             size="sm" 
-                            className="h-7 px-2 text-xs"
+                            className="h-7 px-2 text-xs gap-1"
                             onClick={(e) => {
                                 e.stopPropagation()
                                 onResumeReport(project)
                             }}
                         >
-                            <Play className="w-3 h-3 mr-1" />
-                            Report
+                            <Play className="w-3 h-3 shrink-0" />
+                            <span>Report</span>
                         </Button>
                     </div>
                 </div>
@@ -869,13 +869,13 @@ export default function Dashboard() {
                     </p>
                 </div>
                 <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" onClick={handleNewClient}>
-                        <Users className="w-4 h-4 mr-1.5" />
-                        Add Client
+                    <Button variant="outline" size="sm" onClick={handleNewClient} className="gap-1.5">
+                        <Users className="w-4 h-4 shrink-0" />
+                        <span>Add Client</span>
                     </Button>
-                    <Button size="sm" onClick={handleStartProject}>
-                        <Plus className="w-4 h-4 mr-1.5" />
-                        New Project
+                    <Button size="sm" onClick={handleStartProject} className="gap-1.5">
+                        <Plus className="w-4 h-4 shrink-0" />
+                        <span>New Project</span>
                     </Button>
                 </div>
             </div>
@@ -897,14 +897,14 @@ export default function Dashboard() {
                         </Badge>
                     </div>
                     <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="sm" className="text-slate-500">
-                            <BarChart3 className="w-4 h-4 mr-1.5" />
-                            Board
+                        <Button variant="ghost" size="sm" className="text-slate-500 gap-1.5">
+                            <BarChart3 className="w-4 h-4 shrink-0" />
+                            <span>Board</span>
                         </Button>
                         <Link to="/projects">
-                            <Button variant="ghost" size="sm" className="text-slate-500">
-                                View all
-                                <ChevronRight className="w-4 h-4 ml-0.5" />
+                            <Button variant="ghost" size="sm" className="text-slate-500 gap-0.5">
+                                <span>View all</span>
+                                <ChevronRight className="w-4 h-4 shrink-0" />
                             </Button>
                         </Link>
                     </div>

@@ -194,6 +194,7 @@ export function EditFindingSheet({ finding, isOpen, onClose, onUpdate, onDelete 
                         setShowUnsavedDialog(true);
                     }
                 }}
+                onOpenAutoFocus={(e) => e.preventDefault()}
             >
                 <div className="flex flex-col h-full w-full">
                     {/* Premium Header - Consistent with EditFindingModal */}

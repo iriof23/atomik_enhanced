@@ -201,6 +201,7 @@ export function EditFindingModal({ finding, isOpen, onClose, onUpdate, onDelete,
                         setShowUnsavedDialog(true);
                     }
                 }}
+                onOpenAutoFocus={(e) => e.preventDefault()}
             >
                 
                 {/* Premium Header */}
@@ -266,9 +267,9 @@ export function EditFindingModal({ finding, isOpen, onClose, onUpdate, onDelete,
                             <Button variant="ghost" size="sm" onClick={handleClose} className="text-slate-500 hover:text-slate-900 text-xs">
                                 Cancel
                         </Button>
-                            <Button size="sm" onClick={handleSave} disabled={!isDirty} className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm text-xs px-4">
-                                <Save className="w-3.5 h-3.5 mr-1.5" />
-                                Save
+                            <Button size="sm" onClick={handleSave} disabled={!isDirty} className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm text-xs px-4 gap-1.5">
+                                <Save className="w-3.5 h-3.5 shrink-0" />
+                                <span>Save</span>
                             </Button>
                         </div>
                     </div>

@@ -341,16 +341,16 @@ export default function ReportEditor() {
                                     {actualFindingsCount > 0 ? Math.round((actualFindingsCount / 10) * 100) : 0}% Complete
                                 </p>
                             </div>
-                            <Button onClick={handleSave} size="sm" disabled={!hasUnsavedChanges || isSaving} className="bg-emerald-600 hover:bg-emerald-700">
+                            <Button onClick={handleSave} size="sm" disabled={!hasUnsavedChanges || isSaving} className="bg-emerald-600 hover:bg-emerald-700 gap-2">
                                 {isSaving ? (
                                     <>
-                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                        Saving...
+                                        <Loader2 className="w-4 h-4 shrink-0 animate-spin" />
+                                        <span>Saving...</span>
                                     </>
                                 ) : (
                                     <>
-                                <Save className="w-4 h-4 mr-2" />
-                                {hasUnsavedChanges ? 'Save Changes' : 'Saved'}
+                                        <Save className="w-4 h-4 shrink-0" />
+                                        <span>{hasUnsavedChanges ? 'Save Changes' : 'Saved'}</span>
                                     </>
                                 )}
                             </Button>
@@ -930,18 +930,18 @@ function ExportTab({ reportId, settings }: { reportId: string, settings: any }) 
                     <Button
                         onClick={handleExport}
                         disabled={isExporting}
-                        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
+                        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white gap-2"
                         size="lg"
                     >
                         {isExporting ? (
                             <>
-                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                Generating {exportFormat.toUpperCase()}...
+                                <Loader2 className="w-4 h-4 shrink-0 animate-spin" />
+                                <span>Generating {exportFormat.toUpperCase()}...</span>
                             </>
                         ) : (
                             <>
-                        <Download className="w-4 h-4 mr-2" />
-                                Export as {exportFormat.toUpperCase()}
+                                <Download className="w-4 h-4 shrink-0" />
+                                <span>Export as {exportFormat.toUpperCase()}</span>
                             </>
                         )}
                     </Button>

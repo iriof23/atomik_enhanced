@@ -112,9 +112,9 @@ export default function Settings() {
                                         <Button 
                                             size="lg" 
                                             onClick={handleCreateOrg}
-                                            className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium"
+                                            className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium gap-2"
                                         >
-                                            <Plus className="w-4 h-4 mr-2" /> Create Organization
+                                            <Plus className="w-4 h-4 shrink-0" /> <span>Create Organization</span>
                                         </Button>
                                     </div>
                                 </CardContent>

@@ -694,10 +694,10 @@ export function AddProjectDialog({ open, onOpenChange, onProjectAdded, clients, 
                                 type="button"
                                 variant="ghost"
                                 onClick={handleBack}
-                                className="text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                                className="text-slate-600 hover:text-slate-900 hover:bg-slate-100 gap-1"
                             >
-                                <ChevronLeft className="h-4 w-4 mr-1" />
-                                Back
+                                <ChevronLeft className="h-4 w-4 shrink-0" />
+                                <span>Back</span>
                             </Button>
                         )}
                     </div>
@@ -720,24 +720,24 @@ export function AddProjectDialog({ open, onOpenChange, onProjectAdded, clients, 
                                     (step === 1 && (!formData.name || !formData.clientId)) ||
                                     (step === 3 && (!formData.startDate || !formData.endDate))
                                 }
-                                className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1"
                             >
-                                Next
-                                <ChevronRight className="h-4 w-4 ml-1" />
+                                <span>Next</span>
+                                <ChevronRight className="h-4 w-4 shrink-0" />
                             </Button>
                         ) : (
                             <Button
                                 type="button"
                                 onClick={handleSubmit}
                                 disabled={isSubmitting}
-                                className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2"
                             >
                                 {isSubmitting ? (
-                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                    <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
                                 ) : (
-                                    <Check className="h-4 w-4 mr-2" />
+                                    <Check className="h-4 w-4 shrink-0" />
                                 )}
-                                {isSubmitting ? 'Saving...' : (editingProject ? 'Update' : 'Create')}
+                                <span>{isSubmitting ? 'Saving...' : (editingProject ? 'Update' : 'Create')}</span>
                             </Button>
                         )}
                     </div>

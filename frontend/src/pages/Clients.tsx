@@ -495,9 +495,9 @@ export default function Clients() {
             Manage your client organizations and contacts
           </p>
         </div>
-        <Button onClick={openAddClientDialog}>
-          <Plus className="w-4 h-4 mr-1.5" />
-          Add Client
+        <Button onClick={openAddClientDialog} className="gap-1.5">
+          <Plus className="w-4 h-4 shrink-0" />
+          <span>Add Client</span>
         </Button>
       </div>
 
@@ -540,19 +540,20 @@ export default function Clients() {
                 variant={activeFilters.length > 0 ? "default" : "outline"}
                 size="sm"
                 onClick={openFilterDialog}
+                className="gap-1.5"
               >
-                <Filter className="w-4 h-4 mr-1.5" />
-                Filter
+                <Filter className="w-4 h-4 shrink-0" />
+                <span>Filter</span>
                 {activeFilters.length > 0 && (
-                  <Badge variant="secondary" className="ml-1.5 h-5 w-5 rounded-full p-0 flex items-center justify-center text-[10px]">
+                  <Badge variant="secondary" className="h-5 w-5 rounded-full p-0 flex items-center justify-center text-[10px] shrink-0">
                     {activeFilters.length}
                   </Badge>
                 )}
               </Button>
 
-              <Button variant="outline" size="sm" onClick={handleExportClients}>
-                <Download className="w-4 h-4 mr-1.5" />
-                Export
+              <Button variant="outline" size="sm" onClick={handleExportClients} className="gap-1.5">
+                <Download className="w-4 h-4 shrink-0" />
+                <span>Export</span>
               </Button>
 
               {/* View Mode Switcher */}
@@ -711,9 +712,9 @@ export default function Clients() {
             <p className="text-slate-500 mb-6 max-w-sm">
               Add your first client to start managing projects and tracking security assessments.
             </p>
-            <Button onClick={openAddClientDialog} size="lg">
-              <Plus className="w-5 h-5 mr-2" />
-              Add Your First Client
+            <Button onClick={openAddClientDialog} size="lg" className="gap-2">
+              <Plus className="w-5 h-5 shrink-0" />
+              <span>Add Your First Client</span>
             </Button>
           </CardContent>
         </Card>
@@ -1016,11 +1017,11 @@ function ListView({ clients, onView, onEdit, onDelete, onDuplicate, onArchive, o
               </div>
 
               <div className="flex items-center gap-1">
-                <Button variant="ghost" size="sm" className="text-slate-400 hover:text-slate-600" onClick={(e) => { e.stopPropagation(); onView(client); }}>
-                  <Eye className="w-4 h-4 mr-1" /> View
+                <Button variant="ghost" size="sm" className="text-slate-400 hover:text-slate-600 gap-1" onClick={(e) => { e.stopPropagation(); onView(client); }}>
+                  <Eye className="w-4 h-4 shrink-0" /> <span>View</span>
                 </Button>
-                <Button variant="ghost" size="sm" className="text-slate-400 hover:text-slate-600" onClick={(e) => { e.stopPropagation(); onEdit(client); }}>
-                  <Edit className="w-4 h-4 mr-1" /> Edit
+                <Button variant="ghost" size="sm" className="text-slate-400 hover:text-slate-600 gap-1" onClick={(e) => { e.stopPropagation(); onEdit(client); }}>
+                  <Edit className="w-4 h-4 shrink-0" /> <span>Edit</span>
                 </Button>
               </div>
 

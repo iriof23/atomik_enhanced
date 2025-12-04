@@ -372,18 +372,18 @@ export default function ClientDetailModal({ client, open, onClose, onEdit, onDel
                     <Button 
                         variant="ghost" 
                         onClick={() => onDelete?.(client)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50 gap-2"
                     >
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        Delete
+                        <Trash2 className="w-4 h-4 shrink-0" />
+                        <span>Delete</span>
                     </Button>
                     <div className="flex gap-2">
                         <Button variant="outline" onClick={onClose}>
                             Close
                         </Button>
-                        <Button onClick={() => onEdit(client)} className="bg-emerald-600 hover:bg-emerald-700 text-white">
-                            <Edit className="w-4 h-4 mr-2" />
-                            Edit Client
+                        <Button onClick={() => onEdit(client)} className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2">
+                            <Edit className="w-4 h-4 shrink-0" />
+                            <span>Edit Client</span>
                         </Button>
                     </div>
                 </div>

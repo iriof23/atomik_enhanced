@@ -453,26 +453,26 @@ export default function ReportBuilder() {
                                     <Button 
                                         variant="ghost" 
                                         size="sm" 
-                                        className="text-slate-500 hover:text-red-600 hover:bg-red-50 h-9"
+                                        className="text-slate-500 hover:text-red-600 hover:bg-red-50 h-9 gap-1.5"
                                         onClick={() => setDeleteDialogOpen(true)}
                                     >
-                                        <Trash2 className="w-4 h-4 mr-1.5" />
-                                        Delete
+                                        <Trash2 className="w-4 h-4 shrink-0" />
+                                        <span>Delete</span>
                                     </Button>
                                     <Button 
                                         onClick={() => handleOpenReport(selectedProject.id)}
                                         disabled={isOpeningEditor}
-                                        className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold h-10 px-5 shadow-lg shadow-emerald-600/25 hover:shadow-emerald-600/30 transition-all"
+                                        className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold h-10 px-5 shadow-lg shadow-emerald-600/25 hover:shadow-emerald-600/30 transition-all gap-2"
                                     >
                                         {isOpeningEditor ? (
                                             <>
-                                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                                Opening...
+                                                <Loader2 className="w-4 h-4 shrink-0 animate-spin" />
+                                                <span>Opening...</span>
                                             </>
                                         ) : (
                                             <>
-                                                Open Editor
-                                                <ArrowUpRight className="w-4 h-4 ml-2" />
+                                                <span>Open Editor</span>
+                                                <ArrowUpRight className="w-4 h-4 shrink-0" />
                                             </>
                                         )}
                                     </Button>
@@ -636,17 +636,17 @@ export default function ReportBuilder() {
                         <AlertDialogAction
                             onClick={handleDeleteProject}
                             disabled={isDeleting}
-                            className="bg-red-600 hover:bg-red-700 text-white"
+                            className="bg-red-600 hover:bg-red-700 text-white gap-2"
                         >
                             {isDeleting ? (
                                 <>
-                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                    Deleting...
+                                    <Loader2 className="w-4 h-4 shrink-0 animate-spin" />
+                                    <span>Deleting...</span>
                                 </>
                             ) : (
                                 <>
-                                    <Trash2 className="w-4 h-4 mr-2" />
-                                    Delete Project
+                                    <Trash2 className="w-4 h-4 shrink-0" />
+                                    <span>Delete Project</span>
                                 </>
                             )}
                         </AlertDialogAction>

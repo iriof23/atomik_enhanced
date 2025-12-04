@@ -261,13 +261,13 @@ export default function Findings() {
                             accept=".xml,.csv,.json"
                             onChange={handleFileChange}
                         />
-                        <Button variant="outline" onClick={handleImportClick} className="bg-white border-slate-200 hover:bg-slate-50 text-slate-700">
-                            <Upload className="w-4 h-4 mr-2" />
-                            Import
+                        <Button variant="outline" onClick={handleImportClick} className="bg-white border-slate-200 hover:bg-slate-50 text-slate-700 gap-2">
+                            <Upload className="w-4 h-4 shrink-0" />
+                            <span>Import</span>
                         </Button>
-                        <Button className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => setAddDialogOpen(true)}>
-                            <Plus className="w-4 h-4 mr-2" />
-                            New Finding
+                        <Button className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2" onClick={() => setAddDialogOpen(true)}>
+                            <Plus className="w-4 h-4 shrink-0" />
+                            <span>New Finding</span>
                         </Button>
                     </div>
                 </div>
@@ -337,9 +337,9 @@ export default function Findings() {
                         <div className="flex gap-3 flex-1 justify-end w-full md:w-auto">
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                    <Button variant="outline" className="border-slate-200 text-slate-600 hover:bg-slate-50">
-                                        <Filter className="w-4 h-4 mr-2" />
-                                        Filter
+                                    <Button variant="outline" className="border-slate-200 text-slate-600 hover:bg-slate-50 gap-2">
+                                        <Filter className="w-4 h-4 shrink-0" />
+                                        <span>Filter</span>
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" className="w-56">
@@ -375,9 +375,9 @@ export default function Findings() {
                                         </div>
                                         <h3 className="text-lg font-semibold text-slate-900 mb-2">No custom templates yet</h3>
                                         <p className="max-w-sm mb-6 text-slate-500">Create your first custom finding template or duplicate one from the System Library to get started.</p>
-                                        <Button onClick={() => setAddDialogOpen(true)} className="bg-emerald-600 hover:bg-emerald-700 text-white">
-                                            <Plus className="w-4 h-4 mr-2" />
-                                            Create Template
+                                        <Button onClick={() => setAddDialogOpen(true)} className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2">
+                                            <Plus className="w-4 h-4 shrink-0" />
+                                            <span>Create Template</span>
                                         </Button>
                                     </>
                                 ) : (
@@ -508,20 +508,20 @@ export default function Findings() {
                                             size="sm" 
                                             disabled={currentPage === 1}
                                             onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                                            className="text-xs h-8 border-slate-200 text-slate-600 hover:text-slate-900"
+                                            className="text-xs h-8 border-slate-200 text-slate-600 hover:text-slate-900 gap-1"
                                         >
-                                            <ChevronLeft className="w-3 h-3 mr-1" />
-                                            Previous
+                                            <ChevronLeft className="w-3 h-3 shrink-0" />
+                                            <span>Previous</span>
                                         </Button>
                                         <Button 
                                             variant="outline" 
                                             size="sm" 
                                             disabled={currentPage === totalPages || totalItems === 0}
                                             onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                                            className="text-xs h-8 border-slate-200 text-slate-600 hover:text-slate-900"
+                                            className="text-xs h-8 border-slate-200 text-slate-600 hover:text-slate-900 gap-1"
                                         >
-                                            Next
-                                            <ChevronRight className="w-3 h-3 ml-1" />
+                                            <span>Next</span>
+                                            <ChevronRight className="w-3 h-3 shrink-0" />
                                         </Button>
                                     </div>
                                 </div>
