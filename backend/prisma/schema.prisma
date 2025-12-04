@@ -253,6 +253,10 @@ model Finding {
   templateId String?
   template   Template? @relation(fields: [templateId], references: [id])
 
+  // Import source tracking (e.g., "burp", "nessus", "manual")
+  source   String?
+  sourceId String? // Original ID from the import source
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -263,6 +267,7 @@ model Finding {
   @@index([status])
   @@index([cveId])
   @@index([referenceId])
+  @@index([source])
 }
 
 enum Severity {

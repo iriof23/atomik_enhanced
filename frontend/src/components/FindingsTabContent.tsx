@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect } from 'react'
-import { Plus, Search, FileText, X, Trash2, Shield, Upload, Loader2 } from 'lucide-react'
+import { Plus, Search, FileText, X, Trash2, Shield, Upload, Loader2, CheckCircle2, AlertCircle } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
 import { vulnerabilityDatabase, type Vulnerability } from '@/data/vulnerabilities'
 import { Editor } from '@/components/editor/Editor'
@@ -60,6 +61,19 @@ export default function FindingsTabContent({ projectId: propProjectId, onUpdate 
     const [selectedVulns, setSelectedVulns] = useState<Vulnerability[]>([])
     const [isLoading, setIsLoading] = useState(false)
     const [isDeleting, setIsDeleting] = useState(false)
+    
+    // Import modal state
+    const [showImportModal, setShowImportModal] = useState(false)
+    const [importFile, setImportFile] = useState<File | null>(null)
+    const [isImporting, setIsImporting] = useState(false)
+    const [skipInformational, setSkipInformational] = useState(false)
+    const [importResult, setImportResult] = useState<{
+        success: boolean
+        message: string
+        imported_count: number
+        skipped_count: number
+    } | null>(null)
+    const importFileInputRef = useRef<HTMLInputElement>(null)
 
     // Helper function to map API FindingResponse to ProjectFinding
     const mapApiFindingToProjectFinding = (apiFinding: any): ProjectFinding => {
@@ -113,41 +127,42 @@ export default function FindingsTabContent({ projectId: propProjectId, onUpdate 
         }
     }
 
-    // Load findings from API on mount
-    useEffect(() => {
-        const fetchFindings = async () => {
-            if (!projectId) return
-            
-            setIsLoading(true)
-            try {
-                const token = await getToken()
-                if (!token) {
-                    console.error('No auth token available')
-                    return
-                }
-
-                const response = await api.get(`/findings/?project_id=${projectId}`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                })
-
-                if (response.data && Array.isArray(response.data)) {
-                    const mappedFindings = response.data.map(mapApiFindingToProjectFinding)
-                    setFindings(mappedFindings)
-                }
-            } catch (error) {
-                console.error('Failed to fetch findings:', error)
-                toast({
-                    title: 'Error',
-                    description: 'Failed to load findings. Please try again.',
-                    variant: 'destructive',
-                })
-            } finally {
-                setIsLoading(false)
-                }
+    // Fetch findings from API
+    const fetchFindings = async () => {
+        if (!projectId) return
+        
+        setIsLoading(true)
+        try {
+            const token = await getToken()
+            if (!token) {
+                console.error('No auth token available')
+                return
             }
 
+            const response = await api.get(`/findings/?project_id=${projectId}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            })
+
+            if (response.data && Array.isArray(response.data)) {
+                const mappedFindings = response.data.map(mapApiFindingToProjectFinding)
+                setFindings(mappedFindings)
+            }
+        } catch (error) {
+            console.error('Failed to fetch findings:', error)
+            toast({
+                title: 'Error',
+                description: 'Failed to load findings. Please try again.',
+                variant: 'destructive',
+            })
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    // Load findings from API on mount
+    useEffect(() => {
         fetchFindings()
-    }, [projectId, getToken, toast])
+    }, [projectId])
 
     // Add finding from library
     const handleAddFinding = async (vuln: Vulnerability) => {
@@ -353,18 +368,85 @@ export default function FindingsTabContent({ projectId: propProjectId, onUpdate 
                 title: 'Finding Deleted',
                 description: `${selectedFinding.title} has been permanently removed.`,
             })
-
+            
             onUpdate()
-        } catch (error: any) {
+        } catch (error) {
             console.error('Failed to delete finding:', error)
             toast({
                 title: 'Error',
-                description: error.response?.data?.detail || 'Failed to delete finding. Please try again.',
+                description: 'Failed to delete finding. Please try again.',
                 variant: 'destructive',
             })
         } finally {
             setIsDeleting(false)
         }
+    }
+
+    // Import Burp scan
+    const handleImportBurp = async () => {
+        if (!importFile || !projectId) return
+
+        setIsImporting(true)
+        setImportResult(null)
+
+        try {
+            const token = await getToken()
+            if (!token) {
+                toast({
+                    title: 'Error',
+                    description: 'Authentication required',
+                    variant: 'destructive',
+                })
+                return
+            }
+
+            const formData = new FormData()
+            formData.append('file', importFile)
+            formData.append('skip_informational', skipInformational.toString())
+
+            const response = await api.post(`/imports/burp/${projectId}`, formData, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'multipart/form-data',
+                }
+            })
+
+            setImportResult(response.data)
+
+            if (response.data.imported_count > 0) {
+                toast({
+                    title: 'Import Successful',
+                    description: response.data.message,
+                })
+                
+                // Refresh findings list
+                await fetchFindings()
+                onUpdate()
+            }
+        } catch (error: any) {
+            console.error('Failed to import Burp scan:', error)
+            setImportResult({
+                success: false,
+                message: error.response?.data?.detail || 'Failed to import scan. Please check the file format.',
+                imported_count: 0,
+                skipped_count: 0,
+            })
+            toast({
+                title: 'Import Failed',
+                description: error.response?.data?.detail || 'Failed to import scan. Please try again.',
+                variant: 'destructive',
+            })
+        } finally {
+            setIsImporting(false)
+        }
+    }
+
+    // Reset import modal state
+    const resetImportModal = () => {
+        setShowImportModal(false)
+        setImportFile(null)
+        setImportResult(null)
+        setSkipInformational(false)
     }
 
 
@@ -458,7 +540,12 @@ export default function FindingsTabContent({ projectId: propProjectId, onUpdate 
                         />
                     </div>
                     <div className="flex items-center gap-2 w-full sm:w-auto">
-                        <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
+                        <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="flex-1 sm:flex-none"
+                            onClick={() => setShowImportModal(true)}
+                        >
                             <Upload className="w-4 h-4 mr-2" />
                             Import Scan
                         </Button>
@@ -793,6 +880,146 @@ export default function FindingsTabContent({ projectId: propProjectId, onUpdate 
                                 </>
                             )}
                         </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Import Scan Modal */}
+            <Dialog open={showImportModal} onOpenChange={(open) => !open && resetImportModal()}>
+                <DialogContent className="max-w-lg">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <Upload className="w-5 h-5 text-emerald-500" />
+                            Import Scan Results
+                        </DialogTitle>
+                        <DialogDescription>
+                            Import findings from external security scanning tools
+                        </DialogDescription>
+                    </DialogHeader>
+                    
+                    <div className="py-4 space-y-6">
+                        {/* File Upload Area */}
+                        <div 
+                            className={cn(
+                                "border-2 border-dashed rounded-lg p-8 text-center transition-all cursor-pointer",
+                                importFile 
+                                    ? "border-emerald-300 bg-emerald-50/50" 
+                                    : "border-slate-200 hover:border-slate-300 hover:bg-slate-50/50"
+                            )}
+                            onClick={() => importFileInputRef.current?.click()}
+                        >
+                            <input
+                                ref={importFileInputRef}
+                                type="file"
+                                accept=".xml"
+                                className="hidden"
+                                onChange={(e) => {
+                                    const file = e.target.files?.[0]
+                                    if (file) setImportFile(file)
+                                }}
+                            />
+                            
+                            {importFile ? (
+                                <div className="flex flex-col items-center gap-2">
+                                    <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center">
+                                        <FileText className="w-6 h-6 text-emerald-600" />
+                                    </div>
+                                    <p className="font-medium text-slate-900">{importFile.name}</p>
+                                    <p className="text-xs text-slate-500">
+                                        {(importFile.size / 1024).toFixed(1)} KB • Click to change
+                                    </p>
+                                </div>
+                            ) : (
+                                <div className="flex flex-col items-center gap-2">
+                                    <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center">
+                                        <Upload className="w-6 h-6 text-slate-400" />
+                                    </div>
+                                    <p className="font-medium text-slate-700">Drop your scan file here</p>
+                                    <p className="text-xs text-slate-500">
+                                        or click to browse • Supports: Burp Suite XML
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Options */}
+                        <div className="flex items-center space-x-2">
+                            <input 
+                                type="checkbox"
+                                id="skip-info" 
+                                checked={skipInformational}
+                                onChange={(e) => setSkipInformational(e.target.checked)}
+                                className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                            />
+                            <Label 
+                                htmlFor="skip-info" 
+                                className="text-sm text-slate-600 cursor-pointer"
+                            >
+                                Skip Informational findings
+                            </Label>
+                        </div>
+
+                        {/* Import Result */}
+                        {importResult && (
+                            <div className={cn(
+                                "rounded-lg p-4 flex items-start gap-3",
+                                importResult.success && importResult.imported_count > 0
+                                    ? "bg-emerald-50 border border-emerald-200"
+                                    : importResult.success && importResult.imported_count === 0
+                                    ? "bg-amber-50 border border-amber-200"
+                                    : "bg-red-50 border border-red-200"
+                            )}>
+                                {importResult.success && importResult.imported_count > 0 ? (
+                                    <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+                                ) : importResult.success && importResult.imported_count === 0 ? (
+                                    <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                                ) : (
+                                    <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+                                )}
+                                <div>
+                                    <p className={cn(
+                                        "text-sm font-medium",
+                                        importResult.success && importResult.imported_count > 0
+                                            ? "text-emerald-900"
+                                            : importResult.success && importResult.imported_count === 0
+                                            ? "text-amber-900"
+                                            : "text-red-900"
+                                    )}>
+                                        {importResult.message}
+                                    </p>
+                                    {importResult.imported_count > 0 && (
+                                        <p className="text-xs text-emerald-700 mt-1">
+                                            {importResult.imported_count} findings imported
+                                            {importResult.skipped_count > 0 && `, ${importResult.skipped_count} skipped`}
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    <DialogFooter>
+                        <Button variant="outline" onClick={resetImportModal}>
+                            {importResult?.success && importResult.imported_count > 0 ? 'Done' : 'Cancel'}
+                        </Button>
+                        {(!importResult || !importResult.success || importResult.imported_count === 0) && (
+                            <Button 
+                                onClick={handleImportBurp}
+                                disabled={!importFile || isImporting}
+                            >
+                                {isImporting ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                        Importing...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Upload className="w-4 h-4 mr-2" />
+                                        Import Findings
+                                    </>
+                                )}
+                            </Button>
+                        )}
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
