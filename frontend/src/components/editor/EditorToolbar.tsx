@@ -14,6 +14,7 @@ import {
     RemoveFormatting,
     Sparkles,
     Loader2,
+    ClipboardPaste,
 } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
 import { useToast } from '@/components/ui/use-toast';
@@ -34,6 +35,42 @@ export const EditorToolbar = ({ editor, frameless = false }: EditorToolbarProps)
     if (!editor) {
         return null;
     }
+
+    /**
+     * Paste clipboard content as a code block (safe for XSS payloads)
+     */
+    const handlePasteAsCode = async () => {
+        try {
+            const text = await navigator.clipboard.readText();
+            if (!text.trim()) {
+                toast({
+                    title: 'Clipboard empty',
+                    description: 'No text found in clipboard to paste',
+                    variant: 'destructive',
+                });
+                return;
+            }
+
+            // Insert as code block - Tiptap auto-escapes content
+            editor.chain()
+                .focus()
+                .setCodeBlock()
+                .insertContent(text)
+                .run();
+
+            toast({
+                title: '📋 Pasted as code block',
+                description: 'Content safely inserted (XSS-safe)',
+            });
+        } catch (error) {
+            console.error('Failed to paste as code:', error);
+            toast({
+                title: 'Paste failed',
+                description: 'Could not read clipboard. Try Ctrl+Shift+V instead.',
+                variant: 'destructive',
+            });
+        }
+    };
 
     const handleAiGenerate = async () => {
         // Get selected text
@@ -225,6 +262,13 @@ export const EditorToolbar = ({ editor, frameless = false }: EditorToolbarProps)
                 title="Terminal / Code Block"
             >
                 <Terminal className="h-4 w-4" />
+            </ToolbarButton>
+            <ToolbarButton
+                onClick={handlePasteAsCode}
+                title="Paste as Code (Safe for payloads)"
+                className="text-amber-600 hover:text-amber-700 hover:bg-amber-50"
+            >
+                <ClipboardPaste className="h-4 w-4" />
             </ToolbarButton>
 
             {/* Divider */}

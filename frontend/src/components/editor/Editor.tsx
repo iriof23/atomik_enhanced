@@ -5,6 +5,7 @@ import Link from '@tiptap/extension-link';
 import DropCursor from '@tiptap/extension-dropcursor';
 import { useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
+import { sanitizeHtml, looksLikeCode } from '@/lib/sanitize';
 import { EditorToolbar } from './EditorToolbar';
 import { ResizableImage } from './ResizableImage';
 
@@ -171,6 +172,8 @@ export const Editor = ({
             },
             handlePaste: (view, event, _slice) => {
                 const items = event.clipboardData?.items;
+                
+                // 1. Handle image paste first
                 if (items) {
                     for (let i = 0; i < items.length; i++) {
                         if (items[i].type.startsWith('image/')) {
@@ -186,7 +189,7 @@ export const Editor = ({
 
                                 // Upload and insert at cursor position
                                 uploadImage(file).then(url => {
-                                    const { schema, selection } = view.state;
+                                    const { schema } = view.state;
                                     const node = schema.nodes.resizableImage.create({ src: url });
                                     const transaction = view.state.tr.replaceSelectionWith(node);
                                     view.dispatch(transaction);
@@ -199,6 +202,62 @@ export const Editor = ({
                         }
                     }
                 }
+                
+                // 2. Smart code detection for plain text
+                const plainText = event.clipboardData?.getData('text/plain');
+                if (plainText && looksLikeCode(plainText)) {
+                    event.preventDefault();
+                    
+                    // Insert as code block (Tiptap auto-escapes content in code blocks)
+                    const { schema, selection } = view.state;
+                    const codeBlockType = schema.nodes.codeBlock;
+                    
+                    if (codeBlockType) {
+                        const textNode = schema.text(plainText);
+                        const codeBlock = codeBlockType.create(null, textNode);
+                        const transaction = view.state.tr.replaceSelectionWith(codeBlock);
+                        view.dispatch(transaction);
+                        
+                        console.log('[Security] Auto-wrapped potentially dangerous content in code block');
+                    }
+                    return true;
+                }
+                
+                // 3. Sanitize HTML paste
+                const htmlContent = event.clipboardData?.getData('text/html');
+                if (htmlContent) {
+                    event.preventDefault();
+                    
+                    // Sanitize the HTML before inserting
+                    const sanitized = sanitizeHtml(htmlContent);
+                    
+                    // Use the editor's insertContent which handles HTML safely
+                    const { state, dispatch } = view;
+                    const { tr, selection } = state;
+                    
+                    // Parse and insert sanitized content
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(sanitized, 'text/html');
+                    const textContent = doc.body.textContent || '';
+                    
+                    // If sanitization stripped everything, insert as plain text
+                    if (!sanitized.trim() || sanitized === textContent) {
+                        const textNode = state.schema.text(plainText || textContent);
+                        dispatch(tr.replaceSelectionWith(textNode));
+                    } else {
+                        // Insert sanitized HTML
+                        const slice = state.schema.nodes.doc.create(null, 
+                            state.schema.nodes.paragraph.create(null, 
+                                state.schema.text(textContent)
+                            )
+                        );
+                        dispatch(tr.replaceSelectionWith(slice.firstChild || state.schema.text(textContent)));
+                    }
+                    
+                    console.log('[Security] Sanitized HTML paste content');
+                    return true;
+                }
+                
                 return false;
             },
         },
