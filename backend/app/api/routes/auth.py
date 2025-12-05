@@ -1,9 +1,16 @@
 """
 Authentication routes for both desktop and docker modes
+
+SECURITY: This module handles authentication with multiple methods:
+- Clerk JWT tokens (primary, with JWKS verification)
+- Legacy JWT tokens (fallback)
+- License key activation (desktop mode)
+
+All authentication attempts are logged for audit purposes.
 """
 from datetime import datetime, timedelta
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel, EmailStr
 from prisma import Prisma
@@ -17,6 +24,7 @@ from app.core.security import (
     decode_token,
     validate_license_key_format,
 )
+from app.core.clerk_auth import verify_clerk_token
 from app.db import db
 
 
@@ -82,9 +90,14 @@ class UserWithOrgResponse(BaseModel):
 
 # Dependency to get current user
 async def get_current_user(token: str = Depends(oauth2_scheme)):
-    """Get current authenticated user from JWT token or Clerk token"""
-    import os
-    import jwt
+    """
+    Get current authenticated user from JWT token or Clerk token.
+    
+    SECURITY: Clerk tokens are now cryptographically verified using JWKS.
+    This prevents token forgery attacks.
+    """
+    import logging
+    logger = logging.getLogger(__name__)
     
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -92,79 +105,63 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         headers={"WWW-Authenticate": "Bearer"},
     )
     
-    # Try to decode as JWT (legacy auth)
+    # Try to decode as legacy JWT (for backwards compatibility)
     payload = decode_token(token)
     if payload is not None:
         user_id: str = payload.get("sub")
         if user_id:
             user = await db.user.find_unique(where={"id": user_id})
             if user:
+                logger.debug(f"User authenticated via legacy JWT: {user.email}")
                 return user
     
-    # Try to validate as Clerk token
+    # Try to validate as Clerk token (with JWKS verification)
     try:
-        # 1. Decode without verification first to inspect headers/claims
-        unverified_claims = jwt.decode(token, options={"verify_signature": False})
+        # SECURITY: verify_clerk_token uses JWKS to cryptographically verify the signature
+        # Set CLERK_SKIP_VERIFICATION=true only for development
+        claims = verify_clerk_token(token)
         
-        # DEBUG: Print all claims to see what's available
-        print(f"🔍 DEBUG: Token claims: {list(unverified_claims.keys())}")
-        
-        # 2. Get issuer from token and normalize (remove trailing slash)
-        token_iss = unverified_claims.get('iss', '').rstrip('/')
-        
-        # 3. Get expected issuer from environment and normalize
-        env_iss = os.getenv('CLERK_ISSUER_URL', '').rstrip('/')
-        
-        # 4. Log issuer comparison for debugging
-        if token_iss != env_iss:
-            print(f"⚠️ WARN: Issuer mismatch handled. Token: {token_iss}, Env: {env_iss}")
-            # We proceed anyway because the signature verification is the real security check
-        
-        # 5. For development/sandbox, we skip signature verification
-        # In production, you should verify using Clerk's JWKS endpoint
-        # For now, we trust the token if it has the expected structure
-        clerk_user_id = unverified_claims.get("sub")
-        
-        if not clerk_user_id:
-            print(f"❌ ERROR: No 'sub' claim in Clerk token")
+        if not claims:
+            logger.warning("Clerk token verification failed")
             raise credentials_exception
         
-        print(f"✅ Clerk token validated. User ID: {clerk_user_id}")
+        clerk_user_id = claims.get("sub")
+        
+        if not clerk_user_id:
+            logger.error("No 'sub' claim in verified Clerk token")
+            raise credentials_exception
+        
+        logger.debug(f"Clerk token verified. User ID: {clerk_user_id}")
         
         # Find user by Clerk external ID
         user = await db.user.find_unique(where={"externalId": clerk_user_id})
         if user:
-            print(f"✅ Found existing user: {user.email}")
+            logger.debug(f"Found existing user: {user.email}")
             return user
         
         # Auto-create user from Clerk token if not exists
-        # Since email is not in the token, we'll fetch it from Clerk's API or use a placeholder
-        print(f"⚠️ WARN: Email not in token claims. Token has: {list(unverified_claims.keys())}")
+        # Note: Email may not be in token claims - use placeholder if needed
+        email = claims.get("email") or f"{clerk_user_id}@clerk.user"
+        name = claims.get("name") or "Clerk User"
         
-        # For now, create user with a placeholder email based on Clerk user ID
-        # In production, you should fetch user details from Clerk's API using the user ID
-        placeholder_email = f"{clerk_user_id}@clerk.user"
-        
-        print(f"🆕 Creating new user with placeholder email: {placeholder_email}")
+        logger.info(f"Creating new user from Clerk token: {email}")
         user = await db.user.create(
             data={
                 "externalId": clerk_user_id,
-                "email": placeholder_email,
-                "firstName": "Clerk",
-                "lastName": "User",
-                "name": "Clerk User",
+                "email": email,
+                "firstName": claims.get("first_name", "Clerk"),
+                "lastName": claims.get("last_name", "User"),
+                "name": name,
                 "creditBalance": 5  # Default trial credits
             }
         )
-        print(f"✅ User created successfully: {user.id}")
-        print(f"⚠️ NOTE: User created with placeholder email. Update user profile to set real email.")
+        logger.info(f"User created successfully: {user.id}")
         return user
+        
     except HTTPException:
         raise
     except Exception as e:
-        print(f"❌ ERROR validating Clerk token: {type(e).__name__}: {e}")
-        import traceback
-        traceback.print_exc()
+        logger.error(f"Error validating Clerk token: {type(e).__name__}: {e}")
     
     raise credentials_exception
 

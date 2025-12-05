@@ -3,15 +3,19 @@ Finding management routes
 
 SECURITY: Evidence fields contain HTML from rich text editor.
 All HTML content is sanitized before storage to prevent XSS.
+
+AUDIT: All CRUD operations are logged for compliance and security monitoring.
 """
 import logging
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Request
 from pydantic import BaseModel
 
 from app.api.routes.auth import get_current_user
+from app.core.security_middleware import get_request_context
 from app.db import db
 from app.services.rich_text_service import RichTextService
+from app.services.audit_service import audit_service, AuditAction
 
 logger = logging.getLogger(__name__)
 
@@ -188,9 +192,13 @@ async def generate_finding_reference_id(client_id: str) -> str:
 @router.post("/", response_model=FindingResponse, status_code=status.HTTP_201_CREATED)
 async def create_finding(
     finding_data: FindingCreate,
+    request: Request,
     current_user = Depends(get_current_user)
 ):
     """Create a new finding"""
+    # Get request context for audit logging
+    ctx = get_request_context(request)
+    
     # Verify project exists and user has access
     project = await db.project.find_unique(
         where={"id": finding_data.project_id},
@@ -204,6 +212,15 @@ async def create_finding(
         )
     
     if current_user.organizationId and project.client.organizationId != current_user.organizationId:
+        # AUDIT: Log access denied
+        await audit_service.log_access_denied(
+            resource="Finding",
+            user_id=current_user.id,
+            user_email=current_user.email,
+            reason="Organization mismatch",
+            ip_address=ctx.get("client_ip"),
+            user_agent=ctx.get("user_agent"),
+        )
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied"
@@ -250,6 +267,25 @@ async def create_finding(
             "createdBy": True,
             "evidences": True
         }
+    )
+    
+    # AUDIT: Log finding creation
+    await audit_service.log_create(
+        resource="Finding",
+        resource_id=finding.id,
+        resource_name=f"{reference_id}: {finding.title}",
+        user_id=current_user.id,
+        user_email=current_user.email,
+        organization_id=current_user.organizationId,
+        details={
+            "reference_id": reference_id,
+            "severity": severity_upper,
+            "project_id": finding_data.project_id,
+            "project_name": project.name,
+        },
+        ip_address=ctx.get("client_ip"),
+        user_agent=ctx.get("user_agent"),
+        request_id=ctx.get("request_id"),
     )
     
     return FindingResponse(
@@ -342,11 +378,15 @@ async def get_finding(
 async def update_finding(
     finding_id: str,
     finding_data: FindingUpdate,
+    request: Request,
     current_user = Depends(get_current_user)
 ):
     """Update a finding"""
     logger.info(f"Updating finding {finding_id} by user {current_user.id}")
     logger.debug(f"Update data: {finding_data}")
+    
+    # Get request context for audit logging
+    ctx = get_request_context(request)
     
     try:
         finding = await db.finding.find_unique(
@@ -364,6 +404,16 @@ async def update_finding(
         # Check organization access
         if current_user.organizationId and finding.project.client.organizationId != current_user.organizationId:
             logger.warning(f"Access denied for user {current_user.id} to finding {finding_id}")
+            # AUDIT: Log access denied
+            await audit_service.log_access_denied(
+                resource="Finding",
+                resource_id=finding_id,
+                user_id=current_user.id,
+                user_email=current_user.email,
+                reason="Organization mismatch",
+                ip_address=ctx.get("client_ip"),
+                user_agent=ctx.get("user_agent"),
+            )
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Access denied"
@@ -421,6 +471,20 @@ async def update_finding(
         
         logger.info(f"Successfully updated finding {finding_id}")
         
+        # AUDIT: Log finding update
+        await audit_service.log_update(
+            resource="Finding",
+            resource_id=finding_id,
+            resource_name=f"{updated_finding.referenceId}: {updated_finding.title}",
+            user_id=current_user.id,
+            user_email=current_user.email,
+            organization_id=current_user.organizationId,
+            changes=update_data,
+            ip_address=ctx.get("client_ip"),
+            user_agent=ctx.get("user_agent"),
+            request_id=ctx.get("request_id"),
+        )
+        
         return FindingResponse(
             id=updated_finding.id,
             reference_id=updated_finding.referenceId,
@@ -462,9 +526,13 @@ async def update_finding(
 @router.delete("/{finding_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_finding(
     finding_id: str,
+    request: Request,
     current_user = Depends(get_current_user)
 ):
     """Delete a finding"""
+    # Get request context for audit logging
+    ctx = get_request_context(request)
+    
     finding = await db.finding.find_unique(
         where={"id": finding_id},
         include={"project": {"include": {"client": True}}}
@@ -478,12 +546,45 @@ async def delete_finding(
     
     # Check organization access
     if current_user.organizationId and finding.project.client.organizationId != current_user.organizationId:
+        # AUDIT: Log access denied
+        await audit_service.log_access_denied(
+            resource="Finding",
+            resource_id=finding_id,
+            user_id=current_user.id,
+            user_email=current_user.email,
+            reason="Organization mismatch",
+            ip_address=ctx.get("client_ip"),
+            user_agent=ctx.get("user_agent"),
+        )
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied"
         )
     
+    # Capture finding details before deletion for audit
+    finding_details = {
+        "reference_id": finding.referenceId,
+        "title": finding.title,
+        "severity": finding.severity,
+        "project_id": finding.projectId,
+    }
+    
     await db.finding.delete(where={"id": finding_id})
+    
+    # AUDIT: Log finding deletion
+    await audit_service.log_delete(
+        resource="Finding",
+        resource_id=finding_id,
+        resource_name=f"{finding.referenceId}: {finding.title}",
+        user_id=current_user.id,
+        user_email=current_user.email,
+        organization_id=current_user.organizationId,
+        details=finding_details,
+        ip_address=ctx.get("client_ip"),
+        user_agent=ctx.get("user_agent"),
+        request_id=ctx.get("request_id"),
+    )
+    
     return None
 
 

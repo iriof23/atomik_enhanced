@@ -18,6 +18,11 @@ from prisma import Prisma
 
 from app.core.config import settings
 from app.core.rate_limit import RateLimitMiddleware
+from app.core.security_middleware import (
+    SecurityHeadersMiddleware,
+    SecureCookieMiddleware,
+    RequestContextMiddleware,
+)
 from app.db import db
 from app.api.routes import auth, clients, projects, findings, reports, templates, uploads, billing, webhooks, orgs, ai, imports
 
@@ -44,6 +49,15 @@ app = FastAPI(
 # Add middleware (order matters - first added = last executed)
 # GZip compression for responses
 app.add_middleware(GZipMiddleware, minimum_size=1000)
+
+# Security headers (X-Content-Type-Options, X-Frame-Options, etc.)
+app.add_middleware(SecurityHeadersMiddleware)
+
+# Secure cookie settings (HttpOnly, SameSite, Secure)
+app.add_middleware(SecureCookieMiddleware)
+
+# Request context for audit logging (extracts IP, user agent, request ID)
+app.add_middleware(RequestContextMiddleware)
 
 # Rate limiting - protects against abuse and DoS
 app.add_middleware(RateLimitMiddleware)

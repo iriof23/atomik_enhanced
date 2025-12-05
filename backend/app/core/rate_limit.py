@@ -226,6 +226,20 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         if not allowed:
             logger.warning(f"Rate limit exceeded for {client_ip} on {request.url.path}")
             
+            # Log rate limit event to audit log (async, fire-and-forget)
+            try:
+                from app.services.audit_service import audit_service
+                import asyncio
+                asyncio.create_task(
+                    audit_service.log_rate_limited(
+                        endpoint=request.url.path,
+                        ip_address=client_ip,
+                        user_id=user_id if user_id else None,
+                    )
+                )
+            except Exception as e:
+                logger.debug(f"Failed to log rate limit to audit: {e}")
+            
             return Response(
                 content='{"detail": "Rate limit exceeded. Please try again later."}',
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,

@@ -408,3 +408,73 @@ model AiUsageLog {
   @@index([organizationId])
   @@index([createdAt])
 }
+
+// Audit Log (Security and compliance audit trail)
+// SECURITY: Tracks all user actions for compliance and security monitoring
+model AuditLog {
+  id        String   @id @default(uuid())
+  timestamp DateTime @default(now())
+  
+  // Who performed the action
+  userId    String?  // May be null for unauthenticated actions (e.g., failed login)
+  userEmail String?  // Cached for historical reference
+  
+  // What action was performed
+  action    AuditAction
+  
+  // What resource was affected
+  resource     String   // e.g., "Finding", "Client", "Project", "User"
+  resourceId   String?  // ID of the affected resource
+  resourceName String?  // Human-readable name (for reports)
+  
+  // Action details
+  details   String?  // JSON with before/after values or context
+  
+  // Request context
+  ipAddress String?
+  userAgent String?
+  requestId String?  // For correlating with logs
+  
+  // Organization context
+  organizationId String?
+  
+  // Outcome
+  success   Boolean @default(true)
+  errorMsg  String? // Error message if action failed
+  
+  @@index([userId])
+  @@index([action])
+  @@index([resource])
+  @@index([resourceId])
+  @@index([timestamp])
+  @@index([organizationId])
+  @@index([ipAddress])
+}
+
+enum AuditAction {
+  // CRUD operations
+  CREATE
+  READ
+  UPDATE
+  DELETE
+  
+  // Authentication
+  LOGIN_SUCCESS
+  LOGIN_FAILED
+  LOGOUT
+  TOKEN_REFRESH
+  
+  // Security events
+  RATE_LIMITED
+  ACCESS_DENIED
+  INVALID_INPUT
+  
+  // Import/Export
+  IMPORT
+  EXPORT
+  DOWNLOAD
+  
+  // Admin actions
+  ROLE_CHANGE
+  SETTINGS_CHANGE
+}
