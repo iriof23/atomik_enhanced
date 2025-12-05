@@ -1,0 +1,412 @@
+# Atomik Security Implementation Guide
+
+> **Last Updated:** December 2024  
+> **Status:** Production-Ready Security Framework
+
+---
+
+## Table of Contents
+
+1. [Security Overview](#security-overview)
+2. [Phase 1: Frontend XSS Protection](#phase-1-frontend-xss-protection)
+3. [Phase 2: Backend XSS Prevention](#phase-2-backend-xss-prevention)
+4. [Phase 3: Scan Import Security](#phase-3-scan-import-security)
+5. [Phase 4: Rate Limiting & Input Validation](#phase-4-rate-limiting--input-validation)
+6. [Phase 5: Authentication & Audit Logging](#phase-5-authentication--audit-logging)
+7. [Phase 6: Content Security Policy](#phase-6-content-security-policy)
+8. [Configuration Reference](#configuration-reference)
+9. [Security Checklist](#security-checklist)
+
+---
+
+## Security Overview
+
+Atomik implements a defense-in-depth security strategy with multiple layers of protection:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        SECURITY LAYERS                          │
+├─────────────────────────────────────────────────────────────────┤
+│  Layer 1: Frontend     │ DOMPurify, CSP, Code Detection        │
+│  Layer 2: API Gateway  │ Rate Limiting, Security Headers       │
+│  Layer 3: Auth         │ Clerk JWKS, Secure Cookies            │
+│  Layer 4: Backend      │ Input Validation, HTML Sanitization   │
+│  Layer 5: Database     │ Multi-tenancy, Audit Logging          │
+│  Layer 6: Files        │ Magic Bytes, SVG Sanitization         │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Phase 1: Frontend XSS Protection
+
+**Status:** ✅ Complete  
+**Files:** `frontend/src/lib/sanitize.ts`
+
+### Features Implemented
+
+| Feature | Description | Attack Prevented |
+|---------|-------------|------------------|
+| **DOMPurify Integration** | HTML sanitization before rendering | Stored XSS |
+| **Code Detection** | Auto-detects payloads/code snippets | Script injection |
+| **Safe Tag Allowlist** | Only permits safe HTML tags | Malicious tags |
+| **Attribute Filtering** | Blocks `onerror`, `onload`, etc. | Event handler XSS |
+
+### Allowed HTML Tags
+```
+b, i, u, s, strong, em, p, br, ul, ol, li, 
+blockquote, pre, code, h1-h6, a, img, span, div, table, 
+thead, tbody, tr, th, td, hr
+```
+
+### Blocked Attributes
+```
+onerror, onload, onclick, onmouseover, onfocus, onblur
+```
+
+### Code Detection Patterns
+- SQL injection: `SELECT`, `UNION`, `DROP TABLE`
+- XSS payloads: `<script>`, `javascript:`, `onerror=`
+- Shell commands: `$(`, backticks, `; rm -rf`
+- XML/HTML: `<?xml`, `<!DOCTYPE`
+
+### Usage
+```typescript
+import { sanitizeHtml, looksLikeCode } from '@/lib/sanitize';
+
+// Sanitize before rendering
+const safeHtml = sanitizeHtml(untrustedHtml);
+
+// Check if content should be in code block
+if (looksLikeCode(pastedContent)) {
+  editor.commands.insertContent({ type: 'codeBlock', content: pastedContent });
+}
+```
+
+---
+
+## Phase 2: Backend XSS Prevention
+
+**Status:** ✅ Complete  
+**Files:** `backend/app/services/rich_text_service.py`, `backend/app/api/routes/uploads.py`
+
+### Features Implemented
+
+| Feature | Description | Attack Prevented |
+|---------|-------------|------------------|
+| **Bleach Sanitization** | Server-side HTML cleaning | Stored XSS |
+| **SVG Sanitization** | Removes scripts from SVGs | SVG-based XSS |
+| **CSP on /uploads/** | Restricts uploaded content execution | Malicious uploads |
+| **URL Scheme Validation** | Only allows safe URL schemes | JavaScript URLs |
+
+### Backend Sanitization (Bleach)
+```python
+ALLOWED_TAGS = ['p', 'b', 'i', 'u', 's', 'strong', 'em', 'br', 'ul', 'ol', 
+                'li', 'blockquote', 'pre', 'code', 'h1', 'h2', 'h3', 'h4', 
+                'h5', 'h6', 'a', 'img', 'span', 'div', 'table', 'thead', 
+                'tbody', 'tr', 'th', 'td', 'hr']
+
+ALLOWED_ATTRIBUTES = {
+    'a': ['href', 'title', 'target', 'rel'],
+    'img': ['src', 'alt', 'title', 'width', 'height', 'data-align', 'data-caption'],
+    # Event handlers explicitly blocked
+}
+```
+
+### SVG Sanitization
+```python
+def sanitize_svg(content: bytes) -> bytes:
+    # Removes: <script>, onclick, onerror, onload, javascript:
+```
+
+### CSP Headers for /uploads/
+```nginx
+location /uploads/ {
+    add_header Content-Security-Policy "default-src 'none'; img-src 'self'; 
+               style-src 'none'; script-src 'none'; object-src 'none'; 
+               frame-ancestors 'none';";
+    add_header X-Content-Type-Options "nosniff";
+    add_header X-Frame-Options "DENY";
+}
+```
+
+---
+
+## Phase 3: Scan Import Security
+
+**Status:** ✅ Complete  
+**Files:** `backend/app/services/burp_parser.py`, `backend/app/api/routes/imports.py`
+
+### Features Implemented
+
+| Feature | Description | Attack Prevented |
+|---------|-------------|------------------|
+| **XML Parsing Safety** | Defused XML parsing | XXE attacks |
+| **Content Sanitization** | Sanitizes imported descriptions | Imported XSS |
+| **Base64 Validation** | Validates decoded content | Binary injection |
+| **Duplicate Prevention** | Tracks source/sourceId | Data integrity |
+
+### Supported Import Formats
+- ✅ Burp Suite XML
+- 🔜 Nessus (planned)
+- 🔜 Qualys (planned)
+
+### Database Tracking
+```prisma
+model Finding {
+  source   String?  // "burp", "nessus", "manual"
+  sourceId String?  // Original ID from scanner
+  @@unique([source, sourceId, projectId])
+}
+```
+
+---
+
+## Phase 4: Rate Limiting & Input Validation
+
+**Status:** ✅ Complete  
+**Files:** `backend/app/core/rate_limit.py`, `backend/app/core/file_validation.py`, `backend/app/core/validators.py`
+
+### Rate Limiting Configuration
+
+| Endpoint | Limit | Reason |
+|----------|-------|--------|
+| `/api/auth/*` | 20/min | Prevent brute force |
+| `/api/uploads/*` | 30/min | Prevent upload abuse |
+| `/api/imports/*` | 10/min | Heavy operations |
+| `/api/v1/ai/*` | 20/min | Expensive operations |
+| Default | 60/min | Standard protection |
+
+### Response Headers
+```
+X-RateLimit-Limit: 60
+X-RateLimit-Remaining: 59
+Retry-After: 60  (when exceeded)
+```
+
+### Magic Byte Validation
+
+| File Type | Magic Bytes | Validated |
+|-----------|-------------|-----------|
+| PNG | `\x89PNG\r\n\x1a\n` | ✅ |
+| JPEG | `\xff\xd8\xff` | ✅ |
+| GIF | `GIF87a` / `GIF89a` | ✅ |
+| WebP | `RIFF....WEBP` | ✅ |
+| SVG | `<?xml` / `<svg` | ✅ |
+| PDF | `%PDF-` | ✅ |
+| XML | `<?xml` | ✅ |
+
+### Input Validators
+```python
+# Available validators
+validate_email(email)      # RFC-compliant email
+validate_phone(phone)      # International formats
+validate_url(url)          # Safe URL schemes only
+validate_uuid(uuid)        # UUID format
+validate_filename(name)    # Path traversal prevention
+sanitize_string(text)      # Null bytes, length limits
+```
+
+---
+
+## Phase 5: Authentication & Audit Logging
+
+**Status:** ✅ Complete  
+**Files:** `backend/app/core/clerk_auth.py`, `backend/app/core/security_middleware.py`, `backend/app/services/audit_service.py`
+
+### Clerk JWKS Token Verification
+
+```python
+# Production mode (CLERK_SKIP_VERIFICATION=false)
+1. Fetch JWKS from Clerk's /.well-known/jwks.json
+2. Extract signing key from token header
+3. Verify signature using RS256
+4. Validate: exp, nbf, iat, iss claims
+5. Return verified claims or reject
+```
+
+### Security Headers (All Responses)
+
+| Header | Value | Protection |
+|--------|-------|------------|
+| `X-Content-Type-Options` | `nosniff` | MIME sniffing |
+| `X-Frame-Options` | `SAMEORIGIN` | Clickjacking |
+| `X-XSS-Protection` | `1; mode=block` | Legacy XSS |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` | Referrer leakage |
+| `Permissions-Policy` | `camera=(), microphone=()...` | Feature restriction |
+| `X-Request-ID` | UUID | Request tracing |
+
+### Secure Cookie Settings
+
+| Attribute | Value | Protection |
+|-----------|-------|------------|
+| `HttpOnly` | `true` | XSS cookie theft |
+| `SameSite` | `Lax` | CSRF attacks |
+| `Secure` | `true` (prod) | HTTPS only |
+
+### Audit Log Events
+
+| Action | Resource | Captured Data |
+|--------|----------|---------------|
+| `CREATE` | Finding, Client, Project | Full details, user, IP |
+| `UPDATE` | Finding, Client, Project | Changes (before/after) |
+| `DELETE` | Finding, Client, Project | Deleted resource info |
+| `LOGIN_SUCCESS` | User | Auth method, IP |
+| `LOGIN_FAILED` | User | Email attempted, reason |
+| `RATE_LIMITED` | API | Endpoint, IP |
+| `ACCESS_DENIED` | Any | Resource, reason |
+| `IMPORT` | Scan data | Source, count |
+| `EXPORT` | Report | Format, recipient |
+
+### Audit Log Schema
+```prisma
+model AuditLog {
+  id             String   @id
+  timestamp      DateTime
+  userId         String?
+  userEmail      String?
+  action         AuditAction
+  resource       String
+  resourceId     String?
+  resourceName   String?
+  details        String?  // JSON
+  ipAddress      String?
+  userAgent      String?
+  requestId      String?
+  organizationId String?
+  success        Boolean
+  errorMsg       String?
+}
+```
+
+---
+
+## Phase 6: Content Security Policy
+
+**Status:** ✅ Complete  
+**Files:** `docker/nginx.conf`, `frontend/index.html`
+
+### CSP Directives Implemented
+
+```
+default-src 'self';
+script-src 'self' https://*.clerk.accounts.dev https://challenges.cloudflare.com;
+style-src 'self' 'unsafe-inline';
+img-src 'self' data: blob: https://*.clerk.com https://img.clerk.com;
+font-src 'self' data:;
+connect-src 'self' https://*.clerk.accounts.dev https://*.clerk.com wss://*.clerk.accounts.dev;
+frame-src https://*.clerk.accounts.dev https://challenges.cloudflare.com;
+frame-ancestors 'self';
+base-uri 'self';
+form-action 'self';
+```
+
+### CSP Directive Explanations
+
+| Directive | Value | Purpose |
+|-----------|-------|---------|
+| `default-src` | `'self'` | Default fallback - only same origin |
+| `script-src` | `'self'` + Clerk | Allow app scripts + Clerk auth |
+| `style-src` | `'self' 'unsafe-inline'` | Allow Tailwind inline styles |
+| `img-src` | `'self' data: blob:` + Clerk | Allow images, base64, blobs, Clerk avatars |
+| `font-src` | `'self' data:` | Allow fonts and data URIs |
+| `connect-src` | `'self'` + Clerk | Allow API calls and Clerk |
+| `frame-src` | Clerk domains | Allow Clerk auth iframes |
+| `frame-ancestors` | `'self'` | Prevent embedding in other sites |
+| `base-uri` | `'self'` | Prevent base tag injection |
+| `form-action` | `'self'` | Forms can only submit to same origin |
+
+### Security Headers (All Responses)
+
+| Header | Frontend | API | Uploads |
+|--------|----------|-----|---------|
+| `X-Content-Type-Options: nosniff` | ✅ | ✅ | ✅ |
+| `X-Frame-Options` | SAMEORIGIN | DENY | DENY |
+| `X-XSS-Protection: 1; mode=block` | ✅ | ✅ | ✅ |
+| `Referrer-Policy` | ✅ | ✅ | - |
+| `Permissions-Policy` | ✅ | - | - |
+| `Content-Security-Policy` | Full CSP | - | Restrictive |
+
+### Attacks Prevented by CSP
+
+| Attack | CSP Protection |
+|--------|----------------|
+| **Inline Script Injection** | `script-src 'self'` - no inline scripts |
+| **External Script Loading** | Only whitelisted domains |
+| **Data Exfiltration** | `connect-src` limits endpoints |
+| **Clickjacking** | `frame-ancestors 'self'` |
+| **Form Hijacking** | `form-action 'self'` |
+| **Base Tag Injection** | `base-uri 'self'` |
+
+---
+
+## Configuration Reference
+
+### Environment Variables
+
+```bash
+# Authentication
+CLERK_ISSUER_URL=https://your-instance.clerk.accounts.dev
+CLERK_SKIP_VERIFICATION=false  # Set to 'true' ONLY for development
+
+# Rate Limiting
+RATE_LIMIT_PER_MINUTE=60
+
+# Security
+DEBUG=false  # Enables Secure cookie flag when false
+
+# File Uploads
+MAX_UPLOAD_SIZE=10485760  # 10MB
+ALLOWED_EXTENSIONS=png,jpg,jpeg,gif,pdf,xml,nessus,txt
+```
+
+### Docker Compose Security Settings
+
+```yaml
+services:
+  backend:
+    environment:
+      - CLERK_SKIP_VERIFICATION=false
+      - DEBUG=false
+    read_only: true  # Recommended
+    security_opt:
+      - no-new-privileges:true
+```
+
+---
+
+## Security Checklist
+
+### Before Production Deployment
+
+- [ ] Set `CLERK_SKIP_VERIFICATION=false`
+- [ ] Set `DEBUG=false`
+- [ ] Configure HTTPS/TLS certificates
+- [ ] Review rate limit settings
+- [ ] Enable audit log retention policy
+- [ ] Configure log aggregation (e.g., CloudWatch, Datadog)
+- [ ] Set up security monitoring alerts
+- [ ] Review CORS origins
+- [ ] Enable database encryption at rest
+- [ ] Configure backup strategy
+
+### Ongoing Security
+
+- [ ] Monitor audit logs for suspicious activity
+- [ ] Review rate limit hits weekly
+- [ ] Update dependencies monthly
+- [ ] Rotate secrets quarterly
+- [ ] Conduct security review annually
+
+---
+
+## Vulnerability Reporting
+
+If you discover a security vulnerability, please report it to:
+- Email: security@atomik.io
+- Do NOT create public GitHub issues for security vulnerabilities
+
+---
+
+*This document is maintained as part of Atomik's security program.*
+

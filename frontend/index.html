@@ -5,6 +5,21 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PenTest Report Generator</title>
+    
+    <!-- SECURITY: Content Security Policy (fallback for development/non-nginx) -->
+    <!-- Note: HTTP header CSP takes precedence when served via nginx -->
+    <meta http-equiv="Content-Security-Policy" content="
+      default-src 'self';
+      script-src 'self' https://*.clerk.accounts.dev https://challenges.cloudflare.com;
+      style-src 'self' 'unsafe-inline';
+      img-src 'self' data: blob: https://*.clerk.com https://img.clerk.com;
+      font-src 'self' data:;
+      connect-src 'self' https://*.clerk.accounts.dev https://*.clerk.com wss://*.clerk.accounts.dev;
+      frame-src https://*.clerk.accounts.dev https://challenges.cloudflare.com;
+      frame-ancestors 'self';
+      base-uri 'self';
+      form-action 'self';
+    ">
   </head>
   <body>
     <div id="root"></div>
